@@ -1,0 +1,31 @@
+# Ignore configuration files
+config.json
+
+# Ignore screenlog files
+screenlog.0
+screenlog.1
+
+# Ignore database files
+*.db
+
+# Ignore backup files
+*.old
+*.bak
+
+# Ignore shell scripts
+*.sh
+
+# Ignore JavaScript files with additional extensions
+*.js.*
+
+# Ignore Node modules (common for Discord bots)
+node_modules/
+
+# Ignore environment files (if applicable)
+.env
+
+# Ignore log files
+*.log
+
+servers.txt
+*.json
