@@ -20,8 +20,8 @@ const domains = (() => {
 })();
 
 // Image layout constants
-const IMAGE_WIDTH = 800;
-const IMAGE_HEIGHT = 1200;
+const IMAGE_WIDTH = 400;
+const IMAGE_HEIGHT = 600;
 const AVATAR_SIZE = 120;
 const FONT_SIZE = 16;
 const LINE_HEIGHT = 24;
@@ -83,61 +83,77 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     let svgContent = `
       <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
         <style>
-          .title { font-family: Arial, sans-serif; font-size: 20px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: Arial, sans-serif; font-size: 18px; font-weight: bold; fill: ${textColor}; }
+          .title { font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: Arial, sans-serif; font-size: 9px; font-weight: bold; fill: ${textColor}; }
           .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-          .section { font-family: Arial, sans-serif; font-size: 17px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+          .section { font-family: Arial, sans-serif; font-size: 9px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
         </style>`;
 
-    let currentY = MARGIN;
+    // Column 1: Avatar and Attributes (left side)
+    const col1X = MARGIN;
+    let col1Y = MARGIN + AVATAR_SIZE + 5;
 
-    // Character Name and Domain (positioned next to avatar if present)
-    if (avatarBlob) {
-      svgContent += `
-        <text x="${MARGIN + AVATAR_SIZE + 10}" y="${MARGIN + 20}" class="title">${userData.displayName}</text>
-        <text x="${MARGIN + AVATAR_SIZE + 10}" y="${MARGIN + 40}" class="header">${domainData.name}</text>`;
-      currentY = MARGIN + AVATAR_SIZE + 20;
-    } else {
-      svgContent += `
-        <text x="${MARGIN}" y="${MARGIN + 20}" class="title">${userData.displayName}</text>
-        <text x="${MARGIN}" y="${MARGIN + 40}" class="header">${domainData.name}</text>`;
-      currentY = MARGIN + 60;
-    }
+    // Column 2: Name and everything else (right side)  
+    const col2X = MARGIN * 2 + COLUMN_WIDTH;
+    let col2Y = MARGIN;
 
-    // Party information
-    if (userData.partyName) {
-      svgContent += `<text x="${MARGIN}" y="${currentY}" class="text">Party: ${userData.partyName}</text>`;
-      currentY += LINE_HEIGHT + 5;
-    }
-
-    currentY += 15;
-
-    // Overall Experience
+    // Character Name and Domain (Column 2)
     svgContent += `
-      <text x="${MARGIN}" y="${currentY}" class="section">Overall Experience</text>
-      <text x="${MARGIN}" y="${currentY + 20}" class="text">${userData.overallExp} XP</text>`;
+      <text x="${col2X}" y="${col2Y + 10}" class="title">${userData.displayName}</text>
+      <text x="${col2X}" y="${col2Y + 20}" class="header">${domainData.name}</text>`;
     
-    currentY += 45;
+    col2Y += 30;
 
-    // Professions Section
-    svgContent += `<text x="${MARGIN}" y="${currentY}" class="section">Professions</text>`;
-    currentY += 25;
+    // Party information (Column 2)
+    if (userData.partyName) {
+      svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Party: ${userData.partyName}</text>`;
+      col2Y += LINE_HEIGHT;
+    }
 
-    // Calculate ranks (you'll need to implement rank calculation based on your experience tables)
+    // Overall Experience (Column 2)
+    svgContent += `
+      <text x="${col2X}" y="${col2Y}" class="section">Overall Experience</text>
+      <text x="${col2X}" y="${col2Y + 10}" class="text">${userData.overallExp} XP</text>`;
+    
+    col2Y += 25;
+
+    // Professions Section (Column 2)
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Professions</text>`;
+    col2Y += 12;
+
     const artisanRank = calculateRank(userData.artisanExp, 'artisan');
     const soldierRank = calculateRank(userData.soldierExp, 'soldier'); 
     const healerRank = calculateRank(userData.healerExp, 'healer');
 
     svgContent += `
-      <text x="${MARGIN}" y="${currentY}" class="text">Artisan: ${artisanRank} (${userData.artisanExp} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT}" class="text">Soldier: ${soldierRank} (${userData.soldierExp} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 2}" class="text">Healer: ${healerRank} (${userData.healerExp} XP)</text>`;
+      <text x="${col2X}" y="${col2Y}" class="text">Artisan: ${artisanRank}</text>
+      <text x="${col2X}" y="${col2Y + LINE_HEIGHT}" class="text">Soldier: ${soldierRank}</text>
+      <text x="${col2X}" y="${col2Y + LINE_HEIGHT * 2}" class="text">Healer: ${healerRank}</text>`;
     
-    currentY += LINE_HEIGHT * 3 + 20;
+    col2Y += LINE_HEIGHT * 3 + 10;
 
-    // Attributes Section
-    svgContent += `<text x="${MARGIN}" y="${currentY}" class="section">Attributes</text>`;
-    currentY += 25;
+    // Coins Section (Column 2)
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Coins</text>`;
+    col2Y += 12;
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${userData.coins}</text>`;
+    col2Y += 20;
+
+    // Equipment Section (Column 2)
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Equipment</text>`;
+    col2Y += 12;
+
+    const armourName = getEquipmentName(userData.armourId, 'armour') || 'None';
+    const weaponName = getEquipmentName(userData.weaponId, 'weapon') || 'None';
+
+    svgContent += `
+      <text x="${col2X}" y="${col2Y}" class="text">Armour: ${armourName}</text>
+      <text x="${col2X}" y="${col2Y + LINE_HEIGHT}" class="text">Weapon: ${weaponName}</text>`;
+    
+    col2Y += LINE_HEIGHT * 2 + 5;
+
+    // Attributes Section (Column 1)
+    svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Attributes</text>`;
+    col1Y += 12;
 
     // Calculate attribute levels from skills 1-6 using proper database lookups
     const skill1Level = calculateAttributeLevel(userData.skill1, 1);
@@ -156,80 +172,51 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     const skill6Name = getAttributeName(6, userData.domainId);
 
     svgContent += `
-      <text x="${MARGIN}" y="${currentY}" class="text">${skill1Name}: Level ${skill1Level} (${userData.skill1} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT}" class="text">${skill2Name}: Level ${skill2Level} (${userData.skill2} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 2}" class="text">${skill3Name}: Level ${skill3Level} (${userData.skill3} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 3}" class="text">${skill4Name}: Level ${skill4Level} (${userData.skill4} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 4}" class="text">${skill5Name}: Level ${skill5Level} (${userData.skill5} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 5}" class="text">${skill6Name}: Level ${skill6Level} (${userData.skill6} XP)</text>`;
-    
-    currentY += LINE_HEIGHT * 6 + 20;
+      <text x="${col1X}" y="${col1Y}" class="text">${skill1Name}: Lv${skill1Level}</text>
+      <text x="${col1X}" y="${col1Y + LINE_HEIGHT}" class="text">${skill2Name}: Lv${skill2Level}</text>
+      <text x="${col1X}" y="${col1Y + LINE_HEIGHT * 2}" class="text">${skill3Name}: Lv${skill3Level}</text>
+      <text x="${col1X}" y="${col1Y + LINE_HEIGHT * 3}" class="text">${skill4Name}: Lv${skill4Level}</text>
+      <text x="${col1X}" y="${col1Y + LINE_HEIGHT * 4}" class="text">${skill5Name}: Lv${skill5Level}</text>
+      <text x="${col1X}" y="${col1Y + LINE_HEIGHT * 5}" class="text">${skill6Name}: Lv${skill6Level}</text>`;
 
-    // Treasure Section (Coins)
-    svgContent += `<text x="${MARGIN}" y="${currentY}" class="section">Coins</text>`;
-    currentY += 25;
-    svgContent += `<text x="${MARGIN}" y="${currentY}" class="text">${userData.coins}</text>`;
-    currentY += 35;
-
-    // Equipment Section
-    svgContent += `<text x="${MARGIN}" y="${currentY}" class="section">Equipment</text>`;
-    currentY += 25;
-
-    // You'll need to join with equipment tables to get names
-    const armourName = getEquipmentName(userData.armourId, 'armour') || 'None';
-    const weaponName = getEquipmentName(userData.weaponId, 'weapon') || 'None';
-
-    svgContent += `
-      <text x="${MARGIN}" y="${currentY}" class="text">Armour: ${armourName}</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT}" class="text">Weapon: ${weaponName}</text>`;
-    
-    // Add bonus information if active
-    currentY += LINE_HEIGHT * 2;
-    
+    // Add active bonuses and relics at bottom of column 2 if space allows
     const now = Math.floor(Date.now() / 1000);
     
-    if (userData.armourBonusEnd > now) {
-      const timeRemaining = formatTimeRemaining(userData.armourBonusEnd - now);
-      svgContent += `<text x="${MARGIN + 10}" y="${currentY}" class="text">• Armour Bonus: +${userData.armourBonus} (${timeRemaining})</text>`;
-      currentY += LINE_HEIGHT;
-    }
-    
-    if (userData.weaponBonusEnd > now) {
-      const timeRemaining = formatTimeRemaining(userData.weaponBonusEnd - now);
-      svgContent += `<text x="${MARGIN + 10}" y="${currentY}" class="text">• Weapon Bonus: +${userData.weaponBonus} (${timeRemaining})</text>`;
-      currentY += LINE_HEIGHT;
-    }
-    
-    if (userData.healerBonusEnd > now) {
-      const timeRemaining = formatTimeRemaining(userData.healerBonusEnd - now);
-      svgContent += `<text x="${MARGIN + 10}" y="${currentY}" class="text">• Healer Bonus: x${userData.healerBonus} (${timeRemaining})</text>`;
-      currentY += LINE_HEIGHT;
+    if (userData.armourBonusEnd > now || userData.weaponBonusEnd > now || userData.healerBonusEnd > now) {
+      svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Active Bonuses</text>`;
+      col2Y += 12;
+      
+      if (userData.armourBonusEnd > now) {
+        const timeRemaining = formatTimeRemaining(userData.armourBonusEnd - now);
+        svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Armour +${userData.armourBonus}</text>`;
+        col2Y += LINE_HEIGHT;
+      }
+      
+      if (userData.weaponBonusEnd > now) {
+        const timeRemaining = formatTimeRemaining(userData.weaponBonusEnd - now);
+        svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Weapon +${userData.weaponBonus}</text>`;
+        col2Y += LINE_HEIGHT;
+      }
+      
+      if (userData.healerBonusEnd > now) {
+        const timeRemaining = formatTimeRemaining(userData.healerBonusEnd - now);
+        svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Healer x${userData.healerBonus}</text>`;
+        col2Y += LINE_HEIGHT;
+      }
     }
 
-    currentY += 20;
-
-    // Relic Section
-    svgContent += `<text x="${MARGIN}" y="${currentY}" class="section">Relics</text>`;
-    currentY += 25;
-
-    let hasRelics = false;
-    
-    if (userData.artisanBonusEnd > now) {
-      const timeRemaining = formatTimeRemaining(userData.artisanBonusEnd - now);
-      svgContent += `<text x="${MARGIN}" y="${currentY}" class="text">Artisan: x${userData.artisanBonus} multiplier (${timeRemaining})</text>`;
-      currentY += LINE_HEIGHT;
-      hasRelics = true;
-    }
-    
-    if (userData.soldierBonusEnd > now) {
-      const timeRemaining = formatTimeRemaining(userData.soldierBonusEnd - now);
-      svgContent += `<text x="${MARGIN}" y="${currentY}" class="text">Soldier: x${userData.soldierBonus} multiplier (${timeRemaining})</text>`;
-      currentY += LINE_HEIGHT;
-      hasRelics = true;
-    }
-    
-    if (!hasRelics) {
-      svgContent += `<text x="${MARGIN}" y="${currentY}" class="text">None active</text>`;
+    if (userData.artisanBonusEnd > now || userData.soldierBonusEnd > now) {
+      svgContent += `<text x="${col2X}" y="${col2Y + 5}" class="section">Relics</text>`;
+      col2Y += 17;
+      
+      if (userData.artisanBonusEnd > now) {
+        svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Artisan x${userData.artisanBonus}</text>`;
+        col2Y += LINE_HEIGHT;
+      }
+      
+      if (userData.soldierBonusEnd > now) {
+        svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Soldier x${userData.soldierBonus}</text>`;
+      }
     }
 
     svgContent += '</svg>';
