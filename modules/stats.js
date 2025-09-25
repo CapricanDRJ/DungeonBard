@@ -311,11 +311,6 @@ module.exports = {
                 // For now, allow viewing any user's stats
             }
 
-            // Update avatar if changed
-            setTimeout(() => {
-                updateAvatarIfChanged(userId, guildId, targetUser.displayAvatarURL({ size: 256 }));
-            }, 0);
-
             // Get domain data
             const domainData = domains[userData.domainId];
             if (!domainData) {
