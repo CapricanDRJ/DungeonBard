@@ -22,8 +22,15 @@ if (data.length < 1) {
 const headers = data[0].split(",").map((h) =>
   h.trim().replace(/[^a-zA-Z0-9_]/g, "_")
 );
-const rows = data.slice(1).map((line) => line.split(","));
-
+const rows = data.slice(1).map(line =>
+  line.split(",").map(value => {
+    const trimmed = value.trim();
+    if (/^-?\d+$/.test(trimmed)) {
+      return parseInt(trimmed, 10);
+    }
+    return trimmed;
+  })
+);
 // --- Open DB ---
 const db = new Database(dbFile);
 
@@ -33,18 +40,18 @@ db.prepare(`DROP TABLE IF EXISTS "${tableName}"`).run();
 db.prepare(`CREATE TABLE "${tableName}" (${colDefs})`).run();
 
 // --- Insert Rows ---
-if (data.length < 2) {
-    const placeholders = headers.map(() => "?").join(", ");
-    const insert = db.prepare(
+if (data.length > 1) {  // FIXED
+  const placeholders = headers.map(() => "?").join(", ");
+  const insert = db.prepare(
     `INSERT INTO "${tableName}" (${headers.map((h) => `"${h}"`).join(", ")})
     VALUES (${placeholders})`
-    );
+  );
 
-    const insertMany = db.transaction((rows) => {
+  const insertMany = db.transaction((rows) => {
     for (const row of rows) insert.run(row);
-    });
-    insertMany(rows);
-};
+  });
+  insertMany(rows);
+}
 console.log(
   `Imported ${rows.length} rows into table "${tableName}" in ${dbFile}`
 );
