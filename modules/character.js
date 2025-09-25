@@ -100,7 +100,10 @@ module.exports = {
 
                     setTimeout(async () => {
                         // Get avatar data
-                        const avatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 64, dynamic: false});
+                        const avatarURL = interaction.user.displayAvatarURL()
+                        .replace(/\/a_/, '/')
+                        .replace(/\.[a-zA-Z]{3,4}$/, '')
+                        + '.png?size=64';
 
                         console.log(avatarURL);
                         const avatarFileName = avatarURL.split('/').pop().split('?')[0];
