@@ -94,7 +94,7 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     let col1Y = MARGIN + AVATAR_SIZE + 10;
 
     // Column 2: Name and everything else (right side)  
-    const col2X = MARGIN * 2 + COLUMN_WIDTH;
+    const col2X = MARGIN + AVATAR_SIZE + 10;
     let col2Y = MARGIN;
 
     // Character Name and Domain (Column 2)
