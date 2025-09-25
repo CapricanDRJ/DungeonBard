@@ -21,7 +21,7 @@ const domains = (() => {
 
 const attributes = (() => {
     const attrRows = db.prepare(`
-  SELECT domainId, skillId, domain, skillName, skillAbbrv, skillDesc
+  SELECT domainId, skillId, domain, skillName, skillAbbrv, skillDesc, levels
   FROM attributes
   ORDER BY domainId, skillId
 `).all();
@@ -36,6 +36,7 @@ for (const row of attrRows) {
     skillName: row.skillName,
     skillAbbrv: row.skillAbbrv,
     skillDesc: row.skillDesc,
+    levels: JSON.parse(row.levels)
   };
 }
 return attrObj;
@@ -153,22 +154,22 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     // Attributes Section (Column 1)
     svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Attributes</text>`;
     col1Y += 18;
-
+    const attrDomain = attributes[userData.domainId];
     // Calculate attribute levels from skills 1-6 using proper database lookups
-    const skill1Level = calculateAttributeLevel(userData.skill1, 1);
-    const skill2Level = calculateAttributeLevel(userData.skill2, 2);
-    const skill3Level = calculateAttributeLevel(userData.skill3, 3);
-    const skill4Level = calculateAttributeLevel(userData.skill4, 4);
-    const skill5Level = calculateAttributeLevel(userData.skill5, 5);
-    const skill6Level = calculateAttributeLevel(userData.skill6, 6);
+    const skill1Level = attributes[userData.domainId][1][1].levels.findLastIndex(level => userData.skill1 >= level) + 1;
+    const skill2Level = attributes[userData.domainId][2][1].levels.findLastIndex(level => userData.skill2 >= level) + 1;
+    const skill3Level = attributes[userData.domainId][3][1].levels.findLastIndex(level => userData.skill3 >= level) + 1;
+    const skill4Level = attributes[userData.domainId][4][1].levels.findLastIndex(level => userData.skill4 >= level) + 1;
+    const skill5Level = attributes[userData.domainId][5][1].levels.findLastIndex(level => userData.skill5 >= level) + 1;
+    const skill6Level = attributes[userData.domainId][6][1].levels.findLastIndex(level => userData.skill6 >= level) + 1;
 
     // Get proper attribute names based on domain
-    const skill1Name = getAttributeName(1, userData.domainId);
-    const skill2Name = getAttributeName(2, userData.domainId);
-    const skill3Name = getAttributeName(3, userData.domainId);
-    const skill4Name = getAttributeName(4, userData.domainId);
-    const skill5Name = getAttributeName(5, userData.domainId);
-    const skill6Name = getAttributeName(6, userData.domainId);
+    const skill1Name = attributes[userData.domainId][1]?.skillAbbrv || 'Skill 1';
+    const skill2Name = attributes[userData.domainId][2]?.skillAbbrv || 'Skill 2';
+    const skill3Name = attributes[userData.domainId][3]?.skillAbbrv || 'Skill 3';
+    const skill4Name = attributes[userData.domainId][4]?.skillAbbrv || 'Skill 4';
+    const skill5Name = attributes[userData.domainId][5]?.skillAbbrv || 'Skill 5';
+    const skill6Name = attributes[userData.domainId][6]?.skillAbbrv || 'Skill 6';
 
     svgContent += `
       <text x="${col1X}" y="${col1Y}" class="text">${skill1Name}: Lv${skill1Level}</text>
@@ -249,28 +250,6 @@ function calculateRank(experience, profession) {
   if (experience < 1000) return 'Journeyman';
   if (experience < 2000) return 'Expert';
   return 'Master';
-}
-
-function calculateAttributeLevel(experience, skillId) {
-  // Query the attributeLevels table to get the correct level
-  const levelData = db.prepare(`
-    SELECT level FROM attributeLevels 
-    WHERE skillId = ? AND exp <= ? 
-    ORDER BY exp DESC 
-    LIMIT 1
-  `).get(skillId, experience);
-  
-  return levelData ? levelData.level : 1;
-}
-
-function getAttributeName(skillId, domainId) {
-  // Query the attributes table to get skill name and abbreviation
-  const attr = db.prepare(`
-    SELECT skillName, skillAbbrv FROM attributes 
-    WHERE skillId = ? AND domainId = ?
-  `).get(skillId, domainId);
-  
-  return attr ? `${attr.skillAbbrv} (${attr.skillName})` : `Skill ${skillId}`;
 }
 
 function getEquipmentName(equipmentId, type) {
