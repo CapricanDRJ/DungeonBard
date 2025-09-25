@@ -156,12 +156,12 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     col1Y += 18;
     const attrDomain = attributes[userData.domainId];
     // Calculate attribute levels from skills 1-6 using proper database lookups
-    const skill1Level = attributes[userData.domainId][1][1].levels.findLastIndex(level => userData.skill1 >= level) + 1;
-    const skill2Level = attributes[userData.domainId][2][1].levels.findLastIndex(level => userData.skill2 >= level) + 1;
-    const skill3Level = attributes[userData.domainId][3][1].levels.findLastIndex(level => userData.skill3 >= level) + 1;
-    const skill4Level = attributes[userData.domainId][4][1].levels.findLastIndex(level => userData.skill4 >= level) + 1;
-    const skill5Level = attributes[userData.domainId][5][1].levels.findLastIndex(level => userData.skill5 >= level) + 1;
-    const skill6Level = attributes[userData.domainId][6][1].levels.findLastIndex(level => userData.skill6 >= level) + 1;
+    const skill1Level = attributes[userData.domainId][1].levels.findLastIndex(level => userData.skill1 >= level) + 1;
+    const skill2Level = attributes[userData.domainId][2].levels.findLastIndex(level => userData.skill2 >= level) + 1;
+    const skill3Level = attributes[userData.domainId][3].levels.findLastIndex(level => userData.skill3 >= level) + 1;
+    const skill4Level = attributes[userData.domainId][4].levels.findLastIndex(level => userData.skill4 >= level) + 1;
+    const skill5Level = attributes[userData.domainId][5].levels.findLastIndex(level => userData.skill5 >= level) + 1;
+    const skill6Level = attributes[userData.domainId][6].levels.findLastIndex(level => userData.skill6 >= level) + 1;
 
     // Get proper attribute names based on domain
     const skill1Name = attributes[userData.domainId][1]?.skillAbbrv || 'Skill 1';
