@@ -20,8 +20,8 @@ const domains = (() => {
 })();
 
 // Image layout constants
-const IMAGE_WIDTH = 800;
-const IMAGE_HEIGHT = 1200;
+const IMAGE_WIDTH = 400;
+const IMAGE_HEIGHT = 600;
 const AVATAR_SIZE = 120;
 const FONT_SIZE = 16;
 const LINE_HEIGHT = 24;
@@ -275,12 +275,7 @@ function formatTimeRemaining(seconds) {
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('stats')
-        .setDescription('Display character statistics image')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('View another user\'s stats (if allowed)')
-                .setRequired(false)
-        ),
+        .setDescription('Display character statistics image'),
 
     allowedButtons: [],
 
@@ -295,8 +290,7 @@ module.exports = {
     },
 
     executeCommand: async (interaction) => {
-        const targetUser = interaction.options.getUser('user') || interaction.user;
-        const userId = targetUser.id;
+        const userId = interaction.user.id;
         const guildId = interaction.guildId;
 
         try {
