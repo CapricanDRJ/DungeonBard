@@ -45,7 +45,7 @@ return attrObj;
 // Image layout constants
 const IMAGE_WIDTH = 400;
 const IMAGE_HEIGHT = 600;
-const AVATAR_SIZE = 64;
+const AVATAR_SIZE = 32;
 const FONT_SIZE = 12;
 const LINE_HEIGHT = 16;
 const MARGIN = 10;
