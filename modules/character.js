@@ -102,7 +102,7 @@ module.exports = {
                         // Get avatar data
                         const avatarURL = interaction.user.displayAvatarURL({ extension: 'png', size: 128, dynamic: false})
                         .replace(/\/a_/, '/')
-                        .replace(/\.(gif|webp)$/, '')
+                        .replace(/\.[a-zA-Z]{3,4}$/, '')
                         + '.png';
 
                         console.log(avatarURL);
