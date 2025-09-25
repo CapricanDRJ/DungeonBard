@@ -1,45 +1,45 @@
 CREATE TABLE IF NOT EXISTS "attributes" (
-    "skillId" INTEGER, 
     "domainId" INTEGER, 
+    "skillId" INTEGER, 
     "domain" TEXT, 
     "skillName" TEXT, 
     "skillAbbrv" TEXT, 
-    "skillDesc" TEXT,
-    PRIMARY KEY (skillId, domainId)
-    );
-INSERT INTO attributes VALUES(1,1,'Initiate','LEARNING','LRN','Absorbing and recalling knowledge from lessons readings and practice.');
-INSERT INTO attributes VALUES(2,1,'Initiate','COMMUNICATION','COM','Speaking clearly, participating in discussions, and asking thoughtful questions.');
-INSERT INTO attributes VALUES(3,1,'Initiate','DISCIPLINE','DIS','Developing time management, note-taking, and study habits.');
-INSERT INTO attributes VALUES(4,1,'Initiate','ORGANIZATION','ORG','Managing assignments, schedules, and school-related responsibilities.');
-INSERT INTO attributes VALUES(5,1,'Initiate','STAMINA','STA','Maintaining focus, handling stress, and persisting through long study sessions.');
-INSERT INTO attributes VALUES(6,1,'Initiate','PERSEVERANCE','PRS','Overcoming academic setbacks, late assignments, and exam stress.');
-INSERT INTO attributes VALUES(1,2,'Collegiate','LEARNING','LRN','Ability to absorb and retain knowledge from lectures and readings.');
-INSERT INTO attributes VALUES(2,2,'Collegiate','COMMUNICATION','COM','Skill in participating in discussions, presentations, and group projects.');
-INSERT INTO attributes VALUES(3,2,'Collegiate','DISCIPLINE','DIS','Focus and time management for completing assignments and studying.');
-INSERT INTO attributes VALUES(4,2,'Collegiate','ORGANIZATION','ORG','Keeping track of deadlines, schedules, and coursework.');
-INSERT INTO attributes VALUES(5,2,'Collegiate','STAMINA','STA','Enduring long study sessions, late-night cramming, and busy semesters.');
-INSERT INTO attributes VALUES(6,2,'Collegiate','PERSEVERANCE','PRS','Resilience against academic setbacks, exam failures, and stress.');
-INSERT INTO attributes VALUES(1,3,'Pedagogue','PEDAGOGY','PDG','Knowledge of teaching methods, curriculum design, and educational theories.');
-INSERT INTO attributes VALUES(2,3,'Pedagogue','CLASSROOM COMMAND','CMC','The ability to manage a class, engage students, and deliver compelling lessons.');
-INSERT INTO attributes VALUES(3,3,'Pedagogue','LESSON CRAFTING','LCR','Skill in preparing, adapting, and refining lesson plans.');
-INSERT INTO attributes VALUES(4,3,'Pedagogue','ORGANIZATION','ORG','Tracking assessments, marking work, and maintaining a structured learning environment.');
-INSERT INTO attributes VALUES(5,3,'Pedagogue','STAMINA','STA','The endurance to teach daily, plan lessons, and manage grading loads.');
-INSERT INTO attributes VALUES(6,3,'Pedagogue','ADAPTABILITY','ADP','The flexibility to modify plans, deal with disruptions, and pivot in response to challenges.');
-INSERT INTO attributes VALUES(1,4,'Masters','SCHOLARSHIP','SCH','Mastery of one’s research field, ability to synthesize knowledge, and theoretical depth.');
-INSERT INTO attributes VALUES(2,4,'Masters','RHETORIC','RHT','Presenting, debating, and defending research to peers and faculty.');
-INSERT INTO attributes VALUES(3,4,'Masters','ENDURANCE','END','The stamina to write, edit, and revise an endless thesis.');
-INSERT INTO attributes VALUES(4,4,'Masters','ORGANIZATION','ORG','Managing research notes, deadlines, and administrative duties.');
-INSERT INTO attributes VALUES(5,4,'Masters','STAMINA','STA','Surviving long nights of writing, conference preparation, and stress.');
-INSERT INTO attributes VALUES(6,4,'Masters','RESILIENCE','RES','Withstanding peer review, setbacks, and the terror of Reviewer #2.');
-INSERT INTO attributes VALUES(1,5,'Doctoral','SCHOLARSHIP','SCH','Mastery of research methodology, original contributions to knowledge, and field expertise.');
-INSERT INTO attributes VALUES(2,5,'Doctoral','RHETORIC','RHT','The ability to present, debate, and defend research before a panel of experts.');
-INSERT INTO attributes VALUES(3,5,'Doctoral','ENDURANCE','END','The mental and physical stamina to withstand years of research and revisions.');
-INSERT INTO attributes VALUES(4,5,'Doctoral','ORGANIZATION','ORG','Managing extensive notes, datasets, deadlines, and bureaucratic hurdles.');
-INSERT INTO attributes VALUES(5,5,'Doctoral','STAMINA','STA','Surviving stress, conference travel, grant applications, and the endless waiting game.');
-INSERT INTO attributes VALUES(6,5,'Doctoral','RESILIENCE','RES','Withstanding peer review, funding rejections, and existential crises.');
-INSERT INTO attributes VALUES(1,6,'Sage','SCHOLARSHIP','SCH','Mastery of one’s field, the depth of research, and publication record.');
-INSERT INTO attributes VALUES(2,6,'Sage','RHETORIC','RHT','Command of speech, persuasion in funding proposals, and conference delivery.');
-INSERT INTO attributes VALUES(3,6,'Sage','ENDURANCE','END','Stamina for long research hours, grading marathons, and tenure-track survival.');
-INSERT INTO attributes VALUES(4,6,'Sage','ADMINISTRATION','ADM','Mastery of bureaucratic tasks, committee duties, and institutional navigation.');
-INSERT INTO attributes VALUES(5,6,'Sage','STAMINA','STA','Resilience against burnout, ability to balance research, teaching, and service.');
-INSERT INTO attributes VALUES(6,6,'Sage','INFLUENCE','INF','Political acumen, networking, and power within the institution.');
+    "skillDesc" TEXT, "levels" TEXT,
+    PRIMARY KEY (domainId, skillId)
+);
+INSERT INTO attributes VALUES(1,1,'Initiate','LEARNING','LRN','Absorbing and recalling knowledge from lessons readings and practice.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
+INSERT INTO attributes VALUES(1,2,'Initiate','COMMUNICATION','COM','Speaking clearly, participating in discussions, and asking thoughtful questions.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
+INSERT INTO attributes VALUES(1,3,'Initiate','DISCIPLINE','DIS','Developing time management, note-taking, and study habits.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
+INSERT INTO attributes VALUES(1,4,'Initiate','ORGANIZATION','ORG','Managing assignments, schedules, and school-related responsibilities.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
+INSERT INTO attributes VALUES(1,5,'Initiate','STAMINA','STA','Maintaining focus, handling stress, and persisting through long study sessions.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
+INSERT INTO attributes VALUES(1,6,'Initiate','PERSEVERANCE','PRS','Overcoming academic setbacks, late assignments, and exam stress.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
+INSERT INTO attributes VALUES(2,1,'Collegiate','LEARNING','LRN','Ability to absorb and retain knowledge from lectures and readings.','[0,40,190,440,810,1290,1900,2640,3490,4480,5590,6840,8220,9730,11370,13160,15080,17130,19330,21660]');
+INSERT INTO attributes VALUES(2,2,'Collegiate','COMMUNICATION','COM','Skill in participating in discussions, presentations, and group projects.','[0,40,190,440,810,1290,1900,2640,3490,4480,5590,6840,8220,9730,11370,13160,15080,17130,19330,21660]');
+INSERT INTO attributes VALUES(2,3,'Collegiate','DISCIPLINE','DIS','Focus and time management for completing assignments and studying.','[0,40,190,440,810,1290,1900,2640,3490,4480,5590,6840,8220,9730,11370,13160,15080,17130,19330,21660]');
+INSERT INTO attributes VALUES(2,4,'Collegiate','ORGANIZATION','ORG','Keeping track of deadlines, schedules, and coursework.','[0,40,190,440,810,1290,1900,2640,3490,4480,5590,6840,8220,9730,11370,13160,15080,17130,19330,21660]');
+INSERT INTO attributes VALUES(2,5,'Collegiate','STAMINA','STA','Enduring long study sessions, late-night cramming, and busy semesters.','[0,40,190,440,810,1290,1900,2640,3490,4480,5590,6840,8220,9730,11370,13160,15080,17130,19330,21660]');
+INSERT INTO attributes VALUES(2,6,'Collegiate','PERSEVERANCE','PRS','Resilience against academic setbacks, exam failures, and stress.','[0,40,190,440,810,1290,1900,2640,3490,4480,5590,6840,8220,9730,11370,13160,15080,17130,19330,21660]');
+INSERT INTO attributes VALUES(3,1,'Pedagogue','PEDAGOGY','PDG','Knowledge of teaching methods, curriculum design, and educational theories.','[0,50,235,550,1010,1615,2375,3295,4365,5600,6990,8550,10270,12160,14215,16450,18850,21415,24165,27080]');
+INSERT INTO attributes VALUES(3,2,'Pedagogue','CLASSROOM COMMAND','CMC','The ability to manage a class, engage students, and deliver compelling lessons.','[0,50,235,550,1010,1615,2375,3295,4365,5600,6990,8550,10270,12160,14215,16450,18850,21415,24165,27080]');
+INSERT INTO attributes VALUES(3,3,'Pedagogue','LESSON CRAFTING','LCR','Skill in preparing, adapting, and refining lesson plans.','[0,50,235,550,1010,1615,2375,3295,4365,5600,6990,8550,10270,12160,14215,16450,18850,21415,24165,27080]');
+INSERT INTO attributes VALUES(3,4,'Pedagogue','ORGANIZATION','ORG','Tracking assessments, marking work, and maintaining a structured learning environment.','[0,50,235,550,1010,1615,2375,3295,4365,5600,6990,8550,10270,12160,14215,16450,18850,21415,24165,27080]');
+INSERT INTO attributes VALUES(3,5,'Pedagogue','STAMINA','STA','The endurance to teach daily, plan lessons, and manage grading loads.','[0,50,235,550,1010,1615,2375,3295,4365,5600,6990,8550,10270,12160,14215,16450,18850,21415,24165,27080]');
+INSERT INTO attributes VALUES(3,6,'Pedagogue','ADAPTABILITY','ADP','The flexibility to modify plans, deal with disruptions, and pivot in response to challenges.','[0,50,235,550,1010,1615,2375,3295,4365,5600,6990,8550,10270,12160,14215,16450,18850,21415,24165,27080]');
+INSERT INTO attributes VALUES(4,1,'Masters','SCHOLARSHIP','SCH','Mastery of one’s research field, ability to synthesize knowledge, and theoretical depth.','[0,60,280,660,1210,1940,2850,3950,5240,6720,8390,10260,12320,14590,17060,19740,22620,25700,29000,32500]');
+INSERT INTO attributes VALUES(4,2,'Masters','RHETORIC','RHT','Presenting, debating, and defending research to peers and faculty.','[0,60,280,660,1210,1940,2850,3950,5240,6720,8390,10260,12320,14590,17060,19740,22620,25700,29000,32500]');
+INSERT INTO attributes VALUES(4,3,'Masters','ENDURANCE','END','The stamina to write, edit, and revise an endless thesis.','[0,60,280,660,1210,1940,2850,3950,5240,6720,8390,10260,12320,14590,17060,19740,22620,25700,29000,32500]');
+INSERT INTO attributes VALUES(4,4,'Masters','ORGANIZATION','ORG','Managing research notes, deadlines, and administrative duties.','[0,60,280,660,1210,1940,2850,3950,5240,6720,8390,10260,12320,14590,17060,19740,22620,25700,29000,32500]');
+INSERT INTO attributes VALUES(4,5,'Masters','STAMINA','STA','Surviving long nights of writing, conference preparation, and stress.','[0,60,280,660,1210,1940,2850,3950,5240,6720,8390,10260,12320,14590,17060,19740,22620,25700,29000,32500]');
+INSERT INTO attributes VALUES(4,6,'Masters','RESILIENCE','RES','Withstanding peer review, setbacks, and the terror of Reviewer #2.','[0,60,280,660,1210,1940,2850,3950,5240,6720,8390,10260,12320,14590,17060,19740,22620,25700,29000,32500]');
+INSERT INTO attributes VALUES(5,1,'Doctoral','SCHOLARSHIP','SCH','Mastery of research methodology, original contributions to knowledge, and field expertise.','[0,90,380,880,1620,2590,3810,5270,6990,8960,11190,13680,16440,19460,22750,26320,30160,34270,38670,43440]');
+INSERT INTO attributes VALUES(5,2,'Doctoral','RHETORIC','RHT','The ability to present, debate, and defend research before a panel of experts.','[0,90,380,880,1620,2590,3810,5270,6990,8960,11190,13680,16440,19460,22750,26320,30160,34270,38670,43440]');
+INSERT INTO attributes VALUES(5,3,'Doctoral','ENDURANCE','END','The mental and physical stamina to withstand years of research and revisions.','[0,90,380,880,1620,2590,3810,5270,6990,8960,11190,13680,16440,19460,22750,26320,30160,34270,38670,43440]');
+INSERT INTO attributes VALUES(5,4,'Doctoral','ORGANIZATION','ORG','Managing extensive notes, datasets, deadlines, and bureaucratic hurdles.','[0,90,380,880,1620,2590,3810,5270,6990,8960,11190,13680,16440,19460,22750,26320,30160,34270,38670,43440]');
+INSERT INTO attributes VALUES(5,5,'Doctoral','STAMINA','STA','Surviving stress, conference travel, grant applications, and the endless waiting game.','[0,90,380,880,1620,2590,3810,5270,6990,8960,11190,13680,16440,19460,22750,26320,30160,34270,38670,43440]');
+INSERT INTO attributes VALUES(5,6,'Doctoral','RESILIENCE','RES','Withstanding peer review, funding rejections, and existential crises.','[0,90,380,880,1620,2590,3810,5270,6990,8960,11190,13680,16440,19460,22750,26320,30160,34270,38670,43440]');
+INSERT INTO attributes VALUES(6,1,'Sage','SCHOLARSHIP','SCH','Mastery of one’s field, the depth of research, and publication record.','[0,110,470,1100,2020,3240,4760,6590,8730,11200,13980,17100,20540,24320,28440,32900,37690,42840,48330,54170]');
+INSERT INTO attributes VALUES(6,2,'Sage','RHETORIC','RHT','Command of speech, persuasion in funding proposals, and conference delivery.','[0,110,470,1100,2020,3240,4760,6590,8730,11200,13980,17100,20540,24320,28440,32900,37690,42840,48330,54170]');
+INSERT INTO attributes VALUES(6,3,'Sage','ENDURANCE','END','Stamina for long research hours, grading marathons, and tenure-track survival.','[0,110,470,1100,2020,3240,4760,6590,8730,11200,13980,17100,20540,24320,28440,32900,37690,42840,48330,54170]');
+INSERT INTO attributes VALUES(6,4,'Sage','ADMINISTRATION','ADM','Mastery of bureaucratic tasks, committee duties, and institutional navigation.','[0,110,470,1100,2020,3240,4760,6590,8730,11200,13980,17100,20540,24320,28440,32900,37690,42840,48330,54170]');
+INSERT INTO attributes VALUES(6,5,'Sage','STAMINA','STA','Resilience against burnout, ability to balance research, teaching, and service.','[0,110,470,1100,2020,3240,4760,6590,8730,11200,13980,17100,20540,24320,28440,32900,37690,42840,48330,54170]');
+INSERT INTO attributes VALUES(6,6,'Sage','INFLUENCE','INF','Political acumen, networking, and power within the institution.','[0,110,470,1100,2020,3240,4760,6590,8730,11200,13980,17100,20540,24320,28440,32900,37690,42840,48330,54170]');

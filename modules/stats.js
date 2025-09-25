@@ -19,6 +19,28 @@ const domains = (() => {
     return domainsObj;
 })();
 
+const attributes = (() => {
+    const attrRows = db.prepare(`
+  SELECT domainId, skillId, domain, skillName, skillAbbrv, skillDesc
+  FROM attributes
+  ORDER BY domainId, skillId
+`).all();
+
+const attrObj = {};
+for (const row of attrRows) {
+  if (!attrObj[row.domainId]) {
+    attrObj[row.domainId] = {};
+  }
+  attrObj[row.domainId][row.skillId] = {
+    domain: row.domain,
+    skillName: row.skillName,
+    skillAbbrv: row.skillAbbrv,
+    skillDesc: row.skillDesc,
+  };
+}
+return attrObj;
+})();
+
 // Image layout constants
 const IMAGE_WIDTH = 400;
 const IMAGE_HEIGHT = 600;
@@ -27,26 +49,6 @@ const FONT_SIZE = 12;
 const LINE_HEIGHT = 16;
 const MARGIN = 10;
 const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2; // Two columns with margins
-
-// Update avatar if changed
-const updateAvatarIfChanged = async (userId, guildId, currentAvatarURL) => {
-    const currentFileName = currentAvatarURL.split('/').pop().split('?')[0];
-    const user = db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
-    
-    if (!user || user.avatarFile !== currentFileName) {
-        try {
-            const response = await fetch(currentAvatarURL);
-            if (response.ok) {
-                const arrayBuffer = await response.arrayBuffer();
-                const avatarBlob = Buffer.from(arrayBuffer);
-                db.prepare('UPDATE users SET avatarFile = ?, avatar = ? WHERE userId = ? AND guildId = ?')
-                  .run(currentFileName, avatarBlob, userId, guildId);
-            }
-        } catch (error) {
-            console.error('Error updating avatar:', error, `userId:${userId}`);
-        }
-    }
-};
 
 async function generateCharacterImage(userData, domainData, avatarBlob = null) {
   try {
@@ -66,7 +68,6 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     // Add avatar if available (Column 1)
     if (avatarBlob) {
       const processedAvatar = await sharp(avatarBlob)
-        .resize(AVATAR_SIZE, AVATAR_SIZE)
         .png()
         .toBuffer();
       
@@ -89,7 +90,7 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
 
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
-    let col1Y = MARGIN + AVATAR_SIZE + 10;
+    let col1Y = MARGIN + AVATAR_SIZE + 30;
 
     // Column 2: Name and everything else (right side)  
     const col2X = MARGIN * 2 + COLUMN_WIDTH;
