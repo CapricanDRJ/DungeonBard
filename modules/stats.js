@@ -22,11 +22,11 @@ const domains = (() => {
 // Image layout constants
 const IMAGE_WIDTH = 400;
 const IMAGE_HEIGHT = 600;
-const AVATAR_SIZE = 120;
-const FONT_SIZE = 16;
-const LINE_HEIGHT = 24;
-const MARGIN = 20;
-const SECTION_SPACING = 30;
+const AVATAR_SIZE = 64;
+const FONT_SIZE = 12;
+const LINE_HEIGHT = 16;
+const MARGIN = 10;
+const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2; // Two columns with margins
 
 // Update avatar if changed
 const updateAvatarIfChanged = async (userId, guildId, currentAvatarURL) => {
@@ -63,8 +63,7 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     const compositeLayers = [];
     const textColor = `#${domainData.text.toString(16).padStart(6, '0')}`;
     
-    // Add avatar if available
-    let avatarY = MARGIN;
+    // Add avatar if available (Column 1)
     if (avatarBlob) {
       const processedAvatar = await sharp(avatarBlob)
         .resize(AVATAR_SIZE, AVATAR_SIZE)
@@ -76,22 +75,21 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
         top: MARGIN,
         left: MARGIN,
       });
-      avatarY = MARGIN + AVATAR_SIZE + 20;
     }
 
     // Build SVG text overlay
     let svgContent = `
       <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
         <style>
-          .title { font-family: Arial, sans-serif; font-size: 10px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: Arial, sans-serif; font-size: 9px; font-weight: bold; fill: ${textColor}; }
+          .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
           .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-          .section { font-family: Arial, sans-serif; font-size: 9px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+          .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
         </style>`;
 
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
-    let col1Y = MARGIN + AVATAR_SIZE + 5;
+    let col1Y = MARGIN + AVATAR_SIZE + 10;
 
     // Column 2: Name and everything else (right side)  
     const col2X = MARGIN * 2 + COLUMN_WIDTH;
@@ -99,10 +97,10 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
 
     // Character Name and Domain (Column 2)
     svgContent += `
-      <text x="${col2X}" y="${col2Y + 10}" class="title">${userData.displayName}</text>
-      <text x="${col2X}" y="${col2Y + 20}" class="header">${domainData.name}</text>`;
+      <text x="${col2X}" y="${col2Y + 15}" class="title">${userData.displayName}</text>
+      <text x="${col2X}" y="${col2Y + 30}" class="header">${domainData.name}</text>`;
     
-    col2Y += 30;
+    col2Y += 50;
 
     // Party information (Column 2)
     if (userData.partyName) {
@@ -113,13 +111,13 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     // Overall Experience (Column 2)
     svgContent += `
       <text x="${col2X}" y="${col2Y}" class="section">Overall Experience</text>
-      <text x="${col2X}" y="${col2Y + 10}" class="text">${userData.overallExp} XP</text>`;
+      <text x="${col2X}" y="${col2Y + 15}" class="text">${userData.overallExp} XP</text>`;
     
-    col2Y += 25;
+    col2Y += 35;
 
     // Professions Section (Column 2)
     svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Professions</text>`;
-    col2Y += 12;
+    col2Y += 18;
 
     const artisanRank = calculateRank(userData.artisanExp, 'artisan');
     const soldierRank = calculateRank(userData.soldierExp, 'soldier'); 
@@ -130,17 +128,17 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
       <text x="${col2X}" y="${col2Y + LINE_HEIGHT}" class="text">Soldier: ${soldierRank}</text>
       <text x="${col2X}" y="${col2Y + LINE_HEIGHT * 2}" class="text">Healer: ${healerRank}</text>`;
     
-    col2Y += LINE_HEIGHT * 3 + 10;
+    col2Y += LINE_HEIGHT * 3 + 20;
 
     // Coins Section (Column 2)
     svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Coins</text>`;
-    col2Y += 12;
+    col2Y += 18;
     svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${userData.coins}</text>`;
-    col2Y += 20;
+    col2Y += 30;
 
     // Equipment Section (Column 2)
     svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Equipment</text>`;
-    col2Y += 12;
+    col2Y += 18;
 
     const armourName = getEquipmentName(userData.armourId, 'armour') || 'None';
     const weaponName = getEquipmentName(userData.weaponId, 'weapon') || 'None';
@@ -149,11 +147,11 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
       <text x="${col2X}" y="${col2Y}" class="text">Armour: ${armourName}</text>
       <text x="${col2X}" y="${col2Y + LINE_HEIGHT}" class="text">Weapon: ${weaponName}</text>`;
     
-    col2Y += LINE_HEIGHT * 2 + 5;
+    col2Y += LINE_HEIGHT * 2 + 10;
 
     // Attributes Section (Column 1)
     svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Attributes</text>`;
-    col1Y += 12;
+    col1Y += 18;
 
     // Calculate attribute levels from skills 1-6 using proper database lookups
     const skill1Level = calculateAttributeLevel(userData.skill1, 1);
@@ -184,7 +182,7 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     
     if (userData.armourBonusEnd > now || userData.weaponBonusEnd > now || userData.healerBonusEnd > now) {
       svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Active Bonuses</text>`;
-      col2Y += 12;
+      col2Y += 18;
       
       if (userData.armourBonusEnd > now) {
         const timeRemaining = formatTimeRemaining(userData.armourBonusEnd - now);
@@ -206,8 +204,8 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     }
 
     if (userData.artisanBonusEnd > now || userData.soldierBonusEnd > now) {
-      svgContent += `<text x="${col2X}" y="${col2Y + 5}" class="section">Relics</text>`;
-      col2Y += 17;
+      svgContent += `<text x="${col2X}" y="${col2Y + 10}" class="section">Relics</text>`;
+      col2Y += 28;
       
       if (userData.artisanBonusEnd > now) {
         svgContent += `<text x="${col2X}" y="${col2Y}" class="text">Artisan x${userData.artisanBonus}</text>`;
@@ -299,12 +297,7 @@ function formatTimeRemaining(seconds) {
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('stats')
-        .setDescription('Display character statistics image')
-        .addUserOption(option =>
-            option.setName('user')
-                .setDescription('View another user\'s stats (if allowed)')
-                .setRequired(false)
-        ),
+        .setDescription('Display character statistics image'),
 
     allowedButtons: [],
 
@@ -319,8 +312,7 @@ module.exports = {
     },
 
     executeCommand: async (interaction) => {
-        const targetUser = interaction.options.getUser('user') || interaction.user;
-        const userId = targetUser.id;
+        const userId = interaction.user.id;
         const guildId = interaction.guildId;
 
         try {
@@ -334,17 +326,6 @@ module.exports = {
                 });
                 return;
             }
-
-            // Permission check for viewing other users
-            if (userId !== interaction.user.id) {
-                // Add your permission logic here if needed
-                // For now, allow viewing any user's stats
-            }
-
-            // Update avatar if changed
-            setTimeout(() => {
-                updateAvatarIfChanged(userId, guildId, targetUser.displayAvatarURL({ size: 256 }));
-            }, 0);
 
             // Get domain data
             const domainData = domains[userData.domainId];
