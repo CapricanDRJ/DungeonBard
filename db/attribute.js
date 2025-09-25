@@ -7,6 +7,7 @@ CREATE TABLE IF NOT EXISTS attributeLevels (
     skillId INTEGER,
     level   INTEGER,
     exp     INTEGER,
+    PRIMARY KEY (skillId, exp)
 )
 `).run();
 
