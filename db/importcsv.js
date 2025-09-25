@@ -13,45 +13,92 @@ const csvFile = process.argv[3];
 const tableName =
   process.argv[4] || path.basename(csvFile, path.extname(csvFile));
 
+// --- Simple CSV line parser (handles quoted fields) ---
+function parseCSVLine(line) {
+  const fields = [];
+  let cur = "";
+  let inQuotes = false;
+  for (let i = 0; i < line.length; i++) {
+    const ch = line[i];
+    if (ch === '"' && !inQuotes) {
+      inQuotes = true;
+      continue;
+    }
+    if (ch === '"' && inQuotes) {
+      // look ahead for escaped quote
+      if (i + 1 < line.length && line[i + 1] === '"') {
+        cur += '"';
+        i++; // skip escaped quote
+      } else {
+        inQuotes = false;
+      }
+      continue;
+    }
+    if (ch === "," && !inQuotes) {
+      fields.push(cur);
+      cur = "";
+      continue;
+    }
+    cur += ch;
+  }
+  fields.push(cur);
+  return fields;
+}
+
 // --- Read CSV ---
-const data = fs.readFileSync(csvFile, "utf8").trim().split(/\r?\n/);
-if (data.length < 1) {
+const raw = fs.readFileSync(csvFile, "utf8").replace(/\r\n/g, "\n");
+const lines = raw.split("\n").filter((l) => l.length > 0);
+if (lines.length < 1) {
   console.error("CSV file must have a header row and at least one data row.");
   process.exit(1);
 }
-const headers = data[0].split(",").map((h) =>
-  h.trim().replace(/[^a-zA-Z0-9_]/g, "_")
+
+const headersRaw = parseCSVLine(lines[0]);
+const headers = headersRaw.map((h) =>
+  h.trim().replace(/[^a-zA-Z0-9_]/g, "_") || "col"
 );
-const rows = data.slice(1).map(line =>
-  line.split(",").map(value => {
-    const trimmed = value.trim();
-    if (/^-?\d+$/.test(trimmed)) {
-      return parseInt(trimmed, 10);
-    }
-    return trimmed;
-  })
-);
+
+// --- Parse rows and normalize length to headers.length ---
+// Convert first column to integer if it looks like an integer
+const rows = lines.slice(1).map((ln) => {
+  const parsed = parseCSVLine(ln).map((v) => v.trim());
+  // pad or truncate to match header count
+  if (parsed.length < headers.length) {
+    while (parsed.length < headers.length) parsed.push(null);
+  } else if (parsed.length > headers.length) {
+    parsed.length = headers.length;
+  }
+  // convert first column to integer if integer-like
+  if (parsed.length > 0 && /^-?\d+$/.test(parsed[0])) {
+    parsed[0] = parseInt(parsed[0], 10);
+  }
+  return parsed;
+});
+
 // --- Open DB ---
 const db = new Database(dbFile);
 
 // --- Create Table ---
+// We'll create all columns as TEXT; integers inserted as JS numbers stay numeric in SQLite.
 const colDefs = headers.map((h) => `"${h}" TEXT`).join(", ");
 db.prepare(`DROP TABLE IF EXISTS "${tableName}"`).run();
 db.prepare(`CREATE TABLE "${tableName}" (${colDefs})`).run();
 
 // --- Insert Rows ---
-if (data.length > 1) {  // FIXED
+if (rows.length > 0) {
   const placeholders = headers.map(() => "?").join(", ");
-  const insert = db.prepare(
+  const insertStmt = db.prepare(
     `INSERT INTO "${tableName}" (${headers.map((h) => `"${h}"`).join(", ")})
-    VALUES (${placeholders})`
+     VALUES (${placeholders})`
   );
 
-  const insertMany = db.transaction((rows) => {
-    for (const row of rows) insert.run(row);
+  const insertMany = db.transaction((rowsToInsert) => {
+    for (const row of rowsToInsert) insertStmt.run(row);
   });
+
   insertMany(rows);
 }
+
 console.log(
   `Imported ${rows.length} rows into table "${tableName}" in ${dbFile}`
 );
