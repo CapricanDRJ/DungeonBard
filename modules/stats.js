@@ -43,8 +43,8 @@ return attrObj;
 })();
 
 // Image layout constants
-const IMAGE_WIDTH = 400;
-const IMAGE_HEIGHT = 600;
+const IMAGE_WIDTH = 300;
+const IMAGE_HEIGHT = 400;
 const AVATAR_SIZE = 64;
 const FONT_SIZE = 12;
 const LINE_HEIGHT = 16;
