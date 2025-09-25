@@ -120,7 +120,7 @@ module.exports = {
                         const avatarURL = interaction.user.displayAvatarURL()
                         .replace(/\/a_/, '/')
                         .replace(/\.[a-zA-Z]{3,4}$/, '')
-                        + '.png?size=32';
+                        + '.png?size=64';
 
                         const avatarFileName = avatarURL.split('/').pop().split('?')[0];
                         let avatarBlob = null;
