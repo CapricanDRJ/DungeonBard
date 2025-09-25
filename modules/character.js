@@ -3,20 +3,20 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
 
-// Load domain levels from database
-const getDomainLevels = () => {
-    const domains = db.prepare('SELECT * FROM domains ORDER BY id').all();
-    const domainLevels = {};
-    domains.forEach(domain => {
-        domainLevels[domain.id] = {
+// Load domains from database
+const domains = (() => {
+    const domainData = db.prepare('SELECT * FROM domains ORDER BY id').all();
+    const domainsObj = {};
+    domainData.forEach(domain => {
+        domainsObj[domain.id] = {
             name: domain.title,
             description: domain.description,
             background: domain.background,
-            text: domain.text
+            text: domain.font
         };
     });
-    return domainLevels;
-};
+    return domainsObj;
+})();
 
 module.exports = {
     commandData: new SlashCommandBuilder()
@@ -75,21 +75,19 @@ module.exports = {
 
     executeCommand: async (interaction) => {
         const userId = interaction.user.id;
+        const guildId = interaction.guildId;
         const subcommand = interaction.options.getSubcommand();
-        const domainLevels = getDomainLevels();
 
         try {
             switch (subcommand) {
                 case 'enroll':
-                    const characterName = interaction.options.getString('name');
-                    const domainLevel = interaction.options.getInteger('domain');
-                    const displayName = interaction.member?.displayName || interaction.user.displayName;
-                    const avatarURL = interaction.user.displayAvatarURL();
+                    const displayName = interaction.options.getString('name');
+                    const domainId = interaction.options.getInteger('domain');
 
-                    // Check if character already exists
-                    const existingCharacter = db.prepare('SELECT * FROM characters WHERE userId = ?').get(userId);
+                    // Check if user already exists
+                    const existingUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
                     
-                    if (existingCharacter) {
+                    if (existingUser) {
                         interaction.reply({
                             content: 'You already have a character enrolled. Use `/character delete` first if you want to create a new one.',
                             flags: MessageFlags.Ephemeral
@@ -97,21 +95,35 @@ module.exports = {
                         return;
                     }
 
-                    setTimeout(() => {
-                        db.prepare(`INSERT INTO characters (userId, characterName, domainLevel, displayName, avatarURL, createdAt) 
-                                   VALUES (?, ?, ?, ?, ?, datetime('now'))`).run(userId, characterName, domainLevel, displayName, avatarURL);
-                        checkUsers(interaction);
+                    setTimeout(async () => {
+                        // Get avatar data
+                        const avatarURL = interaction.user.displayAvatarURL({ size: 256 });
+                        const avatarFileName = avatarURL.split('/').pop().split('?')[0];
+                        let avatarBlob = null;
+
+                        try {
+                            const response = await fetch(avatarURL);
+                            if (response.ok) {
+                                const arrayBuffer = await response.arrayBuffer();
+                                avatarBlob = Buffer.from(arrayBuffer);
+                            }
+                        } catch (error) {
+                            console.error('Error downloading avatar:', error, `userId:${userId}`);
+                        }
+
+                        db.prepare(`INSERT INTO users (userId, guildId, displayName, avatarFile, avatar, domainId) 
+                                   VALUES (?, ?, ?, ?, ?, ?)`).run(userId, guildId, displayName, avatarFileName, avatarBlob, domainId);
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${characterName}" successfully enrolled as ${domainLevels[domainLevel].name}!`
+                        content: `Character "${displayName}" successfully enrolled as ${domains[domainId].name}!`
                     });
                     break;
 
                 case 'restart':
-                    const restartCharacter = db.prepare('SELECT * FROM characters WHERE userId = ?').get(userId);
+                    const restartUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
                     
-                    if (!restartCharacter) {
+                    if (!restartUser) {
                         interaction.reply({
                             content: 'No character found. Use `/character enroll` to create one first.',
                             flags: MessageFlags.Ephemeral
@@ -120,19 +132,24 @@ module.exports = {
                     }
 
                     setTimeout(() => {
-                        db.prepare('UPDATE characters SET graduatedAt = datetime(\'now\') WHERE userId = ?').run(userId);
-                        checkUsers(interaction);
+                        db.prepare(`UPDATE users SET artisanExp = 0, soldierExp = 0, healerExp = 0, 
+                                   skill1 = 0, skill2 = 0, skill3 = 0, skill4 = 0, skill5 = 0, skill6 = 0, 
+                                   coins = 0, armourId = 0, weaponId = 0,
+                                   artisanBonus = 0, artisanBonusEnd = 0, soldierBonus = 0, soldierBonusEnd = 0,
+                                   healerBonus = 0, healerBonusEnd = 0, weaponBonus = 0, weaponBonusEnd = 0,
+                                   armourBonus = 0, armourBonusEnd = 0
+                                   WHERE userId = ? AND guildId = ?`).run(userId, guildId);
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${restartCharacter.characterName}" has restarted as ${domainLevels[restartCharacter.domainLevel].name}.`
+                        content: `Character "${restartUser.displayName}" has restarted as ${domains[restartUser.domainId].name}.`
                     });
                     break;
 
                 case 'graduate':
-                    const graduateCharacter = db.prepare('SELECT * FROM characters WHERE userId = ?').get(userId);
+                    const graduateUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
                     
-                    if (!graduateCharacter) {
+                    if (!graduateUser) {
                         interaction.reply({
                             content: 'No character found. Use `/character enroll` to create one first.',
                             flags: MessageFlags.Ephemeral
@@ -140,7 +157,7 @@ module.exports = {
                         return;
                     }
 
-                    if (graduateCharacter.domainLevel >= 6) {
+                    if (graduateUser.domainId >= 6) {
                         interaction.reply({
                             content: 'You are already at the highest domain level (The Sage). Use `/character restart` instead.',
                             flags: MessageFlags.Ephemeral
@@ -148,22 +165,27 @@ module.exports = {
                         return;
                     }
 
-                    const newDomainLevel = graduateCharacter.domainLevel + 1;
+                    const newDomainId = graduateUser.domainId + 1;
 
                     setTimeout(() => {
-                        db.prepare('UPDATE characters SET domainLevel = ?, graduatedAt = datetime(\'now\') WHERE userId = ?').run(newDomainLevel, userId);
-                        checkUsers(interaction);
+                        db.prepare(`UPDATE users SET domainId = ?, artisanExp = 0, soldierExp = 0, healerExp = 0,
+                                   skill1 = 0, skill2 = 0, skill3 = 0, skill4 = 0, skill5 = 0, skill6 = 0,
+                                   coins = 0, armourId = 0, weaponId = 0,
+                                   artisanBonus = 0, artisanBonusEnd = 0, soldierBonus = 0, soldierBonusEnd = 0,
+                                   healerBonus = 0, healerBonusEnd = 0, weaponBonus = 0, weaponBonusEnd = 0,
+                                   armourBonus = 0, armourBonusEnd = 0
+                                   WHERE userId = ? AND guildId = ?`).run(newDomainId, userId, guildId);
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${graduateCharacter.characterName}" has graduated to ${domainLevels[newDomainLevel].name}!`
+                        content: `Character "${graduateUser.displayName}" has graduated to ${domains[newDomainId].name}!`
                     });
                     break;
 
                 case 'delete':
-                    const charToDelete = db.prepare('SELECT characterName FROM characters WHERE userId = ?').get(userId);
+                    const userToDelete = db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
                     
-                    if (!charToDelete) {
+                    if (!userToDelete) {
                         interaction.reply({
                             content: 'No character found to delete.',
                             flags: MessageFlags.Ephemeral
@@ -172,19 +194,18 @@ module.exports = {
                     }
 
                     setTimeout(() => {
-                        db.prepare('DELETE FROM characters WHERE userId = ?').run(userId);
-                        checkUsers(interaction);
+                        db.prepare('DELETE FROM users WHERE userId = ? AND guildId = ?').run(userId, guildId);
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${charToDelete.characterName}" has been deleted.`
+                        content: `Character "${userToDelete.displayName}" has been deleted.`
                     });
                     break;
 
                 case 'stats':
-                    const statsCharacter = db.prepare('SELECT * FROM characters WHERE userId = ?').get(userId);
+                    const statsUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
                     
-                    if (!statsCharacter) {
+                    if (!statsUser) {
                         interaction.reply({
                             content: 'No character found. Use `/character enroll` to create one first.',
                             flags: MessageFlags.Ephemeral
@@ -192,22 +213,21 @@ module.exports = {
                         return;
                     }
 
-                    const domain = domainLevels[statsCharacter.domainLevel];
+                    const domain = domains[statsUser.domainId];
                     const embed = new EmbedBuilder()
-                        .setTitle(`${statsCharacter.characterName}`)
+                        .setTitle(`${statsUser.displayName}`)
                         .setDescription(`**${domain.name}**\n${domain.description}`)
-                        .setThumbnail(statsCharacter.avatarURL)
+                        .setThumbnail(interaction.user.displayAvatarURL())
                         .addFields(
-                            { name: 'Display Name', value: statsCharacter.displayName, inline: true },
-                            { name: 'User ID', value: statsCharacter.userId, inline: true },
-                            { name: 'Enrolled', value: new Date(statsCharacter.createdAt).toLocaleDateString(), inline: true }
+                            { name: 'Overall Exp', value: statsUser.overallExp.toString(), inline: true },
+                            { name: 'Coins', value: statsUser.coins.toString(), inline: true },
+                            { name: 'Party', value: statsUser.partyName || 'None', inline: true },
+                            { name: 'Artisan Exp', value: statsUser.artisanExp.toString(), inline: true },
+                            { name: 'Soldier Exp', value: statsUser.soldierExp.toString(), inline: true },
+                            { name: 'Healer Exp', value: statsUser.healerExp.toString(), inline: true }
                         )
                         .setColor(domain.background)
                         .setTimestamp();
-
-                    if (statsCharacter.graduatedAt) {
-                        embed.addFields({ name: 'Last Graduation', value: new Date(statsCharacter.graduatedAt).toLocaleDateString(), inline: true });
-                    }
 
                     interaction.reply({
                         embeds: [embed]
