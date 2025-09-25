@@ -15,7 +15,7 @@ const tableName =
 
 // --- Read CSV ---
 const data = fs.readFileSync(csvFile, "utf8").trim().split(/\r?\n/);
-if (data.length < 2) {
+if (data.length < 1) {
   console.error("CSV file must have a header row and at least one data row.");
   process.exit(1);
 }
@@ -33,17 +33,18 @@ db.prepare(`DROP TABLE IF EXISTS "${tableName}"`).run();
 db.prepare(`CREATE TABLE "${tableName}" (${colDefs})`).run();
 
 // --- Insert Rows ---
-const placeholders = headers.map(() => "?").join(", ");
-const insert = db.prepare(
-  `INSERT INTO "${tableName}" (${headers.map((h) => `"${h}"`).join(", ")})
-   VALUES (${placeholders})`
-);
+if (data.length < 2) {
+    const placeholders = headers.map(() => "?").join(", ");
+    const insert = db.prepare(
+    `INSERT INTO "${tableName}" (${headers.map((h) => `"${h}"`).join(", ")})
+    VALUES (${placeholders})`
+    );
 
-const insertMany = db.transaction((rows) => {
-  for (const row of rows) insert.run(row);
-});
-insertMany(rows);
-
+    const insertMany = db.transaction((rows) => {
+    for (const row of rows) insert.run(row);
+    });
+    insertMany(rows);
+};
 console.log(
   `Imported ${rows.length} rows into table "${tableName}" in ${dbFile}`
 );
