@@ -5,7 +5,8 @@ const path = require('path');
 
 const client = new Discord.Client({
    intents: [
-     Discord.GatewayIntentBits.Guilds
+     Discord.GatewayIntentBits.Guilds,
+     Discord.GatewayIntentBits.GuildMembers
    ]
 });
 
