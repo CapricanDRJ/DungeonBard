@@ -1,0 +1,41 @@
+CREATE TABLE IF NOT EXISTS "users" (
+  "userId" TEXT NOT NULL,
+  "guildId" TEXT NOT NULL,
+  "displayName" TEXT NOT NULL,
+  "partyName" TEXT DEFAULT NULL,
+  "avatarFile" TEXT DEFAULT NULL,
+  "avatar" BLOB DEFAULT NULL,
+
+  "domainId" INTEGER NOT NULL DEFAULT 0,
+
+  "artisanExp" INTEGER NOT NULL DEFAULT 0,
+  "soldierExp" INTEGER NOT NULL DEFAULT 0,
+  "healerExp" INTEGER NOT NULL DEFAULT 0,
+
+  "overallExp" INTEGER GENERATED ALWAYS AS (
+    artisanExp + soldierExp + healerExp
+  ) STORED,
+
+  "skill1" INTEGER NOT NULL DEFAULT 0,
+  "skill2" INTEGER NOT NULL DEFAULT 0,
+  "skill3" INTEGER NOT NULL DEFAULT 0,
+  "skill4" INTEGER NOT NULL DEFAULT 0,
+  "skill5" INTEGER NOT NULL DEFAULT 0,
+  "skill6" INTEGER NOT NULL DEFAULT 0,
+
+  "coins" INTEGER NOT NULL DEFAULT 0,
+
+  "armourId" INTEGER NOT NULL DEFAULT 0,
+  "weaponId" INTEGER NOT NULL DEFAULT 0,
+
+  "artisanBonus" INTEGER NOT NULL DEFAULT 0,
+  "artisanBonusEnd" INTEGER NOT NULL DEFAULT 0,
+  "soldierBonus" INTEGER NOT NULL DEFAULT 0,
+  "soldierBonusEnd" INTEGER NOT NULL DEFAULT 0,
+  "healerBonus" INTEGER NOT NULL DEFAULT 0,
+  "healerBonusEnd" INTEGER NOT NULL DEFAULT 0,
+  "weaponBonus" INTEGER NOT NULL DEFAULT 0,
+  "weaponBonusEnd" INTEGER NOT NULL DEFAULT 0,
+  "armourBonus" INTEGER NOT NULL DEFAULT 0,
+  "armourBonusEnd" INTEGER NOT NULL DEFAULT 0
+);
