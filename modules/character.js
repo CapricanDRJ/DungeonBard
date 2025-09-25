@@ -25,12 +25,7 @@ module.exports = {
         .addSubcommand(subcommand =>
             subcommand
                 .setName('enroll')
-                .setDescription('Create a character that uses your discord server name and profile picture')
-                .addStringOption(option =>
-                    option.setName('name')
-                        .setDescription('Enter your character name')
-                        .setRequired(true)
-                )
+                .setDescription('Create a character')
                 .addIntegerOption(option =>
                     option.setName('domain')
                         .setDescription('Select your starting domain level')
@@ -38,6 +33,11 @@ module.exports = {
                         .addChoices(
                             ...db.prepare('SELECT id, title FROM domains ORDER BY id').all().map(domain => ({ name: domain.title, value: domain.id }))
                         )
+                )
+                .addStringOption(option =>
+                    option.setName('name')
+                        .setDescription('Enter your character name')
+                        .setRequired(false)
                 )
         )
         .addSubcommand(subcommand =>
@@ -85,7 +85,7 @@ module.exports = {
                     const domainId = interaction.options.getInteger('domain');
 
                     // Check if user already exists
-                    const existingUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                    const existingUser = db.prepare('SELECT 1 FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(userId, guildId);
                     
                     if (existingUser) {
                         interaction.reply({
@@ -97,7 +97,7 @@ module.exports = {
 
                     setTimeout(async () => {
                         // Get avatar data
-                        const avatarURL = interaction.user.displayAvatarURL({ size: 256 });
+                        const avatarURL = interaction.user.displayAvatarURL({ size: 128 , extension: 'png'});
                         const avatarFileName = avatarURL.split('/').pop().split('?')[0];
                         let avatarBlob = null;
 
