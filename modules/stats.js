@@ -20,8 +20,8 @@ const domains = (() => {
 })();
 
 // Image layout constants
-const IMAGE_WIDTH = 800;
-const IMAGE_HEIGHT = 1200;
+const IMAGE_WIDTH = 400;
+const IMAGE_HEIGHT = 600;
 const AVATAR_SIZE = 120;
 const FONT_SIZE = 16;
 const LINE_HEIGHT = 24;
