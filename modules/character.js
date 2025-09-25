@@ -116,7 +116,8 @@ module.exports = {
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${displayName}" successfully enrolled as ${domains[domainId].name}!`
+                        content: `Character "${displayName}" successfully enrolled as ${domains[domainId].name}!`,
+                        flags: MessageFlags.Ephemeral
                     });
                     break;
 
@@ -142,7 +143,8 @@ module.exports = {
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${restartUser.displayName}" has restarted as ${domains[restartUser.domainId].name}.`
+                        content: `Character "${restartUser.displayName}" has restarted as ${domains[restartUser.domainId].name}.`,
+                        flags: MessageFlags.Ephemeral
                     });
                     break;
 
@@ -178,7 +180,8 @@ module.exports = {
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${graduateUser.displayName}" has graduated to ${domains[newDomainId].name}!`
+                        content: `Character "${graduateUser.displayName}" has graduated to ${domains[newDomainId].name}!`,
+                        flags: MessageFlags.Ephemeral
                     });
                     break;
 
@@ -198,7 +201,8 @@ module.exports = {
                     }, 0);
 
                     interaction.reply({
-                        content: `Character "${userToDelete.displayName}" has been deleted.`
+                        content: `Character "${userToDelete.displayName}" has been deleted.`,
+                        flags: MessageFlags.Ephemeral
                     });
                     break;
 
