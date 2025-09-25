@@ -20,8 +20,8 @@ const domains = (() => {
 })();
 
 // Image layout constants
-const IMAGE_WIDTH = 400;
-const IMAGE_HEIGHT = 600;
+const IMAGE_WIDTH = 800;
+const IMAGE_HEIGHT = 1200;
 const AVATAR_SIZE = 120;
 const FONT_SIZE = 16;
 const LINE_HEIGHT = 24;
@@ -139,21 +139,29 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     svgContent += `<text x="${MARGIN}" y="${currentY}" class="section">Attributes</text>`;
     currentY += 25;
 
-    // Calculate attribute levels from skills 1-6
-    const skill1Level = calculateAttributeLevel(userData.skill1);
-    const skill2Level = calculateAttributeLevel(userData.skill2);
-    const skill3Level = calculateAttributeLevel(userData.skill3);
-    const skill4Level = calculateAttributeLevel(userData.skill4);
-    const skill5Level = calculateAttributeLevel(userData.skill5);
-    const skill6Level = calculateAttributeLevel(userData.skill6);
+    // Calculate attribute levels from skills 1-6 using proper database lookups
+    const skill1Level = calculateAttributeLevel(userData.skill1, 1);
+    const skill2Level = calculateAttributeLevel(userData.skill2, 2);
+    const skill3Level = calculateAttributeLevel(userData.skill3, 3);
+    const skill4Level = calculateAttributeLevel(userData.skill4, 4);
+    const skill5Level = calculateAttributeLevel(userData.skill5, 5);
+    const skill6Level = calculateAttributeLevel(userData.skill6, 6);
+
+    // Get proper attribute names based on domain
+    const skill1Name = getAttributeName(1, userData.domainId);
+    const skill2Name = getAttributeName(2, userData.domainId);
+    const skill3Name = getAttributeName(3, userData.domainId);
+    const skill4Name = getAttributeName(4, userData.domainId);
+    const skill5Name = getAttributeName(5, userData.domainId);
+    const skill6Name = getAttributeName(6, userData.domainId);
 
     svgContent += `
-      <text x="${MARGIN}" y="${currentY}" class="text">Skill 1: Level ${skill1Level} (${userData.skill1} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT}" class="text">Skill 2: Level ${skill2Level} (${userData.skill2} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 2}" class="text">Skill 3: Level ${skill3Level} (${userData.skill3} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 3}" class="text">Skill 4: Level ${skill4Level} (${userData.skill4} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 4}" class="text">Skill 5: Level ${skill5Level} (${userData.skill5} XP)</text>
-      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 5}" class="text">Skill 6: Level ${skill6Level} (${userData.skill6} XP)</text>`;
+      <text x="${MARGIN}" y="${currentY}" class="text">${skill1Name}: Level ${skill1Level} (${userData.skill1} XP)</text>
+      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT}" class="text">${skill2Name}: Level ${skill2Level} (${userData.skill2} XP)</text>
+      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 2}" class="text">${skill3Name}: Level ${skill3Level} (${userData.skill3} XP)</text>
+      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 3}" class="text">${skill4Name}: Level ${skill4Level} (${userData.skill4} XP)</text>
+      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 4}" class="text">${skill5Name}: Level ${skill5Level} (${userData.skill5} XP)</text>
+      <text x="${MARGIN}" y="${currentY + LINE_HEIGHT * 5}" class="text">${skill6Name}: Level ${skill6Level} (${userData.skill6} XP)</text>`;
     
     currentY += LINE_HEIGHT * 6 + 20;
 
@@ -246,7 +254,7 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
   }
 }
 
-// Helper functions - you'll need to implement these based on your game logic
+// Helper functions - implement these based on your game logic
 function calculateRank(experience, profession) {
   // Implement rank calculation based on your experience tables
   // This is a placeholder - replace with your actual logic
@@ -257,10 +265,26 @@ function calculateRank(experience, profession) {
   return 'Master';
 }
 
-function calculateAttributeLevel(experience) {
-  // Implement attribute level calculation
-  // This is a placeholder - replace with your actual logic
-  return Math.floor(Math.sqrt(experience / 10)) + 1;
+function calculateAttributeLevel(experience, skillId) {
+  // Query the attributeLevels table to get the correct level
+  const levelData = db.prepare(`
+    SELECT level FROM attributeLevels 
+    WHERE skillId = ? AND exp <= ? 
+    ORDER BY exp DESC 
+    LIMIT 1
+  `).get(skillId, experience);
+  
+  return levelData ? levelData.level : 1;
+}
+
+function getAttributeName(skillId, domainId) {
+  // Query the attributes table to get skill name and abbreviation
+  const attr = db.prepare(`
+    SELECT skillName, skillAbbrv FROM attributes 
+    WHERE skillId = ? AND domainId = ?
+  `).get(skillId, domainId);
+  
+  return attr ? `${attr.skillAbbrv} (${attr.skillName})` : `Skill ${skillId}`;
 }
 
 function getEquipmentName(equipmentId, type) {

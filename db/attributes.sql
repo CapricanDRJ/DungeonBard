@@ -43,4 +43,3 @@ INSERT INTO attributes VALUES(3,6,'Sage','ENDURANCE','END','Stamina for long res
 INSERT INTO attributes VALUES(4,6,'Sage','ADMINISTRATION','ADM','Mastery of bureaucratic tasks, committee duties, and institutional navigation.');
 INSERT INTO attributes VALUES(5,6,'Sage','STAMINA','STA','Resilience against burnout, ability to balance research, teaching, and service.');
 INSERT INTO attributes VALUES(6,6,'Sage','INFLUENCE','INF','Political acumen, networking, and power within the institution.');
-COMMIT;
