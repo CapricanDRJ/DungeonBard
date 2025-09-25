@@ -17,7 +17,24 @@ const domains = (() => {
     });
     return domainsObj;
 })();
-
+const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
+    const currentFileName = currentAvatarURL.split('/').pop().split('?')[0];
+    const user = db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+    
+    if (!user || user.avatarFile !== currentFileName) {
+        try {
+            const response = await fetch(currentAvatarURL);
+            if (response.ok) {
+                const arrayBuffer = await response.arrayBuffer();
+                const avatarBlob = Buffer.from(arrayBuffer);
+                db.prepare('UPDATE users SET avatarFile = ?, avatar = ? WHERE userId = ? AND guildId = ?')
+                  .run(currentFileName, avatarBlob, userId, guildId);
+            }
+        } catch (error) {
+            console.error('Error updating avatar:', error, `userId:${userId}`);
+        }
+    }
+};
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('character')
@@ -105,7 +122,6 @@ module.exports = {
                         .replace(/\.[a-zA-Z]{3,4}$/, '')
                         + '.png?size=64';
 
-                        console.log(avatarURL);
                         const avatarFileName = avatarURL.split('/').pop().split('?')[0];
                         let avatarBlob = null;
 
