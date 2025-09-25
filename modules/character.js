@@ -81,12 +81,15 @@ module.exports = {
         try {
             switch (subcommand) {
                 case 'enroll':
-                    const displayName = interaction.options.getString('name');
+                    let displayName = interaction.options.getString('name');
                     const domainId = interaction.options.getInteger('domain');
 
                     // Check if user already exists
                     const existingUser = db.prepare('SELECT 1 FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(userId, guildId);
-                    
+                    if(displayName === null || displayName.trim() === '') {
+                        displayName = interaction.member?.nickname || 
+                        interaction.user.displayName || interaction.user.globalName || interaction.user.username;
+                    }
                     if (existingUser) {
                         interaction.reply({
                             content: 'You already have a character enrolled. Use `/character delete` first if you want to create a new one.',
