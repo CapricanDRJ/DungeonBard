@@ -91,7 +91,7 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
 
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
-    let col1Y = MARGIN + AVATAR_SIZE + 30;
+    let col1Y = MARGIN + AVATAR_SIZE + 10;
 
     // Column 2: Name and everything else (right side)  
     const col2X = MARGIN * 2 + COLUMN_WIDTH;
@@ -156,20 +156,20 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     col1Y += 18;
     const attrDomain = attributes[userData.domainId];
     // Calculate attribute levels from skills 1-6 using proper database lookups
-    const skill1Level = attributes[userData.domainId][1].levels.findLastIndex(level => userData.skill1 >= level) + 1;
-    const skill2Level = attributes[userData.domainId][2].levels.findLastIndex(level => userData.skill2 >= level) + 1;
-    const skill3Level = attributes[userData.domainId][3].levels.findLastIndex(level => userData.skill3 >= level) + 1;
-    const skill4Level = attributes[userData.domainId][4].levels.findLastIndex(level => userData.skill4 >= level) + 1;
-    const skill5Level = attributes[userData.domainId][5].levels.findLastIndex(level => userData.skill5 >= level) + 1;
-    const skill6Level = attributes[userData.domainId][6].levels.findLastIndex(level => userData.skill6 >= level) + 1;
+    const skill1Level = attrDomain[1].levels.findLastIndex(level => userData.skill1 >= level) + 1;
+    const skill2Level = attrDomain[2].levels.findLastIndex(level => userData.skill2 >= level) + 1;
+    const skill3Level = attrDomain[3].levels.findLastIndex(level => userData.skill3 >= level) + 1;
+    const skill4Level = attrDomain[4].levels.findLastIndex(level => userData.skill4 >= level) + 1;
+    const skill5Level = attrDomain[5].levels.findLastIndex(level => userData.skill5 >= level) + 1;
+    const skill6Level = attrDomain[6].levels.findLastIndex(level => userData.skill6 >= level) + 1;
 
     // Get proper attribute names based on domain
-    const skill1Name = attributes[userData.domainId][1]?.skillAbbrv || 'Skill 1';
-    const skill2Name = attributes[userData.domainId][2]?.skillAbbrv || 'Skill 2';
-    const skill3Name = attributes[userData.domainId][3]?.skillAbbrv || 'Skill 3';
-    const skill4Name = attributes[userData.domainId][4]?.skillAbbrv || 'Skill 4';
-    const skill5Name = attributes[userData.domainId][5]?.skillAbbrv || 'Skill 5';
-    const skill6Name = attributes[userData.domainId][6]?.skillAbbrv || 'Skill 6';
+    const skill1Name = attrDomain[1]?.skillAbbrv || 'Skill 1';
+    const skill2Name = attrDomain[2]?.skillAbbrv || 'Skill 2';
+    const skill3Name = attrDomain[3]?.skillAbbrv || 'Skill 3';
+    const skill4Name = attrDomain[4]?.skillAbbrv || 'Skill 4';
+    const skill5Name = attrDomain[5]?.skillAbbrv || 'Skill 5';
+    const skill6Name = attrDomain[6]?.skillAbbrv || 'Skill 6';
 
     svgContent += `
       <text x="${col1X}" y="${col1Y}" class="text">${skill1Name}: Lv${skill1Level}</text>
