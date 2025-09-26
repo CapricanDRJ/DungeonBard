@@ -17,7 +17,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
   try {
     let embed;
     let components = [];
-    const domain = getDomain.get(interaction.user.id);
+    const domain = getDomain.pluck().get(interaction.user.id);
 
     if (stage === 1) {
       // Stage 1: Show quest areas
