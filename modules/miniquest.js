@@ -206,9 +206,6 @@ module.exports = {
           
         case "miniquestcomplete":
           // Complete quest - check timing
-          await interaction.update({//remove buttons, no extra pressing
-              components: []
-          });
           const completeTime = parseInt(parts[2]);
           const currentTime = Math.floor(Date.now() / 1000);
           const embeds = [];
@@ -222,6 +219,9 @@ module.exports = {
               flags: MessageFlags.Ephemeral
             });
           } else {
+            await interaction.update({//remove buttons, no extra pressing
+                components: []
+            });
             // Quest completed
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
