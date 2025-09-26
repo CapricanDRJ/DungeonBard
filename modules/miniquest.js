@@ -318,7 +318,6 @@ module.exports = {
                               name: "Battle",
                               iconURL: 'https://cdn.discordapp.com/emojis/1421265514474504353.webp'
                             })
-                            .setTitle("⚔️ Battle")
                             .setDescription(battleLog)
                             .setColor(0x8b0000)
                             .addFields(battleField)
