@@ -237,7 +237,7 @@ module.exports = {
                 const user = db.prepare('SELECT * FROM users WHERE userId = ?').get(interaction.user.id);
                 if(Math.random() < quest.perilChance) {
                     fields.push({ name: quest.entity, value: quest.entityEffect});
-                    const difficulty = [0.1,0.75,0.9, 1.05][parseInt(quest.dificulty)];
+                    const difficulty = [0.1,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const monsterAttack = user.skill3 * difficulty;
                     const monsterDefense = user.skill4 * difficulty;
                     const userAttack = user.skill3;
