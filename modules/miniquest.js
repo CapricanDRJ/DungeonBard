@@ -304,9 +304,16 @@ module.exports = {
                         //user won
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
-                        battleField.push({ name: "Monster Coins Earned", value: `+${quest.coins} coins`, inline: true });
                         if(Math.random() < quest.relicChance) {
                             battleField.push({ name: quest.scholarship, value: quest.relicEffect });
+                            relicEmbed = new EmbedBuilder()
+                              .setTitle(quest.scholarship)
+                              .setDescription(quest.relicEffect)
+                              .setColor(colors[quest.domainId])
+                              .setAuthor({
+                                name: "Relic Found!",
+                                iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
+                              });
                         }
 
                     };
