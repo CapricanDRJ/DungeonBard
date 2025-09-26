@@ -1,0 +1,90 @@
+domainId,PerilId,domain,entity,effect,chance,difficulty
+1,1,Initiate,The Deadline Demon,A project due date approaches too quickly!,0.5,1
+1,2,Initiate,The Sleep-Stealing Specter,A restless mind delays sleep!,0.4,2
+1,3,Initiate,The Wi-Fi Banshee,The internet dies before a submission!,0.5,1
+1,4,Initiate,The Multiple-Choice Menace,Two answers seem correctthou must guess blindly!,0.35,2
+2,1,Collegiate,The Lecture Lurker,A professor cold-calls thee when unprepared!,0.5,1
+2,2,Collegiate,The Group Project Ghoul,A teammate vanishes before the deadline!,0.4,2
+2,3,Collegiate,The Multiple-Choice Menace,Two answers seem correctthou dost guess blindly!,0.5,1
+2,4,Collegiate,The Wi-Fi Banshee,The internet dies moments before submission!,0.35,2
+3,1,Pedagogue,The Lesson Lurker,A pupil asks a question on a topic thou hast not planned for.,0.5,1
+3,2,Pedagogue,The Curriculum Ghoul,The textbook thou art given is too complex or too short for thy lesson.,0.4,2
+3,3,Pedagogue,The Apathy Menace,The pupils fall asleep while thou art teaching!,0.5,1
+3,4,Pedagogue,The Interactive Whiteboard Banshee,Thy prepared presentation glitches moments before the lesson begins!,0.35,2
+4,1,Masters,Reviewer #2’s Wrath,Even the best research is not acceptable!,0.5,1
+4,2,Masters,The Citation Phantom,A critical source disappears forever!,0.4,2
+4,3,Masters,The Midnight Panic,A brilliant idea arrivesat 3 AM!,0.5,1
+4,4,Masters,The Funding Wraith,"The proposal is praised, yet denied!",0.35,2
+5,1,Doctoral,Reviewer #2’s Wrath,"No matter how perfect, it is not enough!",0.5,1
+5,2,Doctoral,The Deadline Wraith,The committee pushes back thy defense date!,0.4,2
+5,3,Doctoral,The Imposter Syndrome Phantom,Doubt creeps in: art thou truly worthy of the Ph.D.?,0.5,1
+5,4,Doctoral,The Eternal Wait,Thou hast submitted a grant… and now thou shalt wait.,0.35,2
+6,1,Sage,Reviewer #2’s Curse,"No matter how polished thy work, it shall never be enough!",0.5,1
+6,2,Sage,The Accreditation Hydra,Institutional reviews multiply!,0.4,2
+6,3,Sage,The Scheduling Sphinx,All meetings conflict with thy research hours!,0.5,1
+6,4,Sage,The Funding Wraith,"Thy proposal is praised, yet denied funding!",0.35,2
+-2,1,random peril,The Impending Deadline Fiend,"Lurks ever closer, whispering doom, yet never granting thee focus.",1,1
+-2,2,random peril,The Footnote Gremlin,"Scrambles citations at random, forcing thee to spend precious time in correction.",0.5,1
+-2,3,random peril,The Coffee Chimera ☕,"Promises energy but delivers anxiety, jitters, and impending doom!",0.5,1
+-2,4,random peril,The Invisible Tangle Sprite 🌀,"Moves objects just slightly out of reach, making cleanup thrice as long!",0.5,1
+-2,5,random peril,The Scheduling Sphinx,Ensures all meetings are scheduled at the worst possible time.,0.5,1
+-2,6,random peril,The Disappearing Student,"Signs up for thy class, submits no work, and ghosts entirely.",0.5,1
+-2,7,random peril,The Goblin of Perpetual Fatigue 💤,Whispers sweet nothings of “Thou art too weary to engage in self-care today…”,0.5,1
+-2,8,random peril,The Sleepless Wraith,"Haunts thee with restlessness, ensuring no sleep before a deadline.",0.5,1
+-2,9,random peril,The Forgotten Meal Specter,Ensures thy stomach growls but thy hands remain too busy to eat.,0.5,1
+-2,10,random peril,The Pigeon of Peril,"Strikes unsuspecting scholars from above, bringing momentary humiliation.",0.5,1
+-2,11,random peril,The Infinite Scroll Wraith 📱,Ensnares the scholar in an endless loop of doomscrolling instead of self-care!,0.5,1
+-2,12,random peril,The Horde of Emails,"A single email begets twenty more, none with clear purpose.",0.5,1
+-2,13,random peril,The Infinite Revisions Wraith,Ensures thy draft is never ‘ready’ for submission.,0.5,1
+-2,14,random peril,The Decision Paralysis Gargoyle 🤯,"Leaves thee staring at thy tea selection, unable to choose one before thy water grows cold.",0.5,1
+-2,15,random peril,The Lecture Lich,"Drains the energy from a room, ensuring no one participates.",0.3,2
+-2,16,random peril,The Treasurer’s Frown,Delays funding approvals with cryptic denials.,0.3,2
+-2,17,random peril,The Midnight Muse,"Blesses thee with a genius ideaat 3 AM, at the cost of rest.",0.3,2
+-2,18,random peril,The Citation Phantom,"Erases a critical reference from thy notes, causing a frantic search.",0.3,2
+-2,19,random peril,The Vanishing Towel Phantom 🏴,The towel that was there is now no longer there.,0.3,2
+-2,20,random peril,The Paperwork Mimic,"Transforms completed forms into outdated versions, requiring resubmission.",0.35,2
+-2,21,random peril,The Shampoo Bottle Djinn 🚿,Ensures one necessary hygiene item is missing only after thou art already wet!,0.35,2
+-2,22,random peril,The Blanket of Eternal Rest 🛌,Thou didst lie down… and now thou shalt not rise for many hours!,0.4,2
+-2,23,random peril,The Endless Thread Curse,Causes a single email to generate infinite follow-ups.,0.4,2
+-2,24,random peril,The Endless Thread Curse,Ensures no email chain ever truly ends.,0.4,2
+-2,25,random peril,The Jargon Djinn,"Transforms thy words into an unreadable mess, requiring multiple revisions.",0.4,2
+-2,25,random peril,The Sensory Overwhelm Wraith 🎭,"Ensures a loud noise, bright light, or strong smell derails thee from relaxation.",0.4,2
+-2,27,random peril,The Unread Reviewer,"Dismisses thy work outright, with feedback that proves they never read it.",0.2,3
+-2,28,random peril,The Unmovable Dean,"Rejects all requests for change, citing ‘tradition’ as law.",0.2,3
+-2,29,random peril,The Grant Demon,"Inserts vague and contradictory feedback, leading to confusion and despair.",0.25,3
+-2,30,random peril,The HR Hydra,"Requires an endless stream of forms, approvals, and training modules.",0.25,3
+-2,31,random peril,The Plagiarism Poltergeist,"Haunts thee with false accusations, demanding thou prove thy innocence!",0.25,3
+-2,32,random peril,The Elder Examiner’s Wrath,A grand and impossible question is delivered with a solemn gaze.,0.4,3
+-1,1,Miniquest,The Wandering Mind Phantom,"Halfway through, thou dost forget what thou read!",0.4,1
+-1,2,Miniquest,The Ink Goblin,Thine highlighter is missing or has dried up!,0.35,1
+-1,3,Miniquest,The Jargon Djinn,Thou dost struggle to phrase it simply!,0.3,1
+-1,4,Miniquest,The Notification Gremlin,"An alert, sound, or thought derails thee!",0.5,1
+-1,5,Miniquest,The Perfectionist’s Shadow,"Thou dost hesitate, doubting the worth of the first word!",0.35,1
+-1,6,Miniquest,The Sentence Loop Curse,Thou dost keep rewriting the same phrase!,0.4,1
+-1,7,Miniquest,The Footnote Gremlin,A missing citation throws thee into chaos!,0.3,1
+-1,8,Miniquest,The Document Demon,A required field makes no sense!,0.4,1
+-1,9,Miniquest,The Scheduling Sphinx,The best time is already taken!,0.35,1
+-1,30,Miniquest,The Tangent Djinn,Thou dost veer wildly off-topic!,0.35,1
+-1,31,Miniquest,The Formatting Fiend,A slide layout refuses to align properly!,0.3,1
+-1,32,Miniquest,The Deafening Silence of Disinterest,No student answers immediately!,0.25,1
+-1,33,Miniquest,The Looping Sentence Curse,Thou dost rewrite the same idea five times!,0.35,1
+-1,34,Miniquest,The Footnote Gremlin,A source is missing and must be found!,0.4,1
+-1,35,Miniquest,The Data Goblin,"Numbers seem incorrect, requiring double-checking!",0.3,1
+-1,36,Miniquest,The Vanishing Text Demon,A section disappears mysteriously!,0.25,1
+-1,37,Miniquest,The Slide of Doom,A crucial figure refuses to align correctly!,0.4,1
+-1,38,Miniquest,The Jargon Djinn,Thou dost struggle to phrase things simply!,0.35,1
+-1,39,Miniquest,The Unanswerable Question,A practice query leaves thee speechless!,0.3,1
+-1,40,Miniquest,The Wardrobe Malfunction Gremlin,A button or zipper fails!,0.25,1
+-1,41,Miniquest,The Endless Wordsmithing Curse,Thou dost change it thrice and remain unsatisfied!,0.4,1
+-1,42,Miniquest,The Condensation Struggle,The abstract refuses to fit the word limit!,0.35,1
+-1,43,Miniquest,The Reference Style Wraith,The journal requires a citation format overhaul!,0.3,1
+-1,44,Miniquest,The Server Error Demon,The submission system crashes just after pressing submit!,0.25,1
+-1,45,Miniquest,The Illegible Ink Gremlin,Thou canst not decipher the student’s handwriting!,0.4,1
+-1,46,Miniquest,The Over-Explanation Curse,Thy feedback grows longer than the student’s work!,0.35,1
+-1,47,Miniquest,The Score Sheet Specter,A grading rubric is missing or inconsistent!,0.3,1
+-1,48,Miniquest,The Endless Thread Curse,A single email spawns five follow-ups!,0.4,1
+-1,49,Miniquest,The Cryptic Inquiry Gremlin,The student’s question makes no sense!,0.35,1
+-1,50,Miniquest,The Student No-Show Curse,"None attend thy office hours, and time is lost!",0.3,1
+-1,51,Miniquest,The Disappearing Student,A student on the roster has never been seen!,0.4,1
+-1,52,Miniquest,"The Paperwork PhantomThe form format is incorrect, requiring resubmission!",,0.35,1
+-1,53,Miniquest,The Scheduling SphinxThe ideal time slot is already taken!,,0.3,1
