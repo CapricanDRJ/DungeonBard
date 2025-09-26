@@ -314,6 +314,10 @@ module.exports = {
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
                           embeds.push(new EmbedBuilder()
+                            .setAuthor({
+                              name: "Battle",
+                              iconURL: 'https://cdn.discordapp.com/emojis/1421265514474504353.webp'
+                            })
                             .setTitle("⚔️ Battle")
                             .setDescription(battleLog)
                             .setColor(0x8b0000)
