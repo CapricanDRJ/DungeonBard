@@ -7,6 +7,7 @@ const {
   EmbedBuilder,
   MessageFlagsBitField
 } = require('discord.js');
+const wait = require('node:timers/promises').setTimeout;
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const getDomain = db.prepare("SELECT domainId FROM users WHERE userId = ?");
@@ -303,8 +304,11 @@ module.exports = {
                 .setColor(colors[quest.domainId])
                 .addFields(fields);
             await interaction.update({
-              embeds: [completedEmbed],
               components: []
+            });
+            await wait(1000);
+            await interaction.reply({
+              embeds: [completedEmbed]
             });
           }
           break;
