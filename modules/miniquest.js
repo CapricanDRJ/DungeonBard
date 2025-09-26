@@ -24,11 +24,9 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setTitle("Miniquest Explorer")
         .setDescription("Choose a quest area to explore:")
         .setColor(colors[domain]);
-console.log(1);
       const questAreas = db
         .prepare("SELECT DISTINCT questArea,id FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ? ORDER BY questArea ASC")
         .all(domain);
-console.log(2);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("miniquestAreaSelect")
@@ -42,7 +40,7 @@ console.log(2);
 
         components.push(new ActionRowBuilder().addComponents(dropdown));
       }
-
+console.log(3);
     } else if (stage === 2) {
       // Stage 2: Show quests in area
       const areaData = db.prepare("SELECT DISTINCT questArea, areaDesc FROM miniquest WHERE questArea = ? LIMIT 1").get(selectedArea);
