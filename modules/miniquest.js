@@ -234,7 +234,7 @@ module.exports = {
               .setColor(colors[quest.domainId])
               .addFields(
                 { name: quest.name, value: quest.description, inline: true },
-                { name: "Quest Coins Earned", value: `🪙${quest.coins}`, inline: true }
+                { name: "Quest Coins Earned", value: `🪙 X ${quest.coins}`, inline: true }
               )
               .setAuthor({
                 name: user.displayName,
@@ -313,7 +313,7 @@ module.exports = {
                         //user won
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
-                        battleField.push({ name: "Monster Coins Earned", value: `🪙${quest.coins}`, inline: true });
+                        battleField.push({ name: "Monster Coins Earned", value: `🪙 X ${quest.coins}`, inline: true });
                           embeds.push(new EmbedBuilder()
                             .setAuthor({
                               name: "Battle",
