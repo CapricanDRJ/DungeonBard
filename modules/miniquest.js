@@ -224,7 +224,7 @@ module.exports = {
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.profession) - 1];
             fields.push({ name: quest.name, value: quest.description, inline: true });
             db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ?').run(quest.coins, interaction.user.id);
-            fields.push({ name: "Coins Earned", value: `+${quest.coins} coins`, inline: true });
+            fields.push({ name: "Coins Earned", value: `+ ${quest.coins} coins`, inline: true });
             if(quest.perilChance === null) {
                 let healerQuest;
                 const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
