@@ -44,7 +44,6 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     } else if (stage === 2) {
       // Stage 2: Show quests in area
       const areaData = db.prepare("SELECT DISTINCT questArea, areaDesc FROM miniquest WHERE questArea = ? LIMIT 1").get(selectedArea);
-      console.log(areaData);
       embed = new EmbedBuilder()
         .setTitle(selectedArea)
         .setDescription(areaData?.areaDesc || "Select a miniquest:")
@@ -84,7 +83,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         new ButtonBuilder()
           .setCustomId(`miniquestback`)
           .setLabel("Back")
-          .setStyle(ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Danger)
       );
       components.push(buttonRow);
 
@@ -119,7 +118,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         new ButtonBuilder()
           .setCustomId(`miniquestback-${selectedArea}`)
           .setLabel("Back")
-          .setStyle(ButtonStyle.Secondary),
+          .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId(`miniquestcomplete-${completeTime}`)
           .setLabel("Complete")
