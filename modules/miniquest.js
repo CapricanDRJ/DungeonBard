@@ -148,7 +148,6 @@ module.exports = {
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "miniquest") {
-      await checkInit(interaction);
       menu(interaction, false);
     }
   },
