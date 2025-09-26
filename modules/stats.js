@@ -4,6 +4,18 @@ const db = new sqlite3('db/dungeonbard.db');
 const sharp = require('sharp');
 const MessageFlags = MessageFlagsBitField.Flags;
 
+const professions = {
+    1: [0, 50, 500, 1000, 2000, 3500, 5000],
+    2: [0, 250, 1250, 2500, 5000, 7500, 10000],
+    3: [0, 375, 1875, 5000, 8750, 13750, 17500],
+    4: [0, 500, 2500, 7500, 12500, 20000, 25000],
+    5: [0, 1000, 5000, 15000, 25000, 40000, 50000],
+    6: [0, 2000, 10000, 30000, 50000, 80000, 100000],
+    healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
+    soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
+    artisan: ['Novice', 'Apprentice', 'Artisan', 'Mason', 'Grandmaster', 'Guildmaster']
+}
+
 // Load domains from database
 const domains = (() => {
     const domainData = db.prepare('SELECT * FROM domains ORDER BY id').all();
@@ -121,9 +133,9 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Professions</text>`;
     col2Y += 18;
 
-    const artisanRank = calculateRank(userData.artisanExp, 'artisan');
-    const soldierRank = calculateRank(userData.soldierExp, 'soldier'); 
-    const healerRank = calculateRank(userData.healerExp, 'healer');
+    const artisanRank = calculateRank(userData.domainId, userData.artisanExp, 'artisan');
+    const soldierRank = calculateRank(userData.domainId, userData.soldierExp, 'soldier'); 
+    const healerRank = calculateRank(userData.domainId, userData.healerExp, 'healer');
 
     svgContent += `
       <text x="${col2X}" y="${col2Y}" class="text">Artisan: ${artisanRank}</text>
@@ -242,14 +254,9 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
 }
 
 // Helper functions - implement these based on your game logic
-function calculateRank(experience, profession) {
-  // Implement rank calculation based on your experience tables
-  // This is a placeholder - replace with your actual logic
-  if (experience < 100) return 'Novice';
-  if (experience < 500) return 'Apprentice';
-  if (experience < 1000) return 'Journeyman';
-  if (experience < 2000) return 'Expert';
-  return 'Master';
+function calculateRank(domain, experience, profession) {
+    const level = professions[domain].findLastIndex(level => experience >= level) || 0;
+return professions[profession][level];
 }
 
 function getEquipmentName(equipmentId, type) {
