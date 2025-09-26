@@ -260,7 +260,7 @@ module.exports = {
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
                     embeds.push(new EmbedBuilder()
                       .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`)
-                      .setColor(colors[quest.domainId])
+                      .setColor(0xa6ce2a)
                       .setAuthor({
                         name: `The ${quest.entity}`,
                         iconURL: 'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
@@ -316,14 +316,14 @@ module.exports = {
                           embeds.push(new EmbedBuilder()
                             .setTitle("⚔️ Battle")
                             .setDescription(battleLog)
-                            .setColor(colors[quest.domainId])
+                            .setColor(0x8b0000)
                             .addFields(battleField)
                         );
                         if(Math.random() < quest.relicChance) {
                             embeds.push(new EmbedBuilder()
                               .setTitle(quest.scholarship)
                               .setDescription(quest.relicEffect)
-                              .setColor(colors[quest.domainId])
+                              .setColor(0x996515)
                               .setAuthor({
                                 name: "Relic Found!",
                                 iconURL: 'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
