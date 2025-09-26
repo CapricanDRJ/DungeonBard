@@ -112,6 +112,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         if (quest.relicChance) fields.push({ name: "Relic Chance", value: `${(quest.relicChance * 100).toFixed(1)}%`, inline: true });
         if (quest.scholarship) fields.push({ name: "Scholarship", value: quest.scholarship.toString(), inline: true });
         if (quest.coins) fields.push({ name: "Coins", value: quest.coins.toString(), inline: true });
+        if (quest.waitTime) fields.push({ name: "Wait Time", value: `${quest.waitTime} seconds`, inline: true });
         if (quest.entity) fields.push({ name: "Entity", value: quest.entity, inline: true });
         if (quest.entityEffect) fields.push({ name: "Entity Effect", value: quest.entityEffect, inline: false });
         if (quest.relicEffect) fields.push({ name: "Relic Effect", value: quest.relicEffect, inline: false });
@@ -121,12 +122,19 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         }
       }
 
-      // Back button
+      // Back and Complete buttons
+      const currentTime = Math.floor(Date.now() / 1000);
+      const completeTime = currentTime + (quest.waitTime || 0);
+      
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`miniquestback-${selectedArea}`)
           .setLabel("Back")
-          .setStyle(ButtonStyle.Secondary)
+          .setStyle(ButtonStyle.Secondary),
+        new ButtonBuilder()
+          .setCustomId(`miniquestcomplete-${completeTime}`)
+          .setLabel("Complete")
+          .setStyle(ButtonStyle.Success)
       );
       components.push(buttonRow);
     }
@@ -170,7 +178,7 @@ module.exports = {
     .setName("miniquest")
     .setDescription("Browse and explore miniquests by area"),
 
-  allowedButtons: ["miniquestback"],
+  allowedButtons: ["miniquestback", "miniquestcomplete"],
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "miniquest") {
@@ -199,6 +207,32 @@ module.exports = {
         // Back to stage 2 with area
         const area = interaction.customId.replace("miniquestback-", "");
         menu(interaction, true, 2, area);
+      } else if (interaction.customId.startsWith("miniquestcomplete-")) {
+        // Complete quest - check timing
+        const completeTime = parseInt(interaction.customId.replace("miniquestcomplete-", ""));
+        const currentTime = Math.floor(Date.now() / 1000);
+        
+        if (currentTime < completeTime) {
+          // Not ready yet
+          const remainingSeconds = completeTime - currentTime;
+          const remainingMinutes = Math.ceil(remainingSeconds / 60);
+          
+          await interaction.reply({
+            content: `You need to wait ${remainingMinutes} more minute${remainingMinutes !== 1 ? 's' : ''} before completing this quest.`,
+            flags: MessageFlags.Ephemeral
+          });
+        } else {
+          // Quest completed
+          const completedEmbed = new EmbedBuilder()
+            .setTitle("Quest Completed!")
+            .setDescription("You have successfully completed the miniquest.")
+            .setColor(0x00ff00);
+            
+          await interaction.update({
+            embeds: [completedEmbed],
+            components: []
+          });
+        }
       }
     }
   },

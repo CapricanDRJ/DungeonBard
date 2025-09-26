@@ -14,7 +14,8 @@ CREATE TABLE IF NOT EXISTS "miniquest" (
     "relicChance" real, 
     "scholarship" integer, 
     "relicEffect" TEXT, 
-    "coins" integer
+    "coins" integer,
+    "waitTime" integer
 );
 INSERT INTO miniquest VALUES(NULL,0,'The Vault of Vellum','The Tome Unfurled','Read 1 paragraph of an academic text!','Artisan','1','10','0.2','The Wandering Mind Phantom','Halfway through, thou dost forget what thou read!','1','0.5','The Scholar’s Insight','Thou dost instantly make a profound connection to another field of study.','5');
 INSERT INTO miniquest VALUES(NULL,0,'The Scribe’s Tower','The Annotation of Arcane Knowledge','Highlight or annotate 3 key points!','Artisan','1','15','0.35','The Ink Goblin','Thine highlighter is missing or has dried up!','1','0.5','The Quill of Perfect Recall','Future readings bring greater understanding, as if thou hadst read the text before.','5');
