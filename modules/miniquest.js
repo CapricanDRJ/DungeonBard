@@ -307,7 +307,7 @@ module.exports = {
               components: []
             });
             await wait(1000);
-            await interaction.reply({
+            await interaction.followUp({
               embeds: [completedEmbed]
             });
           }
