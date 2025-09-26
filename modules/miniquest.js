@@ -2,6 +2,9 @@ const {
   SlashCommandBuilder,
   ActionRowBuilder,
   StringSelectMenuBuilder,
+  ButtonBuilder,
+  ButtonStyle,
+  EmbedBuilder,
   MessageFlagsBitField
 } = require('discord.js');
 const sqlite3 = require('better-sqlite3');
@@ -49,12 +52,12 @@ async function menu(interaction, isUpdate, actionType = null, actionValue = null
     // Stage 2: Show quests in selected area
     } else if (actionType === "selectArea") {
       const selectedArea = actionValue;
+      content = `**Quest Area: ${selectedArea}**\n\nSelect a miniquest:`;
 
       // Get all quests for this area, sorted alphabetically
       const quests = db
-        .prepare("SELECT id, areaDesc name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
+        .prepare("SELECT id, name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
         .all(selectedArea);
-      content = `**${selectedArea}**\n\n${quests.areaDesc} \n\nSelect a miniquest:`;
 
       if (quests.length === 0) {
         content += "\n\nNo quests found in this area.";
@@ -144,7 +147,7 @@ module.exports = {
     .setName("miniquest")
     .setDescription("Browse and explore miniquests by area"),
 
-  allowedButtons: [],
+  allowedButtons: ["next", "back"],
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "miniquest") {
@@ -157,9 +160,35 @@ module.exports = {
       module.exports.executeCommand(interaction);
     } else if (interaction.isStringSelectMenu()) {
       if (interaction.customId === "miniquestAreaSelect") {
-        menu(interaction, true, "selectArea", interaction.values[0]);
+        menu(interaction, true, "selectArea", interaction.values[0], 1);
       } else if (interaction.customId.startsWith("miniquestSelect_")) {
-        menu(interaction, true, "selectQuest", interaction.values[0]);
+        // Get current area from embed title
+        const currentArea = interaction.message.embeds[0]?.title;
+        menu(interaction, true, "selectQuest", interaction.values[0], 2, currentArea);
+      }
+    } else if (interaction.isButton()) {
+      const [action, value] = interaction.customId.split("-");
+      
+      if (action === "next") {
+        if (interaction.message.embeds[0]?.title === "Miniquest Explorer") {
+          // Moving from stage 1 to stage 2
+          menu(interaction, true, null, null, 2, value);
+        } else {
+          // Moving from stage 2 to stage 3
+          const questId = value;
+          const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(questId);
+          const currentArea = interaction.message.embeds[0]?.title;
+          menu(interaction, true, null, null, 3, currentArea, quest);
+        }
+      } else if (action === "back") {
+        const targetStage = parseInt(value);
+        if (targetStage === 1) {
+          menu(interaction, true, null, null, 1);
+        } else if (targetStage === 2) {
+          const currentArea = interaction.message.embeds[0]?.fields?.[0]?.value || 
+                            interaction.message.embeds[0]?.title;
+          menu(interaction, true, null, null, 2, currentArea);
+        }
       }
     }
   },
