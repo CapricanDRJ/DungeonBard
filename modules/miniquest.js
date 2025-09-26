@@ -5,8 +5,7 @@ const {
   MessageFlagsBitField
 } = require('discord.js');
 const sqlite3 = require('better-sqlite3');
-const db = new sqlite3('db/tech.db');
-const checkInit = require('../assets/checkUsers.js');
+const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
 
 /**
