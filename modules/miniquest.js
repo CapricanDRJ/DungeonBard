@@ -147,7 +147,7 @@ module.exports = {
     .setName("miniquest")
     .setDescription("Browse and explore miniquests by area"),
 
-  allowedButtons: ["next", "back"],
+  allowedButtons: ["miniquestnext", "miniquestback"],
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "miniquest") {
@@ -169,7 +169,7 @@ module.exports = {
     } else if (interaction.isButton()) {
       const [action, value] = interaction.customId.split("-");
       
-      if (action === "next") {
+      if (action === "miniquestnext") {
         if (interaction.message.embeds[0]?.title === "Miniquest Explorer") {
           // Moving from stage 1 to stage 2
           menu(interaction, true, null, null, 2, value);
@@ -180,7 +180,7 @@ module.exports = {
           const currentArea = interaction.message.embeds[0]?.title;
           menu(interaction, true, null, null, 3, currentArea, quest);
         }
-      } else if (action === "back") {
+      } else if (action === "miniquestback") {
         const targetStage = parseInt(value);
         if (targetStage === 1) {
           menu(interaction, true, null, null, 1);
