@@ -223,15 +223,18 @@ module.exports = {
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.profession) - 1];
             fields.push({ name: quest.name, value: quest.description, inline: true });
+            db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ?').run(quest.coins, interaction.user.id);
             if(quest.perilChance === null) {
+                console.log("peril chance null");
                 let healerQuest;
                 const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
                 if (xp > 0) {
                     healerQuest = db.prepare('SELECT * FROM healerMiniquest ORDER BY RANDOM() LIMIT 1').get();
                     fields.push({ name: healerQuest.name, value: healerQuest.description, inline: true });
                 }
-                db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ?`).run(quest.coins, xp, interaction.user.id);
+                db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(xp, interaction.user.id);
             } else {
+                console.log("peril chance not null");
                 const user = db.prepare('SELECT * FROM users WHERE userId = ?').get(interaction.user.id);
                 if(Math.random() < quest.perilChance) {
                     fields.push({ name: quest.entity, value: quest.entityEffect});
