@@ -49,12 +49,12 @@ async function menu(interaction, isUpdate, actionType = null, actionValue = null
     // Stage 2: Show quests in selected area
     } else if (actionType === "selectArea") {
       const selectedArea = actionValue;
-      content = `**Quest Area: ${selectedArea}**\n\nSelect a miniquest:`;
 
       // Get all quests for this area, sorted alphabetically
       const quests = db
-        .prepare("SELECT id, name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
+        .prepare("SELECT id, areaDesc name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
         .all(selectedArea);
+      content = `**${selectedArea}**\n\n${quests.areaDesc} \n\nSelect a miniquest:`;
 
       if (quests.length === 0) {
         content += "\n\nNo quests found in this area.";

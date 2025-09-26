@@ -69,6 +69,9 @@ INSERT INTO miniquest VALUES(NULL,3,'The Hall of Marvels','The Office Hour Invoc
 INSERT INTO miniquest VALUES(NULL,6,'The Hall of Marvels','The Roster of the Forgotten','Check or update attendance records!','Soldier','2','10','0.4','The Disappearing Student','A student on the roster has never been seen!','1','0.5','The Ledger of Perfect Recall','Thy future attendance tasks will be finished in half the time, for every name and face is now clear to thee.','5');
 INSERT INTO miniquest VALUES(NULL,6,'The Hall of Marvels','The Form of Institutional Doom','Submit one administrative form!','Soldier','2','15','0.35','The Paperwork Phantom','The form format is incorrect, requiring resubmission!','1','0.5','The Scroll of Instant Approval','All forms thou submits from this point forward shall be accepted with ease.','5');
 INSERT INTO miniquest VALUES(NULL,6,'The Hall of Marvels','The Calendar of Despair','Schedule a class, meeting, or deadline!','Soldier','2','15','0.3','The Scheduling Sphinx','The ideal time slot is already taken!','1','0.5','The Clock of Perfect Timing','Thy future scheduling tasks shall be completed in half the time, with no conflict in sight.','5');
+
+update miniquest set areaDesc = 'Where Knowledge is Sought' where questArea = 'The Vault of Vellum';
+
 CREATE TABLE IF NOT EXISTS healerMiniquest (
     id INTEGER PRIMARY KEY AUTOINCREMENT,
     name TEXT NOT NULL,
