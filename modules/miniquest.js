@@ -303,7 +303,6 @@ module.exports = {
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
                         if(Math.random() < quest.relicChance) {
-                            battleField.push({ name: quest.scholarship, value: quest.relicEffect });
                             relicEmbed = new EmbedBuilder()
                               .setTitle(quest.scholarship)
                               .setDescription(quest.relicEffect)
