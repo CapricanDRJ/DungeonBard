@@ -222,7 +222,6 @@ module.exports = {
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.profession) - 1];
-            let message = '';
             fields.push({ name: quest.name, value: quest.description, inline: true });
             if(quest.perilChance === null) {
                 let healerQuest;
