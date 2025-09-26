@@ -199,6 +199,8 @@ module.exports = {
           } else {
             // Back to stage 2 with area
             const area = parts[1];
+            console.log(area);
+            console.log(parts);
             menu(interaction, true, 2, area);
           }
           break;
@@ -224,7 +226,7 @@ module.exports = {
             console.log(quest);
             console.log(1, quest.perilChance);
             if(quest.perilChance === null) {
-                const healerQuest = db.prepare('SELECT * FROM healderMiniquest ORDER BY RANDOM() LIMIT 1').get();
+                const healerQuest = db.prepare('SELECT * FROM healerMiniquest ORDER BY RANDOM() LIMIT 1').get();
                 console.log(healerQuest);
             } else {
             };
