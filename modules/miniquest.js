@@ -221,7 +221,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
-            const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.profession) - 1];
+            const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
             fields.push({ name: quest.name, value: quest.description, inline: true });
             db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ?').run(quest.coins, interaction.user.id);
             fields.push({ name: "Coins Earned", value: `+ ${quest.coins} coins`, inline: true });
