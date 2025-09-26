@@ -1,9 +1,9 @@
 const {
   SlashCommandBuilder,
   ActionRowBuilder,
-  StringSelectMenuBuilder,
   ButtonBuilder,
   ButtonStyle,
+  StringSelectMenuBuilder,
   EmbedBuilder,
   MessageFlagsBitField
 } = require('discord.js');
@@ -11,29 +11,23 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
 
-/**
- * menu(interaction, isUpdate, actionType, actionValue)
- *
- * actionType:   null | "selectArea" | "selectQuest"
- * actionValue:
- *   - "selectArea" => actionValue is the selected questArea (string)
- *   - "selectQuest" => actionValue is the selected miniquest id (string like "miniquest123")
- */
-async function menu(interaction, isUpdate, actionType = null, actionValue = null) {
-  let content = "";
-  let components = [];
-
+async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
-    // Stage 1: Show quest areas dropdown
-    if (actionType === null) {
-      // Get unique quest areas
+    let embed;
+    let components = [];
+
+    if (stage === 1) {
+      // Stage 1: Show quest areas
+      embed = new EmbedBuilder()
+        .setTitle("Miniquest Explorer")
+        .setDescription("Choose a quest area to explore:")
+        .setColor(0x0099ff);
+
       const questAreas = db
         .prepare("SELECT DISTINCT questArea FROM miniquest WHERE questArea IS NOT NULL ORDER BY questArea ASC")
         .all();
 
-      if (questAreas.length === 0) {
-        content = "No quest areas found in the database.";
-      } else {
+      if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("miniquestAreaSelect")
           .setPlaceholder("Select a quest area")
@@ -44,25 +38,24 @@ async function menu(interaction, isUpdate, actionType = null, actionValue = null
             }))
           );
 
-        const row = new ActionRowBuilder().addComponents(dropdown);
-        components = [row];
-        content = "Choose a quest area to explore:";
+        components.push(new ActionRowBuilder().addComponents(dropdown));
       }
 
-    // Stage 2: Show quests in selected area
-    } else if (actionType === "selectArea") {
-      const selectedArea = actionValue;
-      content = `**Quest Area: ${selectedArea}**\n\nSelect a miniquest:`;
+    } else if (stage === 2) {
+      // Stage 2: Show quests in area
+      const areaData = db.prepare("SELECT DISTINCT questArea, areaDesc FROM miniquest WHERE questArea = ? LIMIT 1").get(selectedArea);
+      
+      embed = new EmbedBuilder()
+        .setTitle(selectedArea)
+        .setDescription(areaData?.areaDesc || "Select a miniquest:")
+        .setColor(0x00ff00);
 
-      // Get all quests for this area, sorted alphabetically
       const quests = db
         .prepare("SELECT id, name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
         .all(selectedArea);
 
-      if (quests.length === 0) {
-        content += "\n\nNo quests found in this area.";
-      } else {
-        // Discord has a 25 option limit per dropdown, so we might need multiple
+      if (quests.length > 0) {
+        // Create dropdowns (max 25 options each)
         const maxOptionsPerDropdown = 25;
         const numDropdowns = Math.ceil(quests.length / maxOptionsPerDropdown);
 
@@ -82,41 +75,64 @@ async function menu(interaction, isUpdate, actionType = null, actionValue = null
               }))
             );
 
-          const row = new ActionRowBuilder().addComponents(dropdown);
-          components.push(row);
+          components.push(new ActionRowBuilder().addComponents(dropdown));
         }
       }
 
-    // Stage 3: Show selected quest details
-    } else if (actionType === "selectQuest") {
-      const questId = actionValue.replace('miniquest', ''); // Remove "miniquest" prefix
-      
-      const quest = db
-        .prepare(`SELECT * FROM miniquest WHERE id = ?`)
-        .get(questId);
+      // Back button
+      const buttonRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`miniquestback`)
+          .setLabel("Back")
+          .setStyle(ButtonStyle.Secondary)
+      );
+      components.push(buttonRow);
 
+    } else if (stage === 3) {
+      // Stage 3: Show quest details
+      const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(selectedQuestId);
+      
       if (!quest) {
-        content = "Quest not found.";
+        embed = new EmbedBuilder()
+          .setTitle("Error")
+          .setDescription("Quest not found.")
+          .setColor(0xff0000);
       } else {
-        content = `**${quest.name}**\n`;
-        content += `**Quest Area:** ${quest.questArea}\n`;
-        if (quest.description) content += `**Description:** ${quest.description}\n`;
-        if (quest.profession) content += `**Profession:** ${quest.profession}\n`;
-        if (quest.professionXp) content += `**Profession XP:** ${quest.professionXp}\n`;
-        if (quest.difficulty) content += `**Difficulty:** ${quest.difficulty}\n`;
-        if (quest.perilChance) content += `**Peril Chance:** ${(quest.perilChance * 100).toFixed(1)}%\n`;
-        if (quest.relicChance) content += `**Relic Chance:** ${(quest.relicChance * 100).toFixed(1)}%\n`;
-        if (quest.scholarship) content += `**Scholarship:** ${quest.scholarship}\n`;
-        if (quest.coins) content += `**Coins:** ${quest.coins}\n`;
-        if (quest.entity) content += `**Entity:** ${quest.entity}\n`;
-        if (quest.entityEffect) content += `**Entity Effect:** ${quest.entityEffect}\n`;
-        if (quest.relicEffect) content += `**Relic Effect:** ${quest.relicEffect}\n`;
+        embed = new EmbedBuilder()
+          .setTitle(quest.name)
+          .setDescription(quest.description || "No description available")
+          .setColor(0xffd700);
+
+        const fields = [];
+        if (quest.questArea) fields.push({ name: "Quest Area", value: quest.questArea, inline: true });
+        if (quest.profession) fields.push({ name: "Profession", value: quest.profession, inline: true });
+        if (quest.professionXp) fields.push({ name: "Profession XP", value: quest.professionXp.toString(), inline: true });
+        if (quest.difficulty) fields.push({ name: "Difficulty", value: quest.difficulty.toString(), inline: true });
+        if (quest.perilChance) fields.push({ name: "Peril Chance", value: `${(quest.perilChance * 100).toFixed(1)}%`, inline: true });
+        if (quest.relicChance) fields.push({ name: "Relic Chance", value: `${(quest.relicChance * 100).toFixed(1)}%`, inline: true });
+        if (quest.scholarship) fields.push({ name: "Scholarship", value: quest.scholarship.toString(), inline: true });
+        if (quest.coins) fields.push({ name: "Coins", value: quest.coins.toString(), inline: true });
+        if (quest.entity) fields.push({ name: "Entity", value: quest.entity, inline: true });
+        if (quest.entityEffect) fields.push({ name: "Entity Effect", value: quest.entityEffect, inline: false });
+        if (quest.relicEffect) fields.push({ name: "Relic Effect", value: quest.relicEffect, inline: false });
+
+        if (fields.length > 0) {
+          embed.addFields(fields);
+        }
       }
+
+      // Back button
+      const buttonRow = new ActionRowBuilder().addComponents(
+        new ButtonBuilder()
+          .setCustomId(`miniquestback-${selectedArea}`)
+          .setLabel("Back")
+          .setStyle(ButtonStyle.Secondary)
+      );
+      components.push(buttonRow);
     }
 
-    // Send or update the interaction
     const messageData = {
-      content: content,
+      embeds: [embed],
       components: components,
       flags: MessageFlags.Ephemeral
     };
@@ -128,11 +144,18 @@ async function menu(interaction, isUpdate, actionType = null, actionValue = null
     }
 
   } catch (error) {
-    console.error(`[MINIQUEST_ERROR] ${error.message}`, { questId: actionValue, userId: interaction.user.id });
+    console.error(`[MINIQUEST_ERROR] ${error.message}`, { userId: interaction.user.id });
     
-    const errorMessage = isUpdate 
-      ? { content: "An error occurred while processing your request.", components: [] }
-      : { content: "An error occurred while processing your request.", flags: MessageFlags.Ephemeral };
+    const errorEmbed = new EmbedBuilder()
+      .setTitle("Error")
+      .setDescription("An error occurred while processing your request.")
+      .setColor(0xff0000);
+      
+    const errorMessage = {
+      embeds: [errorEmbed],
+      components: [],
+      flags: MessageFlags.Ephemeral
+    };
       
     if (isUpdate) {
       await interaction.update(errorMessage);
@@ -147,11 +170,11 @@ module.exports = {
     .setName("miniquest")
     .setDescription("Browse and explore miniquests by area"),
 
-  allowedButtons: ["miniquestnext", "miniquestback"],
+  allowedButtons: ["miniquestback"],
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "miniquest") {
-      menu(interaction, false);
+      menu(interaction, false, 1);
     }
   },
 
@@ -160,35 +183,22 @@ module.exports = {
       module.exports.executeCommand(interaction);
     } else if (interaction.isStringSelectMenu()) {
       if (interaction.customId === "miniquestAreaSelect") {
-        menu(interaction, true, "selectArea", interaction.values[0], 1);
+        // Area selected - go to stage 2
+        menu(interaction, true, 2, interaction.values[0]);
       } else if (interaction.customId.startsWith("miniquestSelect_")) {
-        // Get current area from embed title
-        const currentArea = interaction.message.embeds[0]?.title;
-        menu(interaction, true, "selectQuest", interaction.values[0], 2, currentArea);
+        // Quest selected - go to stage 3
+        const questId = parseInt(interaction.values[0].replace('miniquest', ''));
+        const quest = db.prepare("SELECT questArea FROM miniquest WHERE id = ?").get(questId);
+        menu(interaction, true, 3, quest?.questArea, questId);
       }
     } else if (interaction.isButton()) {
-      const [action, value] = interaction.customId.split("-");
-      
-      if (action === "miniquestnext") {
-        if (interaction.message.embeds[0]?.title === "Miniquest Explorer") {
-          // Moving from stage 1 to stage 2
-          menu(interaction, true, null, null, 2, value);
-        } else {
-          // Moving from stage 2 to stage 3
-          const questId = value;
-          const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(questId);
-          const currentArea = interaction.message.embeds[0]?.title;
-          menu(interaction, true, null, null, 3, currentArea, quest);
-        }
-      } else if (action === "miniquestback") {
-        const targetStage = parseInt(value);
-        if (targetStage === 1) {
-          menu(interaction, true, null, null, 1);
-        } else if (targetStage === 2) {
-          const currentArea = interaction.message.embeds[0]?.fields?.[0]?.value || 
-                            interaction.message.embeds[0]?.title;
-          menu(interaction, true, null, null, 2, currentArea);
-        }
+      if (interaction.customId === "miniquestback") {
+        // Back to stage 1
+        menu(interaction, true, 1);
+      } else if (interaction.customId.startsWith("miniquestback-")) {
+        // Back to stage 2 with area
+        const area = interaction.customId.replace("miniquestback-", "");
+        menu(interaction, true, 2, area);
       }
     }
   },
