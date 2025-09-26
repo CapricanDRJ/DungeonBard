@@ -238,12 +238,16 @@ module.exports = {
                 if(Math.random() < quest.perilChance) {
                     fields.push({ name: quest.entity, value: quest.entityEffect});
                     const difficulty = [0.1,0.75,0.9, 1.05][parseInt(quest.difficulty)];
-                    const monsterAttack = user.skill3 * difficulty;
-                    const monsterDefense = user.skill4 * difficulty;
-                    const userAttack = user.skill3;
-                    const userDefense = user.skill4;
-                    let userHitpoints = user.skill5;
-                    let monsterHitpoints = user.skill5 * difficulty;
+                    const attack = Math.min(20, Math.max(1, user.skill3));
+                    const defense = Math.min(20, Math.max(1, user.skill4));
+                    const hp = Math.min(20, Math.max(1, user.skill5));
+
+                    const monsterAttack = attack * difficulty;
+                    const monsterDefense = defense * difficulty;
+                    const userAttack = attack;
+                    const userDefense = defense;
+                    let userHitpoints = hp;
+                    let monsterHitpoints = hp * difficulty;
                     const unixTime = Math.floor(Date.now() / 1000);
                     const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
                     const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
