@@ -239,7 +239,7 @@ module.exports = {
                 if(true) { //always peril for testing
                     //peril
                     fields.push({ name: "Peril!", value: "As you embark on your quest, a sudden peril befalls you!"});
-                    fields.push({ name: quest.entity, value: quest.entityEffect});
+                    fields.push({ name:`You encounter a ${quest.entity}!\n`, value: quest.entityEffect});
                     const difficulty = [0.1,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const attack = Math.min(20, Math.max(1, user.skill3));
                     const defense = Math.min(20, Math.max(1, user.skill4));
@@ -254,8 +254,7 @@ module.exports = {
                     const unixTime = Math.floor(Date.now() / 1000);
                     const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
                     const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
-                    let battleLog = `You encounter a ${quest.entity}!\n`;
-                    battleLog += `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
+                    let battleLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
                     battleLog += `Your Attack: ${userAttack}, Defense: ${userDefense}, Hitpoints: ${userHitpoints}\n`;
                     //battle loop
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
