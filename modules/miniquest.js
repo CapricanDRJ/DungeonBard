@@ -18,18 +18,17 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     let embed;
     let components = [];
     const domain = getDomain.pluck().get(interaction.user.id);
-console.log("domain", domain);
     if (stage === 1) {
       // Stage 1: Show quest areas
       embed = new EmbedBuilder()
         .setTitle("Miniquest Explorer")
         .setDescription("Choose a quest area to explore:")
-        .setColor(0x0099ff);
-
+        .setColor(colors[domain]);
+console.log(1);
       const questAreas = db
         .prepare("SELECT DISTINCT questArea,id FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ? ORDER BY questArea ASC")
         .all(domain);
-
+console.log(2);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("miniquestAreaSelect")
