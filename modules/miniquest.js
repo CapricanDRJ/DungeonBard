@@ -264,13 +264,20 @@ module.exports = {
                             //hit
                             monsterHitpoints -= (d20 - monsterDefense) / 2;
                             battleLog += `You hit the ${quest.entity} for ${(d20 - monsterDefense) / 2} damage!\n`;
+                        } else {
+                            battleLog += `You miss the ${quest.entity}!\n`;
                         }
+                        if(monsterHitpoints <= 0) break;
                         //monster turn
                         const monsterD20 = Math.floor(Math.random() * 20) + 1 + monsterAttack - (userDefense * 2 + armorBonus);
                         if(monsterD20 >= userDefense * 2) {
                             //hit
                             userHitpoints -= (monsterAttack - (userDefense + armorBonus)) / 2;
+                            battleLog += `The ${quest.entity} hits you for ${(monsterAttack - (userDefense + armorBonus)) / 2} damage!\n`;
+                        } else {
+                            battleLog += `The ${quest.entity} misses you!\n`;
                         }
+                        if(userHitpoints <= 0) break;
                     }
                     if(userHitpoints <= 0) {
                         //user lost
