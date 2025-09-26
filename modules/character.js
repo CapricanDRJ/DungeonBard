@@ -104,11 +104,11 @@ module.exports = {
                     // Check if user already exists
                     const existingUser = db.prepare('SELECT 1 FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(userId, guildId);
                     if(displayName === null || displayName.trim() === '') {
-                        displayName = interaction.member?.nickname || 
+                        displayName = interaction.member?.nick || 
                         interaction.user.displayName || interaction.user.globalName || interaction.user.username;
                     }
                     console.log(interaction);
-                    console.log(interaction.member?.nickname, interaction.user.displayName, interaction.user.globalName, interaction.user.username);
+                    console.log(interaction.member?.nick, interaction.user.displayName, interaction.user.globalName, interaction.user.username);
                     if (existingUser) {
                         interaction.reply({
                             content: 'You already have a character enrolled. Use `/character delete` first if you want to create a new one.',
