@@ -223,6 +223,7 @@ module.exports = {
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
+            const user = db.prepare('SELECT * FROM users WHERE userId = ?').get(interaction.user.id);
             fields.push({ name: quest.name, value: quest.description, inline: true });
             db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ?').run(quest.coins, interaction.user.id);
             fields.push({ name: "Coins Earned", value: `+ ${quest.coins} coins`, inline: true });
@@ -235,7 +236,6 @@ module.exports = {
                 }
                 db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(xp, interaction.user.id);
             } else {
-                const user = db.prepare('SELECT * FROM users WHERE userId = ?').get(interaction.user.id);
                 //if(Math.random() < quest.perilChance) {
                 if(true) { //always peril for testing
                     //peril
