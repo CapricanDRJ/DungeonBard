@@ -225,7 +225,7 @@ module.exports = {
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
             const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
             fields.push({ name: quest.name, value: quest.description, inline: true });
-            db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ?').run(quest.coins, interaction.user.id);
+            db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?').run(quest.coins, interaction.user.id, interaction.guildId);
             fields.push({ name: "Coins Earned", value: `+ ${quest.coins} coins`, inline: true });
             if(quest.perilChance === null) {
                 let healerQuest;
@@ -234,7 +234,7 @@ module.exports = {
                     healerQuest = db.prepare('SELECT * FROM healerMiniquest ORDER BY RANDOM() LIMIT 1').get();
                     fields.push({ name: healerQuest.name, value: healerQuest.description, inline: true });
                 }
-                db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(xp, interaction.user.id);
+                db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(xp, interaction.user.id, interaction.guildId);
             } else {
                 //if(Math.random() < quest.perilChance) {
                 if(true) { //always peril for testing
@@ -285,11 +285,11 @@ module.exports = {
                     if(userHitpoints <= 0) {
                         //user lost
                         fields.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
-                        db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(quest.professionXp, interaction.user.id);
+                        db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
                     } else {
                         //user won
                         fields.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
-                        db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ?`).run(quest.coins, quest.professionXp, interaction.user.id);
+                        db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
                         fields.push({ name: "Monster Coins Earned", value: `+${quest.coins} coins`, inline: true });
                         if(Math.random() < quest.relicChance) {
                             fields.push({ name: quest.scholarship, value: quest.relicEffect });
