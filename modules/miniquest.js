@@ -253,8 +253,7 @@ module.exports = {
                       .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`)
                       .setColor(colors[quest.domainId])
                       .setAuthor({
-                        name: quest.entity,
-                        iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
+                        name: `The ${quest.entity}`,
                       });
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const unixTime = Math.floor(Date.now() / 1000);
@@ -312,7 +311,6 @@ module.exports = {
                               .setColor(colors[quest.domainId])
                               .setAuthor({
                                 name: "Relic Found!",
-                                iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
                               });
                         }
 
