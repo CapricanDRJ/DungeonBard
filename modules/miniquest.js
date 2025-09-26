@@ -18,12 +18,13 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     let embed;
     let components = [];
     const domain = getDomain.pluck().get(interaction.user.id);
+    const embedColor = colors[domain];
     if (stage === 1) {
       // Stage 1: Show quest areas
       embed = new EmbedBuilder()
         .setTitle("Miniquest Explorer")
         .setDescription("Choose a quest area to explore:")
-        .setColor(colors[domain]);
+        .setColor(embedColor);
       const questAreas = db
         .prepare("SELECT DISTINCT questArea FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ? ORDER BY questArea ASC")
         .all(domain);
@@ -47,7 +48,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       embed = new EmbedBuilder()
         .setTitle(selectedArea)
         .setDescription(areaData?.areaDesc || "Select a miniquest:")
-        .setColor(0x00ff00);
+        .setColor(embedColor);
 
       const quests = db
         .prepare("SELECT id, name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
@@ -95,26 +96,15 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         embed = new EmbedBuilder()
           .setTitle("Error")
           .setDescription("Quest not found.")
-          .setColor(0xff0000);
+          .setColor(embedColor);
       } else {
         embed = new EmbedBuilder()
-          .setTitle(quest.name)
-          .setDescription(quest.description || "No description available")
-          .setColor(0xffd700);
+          .setTitle(quest.questArea)
+          .setDescription(quest.areaDesc || "No description available")
+          .setColor(embedColor);
 
         const fields = [];
-        if (quest.questArea) fields.push({ name: "Quest Area", value: quest.questArea, inline: true });
-        if (quest.profession) fields.push({ name: "Profession", value: quest.profession, inline: true });
-        if (quest.professionXp) fields.push({ name: "Profession XP", value: quest.professionXp.toString(), inline: true });
-        if (quest.difficulty) fields.push({ name: "Difficulty", value: quest.difficulty.toString(), inline: true });
-        if (quest.perilChance) fields.push({ name: "Peril Chance", value: `${(quest.perilChance * 100).toFixed(1)}%`, inline: true });
-        if (quest.relicChance) fields.push({ name: "Relic Chance", value: `${(quest.relicChance * 100).toFixed(1)}%`, inline: true });
-        if (quest.scholarship) fields.push({ name: "Scholarship", value: quest.scholarship.toString(), inline: true });
-        if (quest.coins) fields.push({ name: "Coins", value: quest.coins.toString(), inline: true });
-        if (quest.waitTime) fields.push({ name: "Wait Time", value: `${quest.waitTime} seconds`, inline: true });
-        if (quest.entity) fields.push({ name: "Entity", value: quest.entity, inline: true });
-        if (quest.entityEffect) fields.push({ name: "Entity Effect", value: quest.entityEffect, inline: false });
-        if (quest.relicEffect) fields.push({ name: "Relic Effect", value: quest.relicEffect, inline: false });
+        if (quest.questArea) fields.push({ name: quest.name, value: quest.description, inline: true });
 
         if (fields.length > 0) {
           embed.addFields(fields);
