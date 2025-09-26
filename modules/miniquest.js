@@ -249,7 +249,6 @@ module.exports = {
                     //peril
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
                     perilEmbed = new EmbedBuilder()
-                      .setTitle("Peril!")
                       .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`)
                       .setColor(colors[quest.domainId])
                       .setAuthor({
