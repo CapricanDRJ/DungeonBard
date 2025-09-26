@@ -304,7 +304,7 @@ module.exports = {
                 .setColor(colors[quest.domainId])
                 .addFields(fields)
                 .setAuthor({
-                  name: interaction.user.username, // owner’s display name
+                  name: user.displayName,
                   iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
                 });
             await interaction.update({
