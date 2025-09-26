@@ -27,7 +27,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setColor(0x0099ff);
 
       const questAreas = db
-        .prepare("SELECT DISTINCT questArea,id FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ?ORDER BY questArea ASC")
+        .prepare("SELECT DISTINCT questArea,id FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ? ORDER BY questArea ASC")
         .all(domain);
 
       if (questAreas.length > 0) {
