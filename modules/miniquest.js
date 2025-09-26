@@ -239,7 +239,8 @@ module.exports = {
               .setAuthor({
                 name: user.displayName,
                 iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
-              }));
+              })
+            );
             if(quest.perilChance === null) {
                 let healerQuest;
                 const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
@@ -329,13 +330,13 @@ module.exports = {
                         }
 
                     };
-
+                }
             }
             await wait(1000);
             await interaction.followUp({
               embeds
             });
-          }
+          };
           break;
       }
     }
