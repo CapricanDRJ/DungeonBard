@@ -238,41 +238,43 @@ module.exports = {
                 //if(Math.random() < quest.perilChance) {
                 if(true) { //always peril for testing
                     //peril
+                    function skillMod(skill){ return Math.floor((Math.min(20, Math.max(1, skill)) - 10) / 2); }
                     fields.push({ name: "Peril!", value: "As you embark on your quest, a sudden peril befalls you!"});
                     fields.push({ name:`You encounter a ${quest.entity}!\n`, value: quest.entityEffect});
                     const difficulty = [0.1,0.75,0.9, 1.05][parseInt(quest.difficulty)];
-                    const attack = Math.min(20, Math.max(1, user.skill3));
-                    const defense = Math.min(20, Math.max(1, user.skill4));
+                    const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
+                    const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
+                    const attack = skillMod(user.skill3) + (weaponBonus || 0);
+                    const defense = skillMod(user.skill4) + (armorBonus || 0);
                     const hp = Math.min(20, Math.max(1, user.skill5));
 
-                    const monsterAttack = attack * difficulty;
-                    const monsterDefense = defense * difficulty;
-                    const userAttack = attack;
-                    const userDefense = defense;
+                    const monsterAttack = skillMod(user.skill3) * difficulty;
+                    const monsterDefense = skillMod(user.skill4) * difficulty;
                     let userHitpoints = hp;
                     let monsterHitpoints = hp * difficulty;
                     const unixTime = Math.floor(Date.now() / 1000);
-                    const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
-                    const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
                     let battleLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
-                    battleLog += `Your Attack: ${userAttack}, Defense: ${userDefense}, Hitpoints: ${userHitpoints}\n`;
+                    battleLog += `Your Attack: ${attack.toFixed(2)}, Defense: ${defense.toFixed(2)}, Hitpoints: ${userHitpoints.toFixed(2)}\n`;
                     //battle loop
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
-                        const d20 = Math.floor(Math.random() * 20) + 1 + userAttack + weaponBonus;
-                        if(d20 >= monsterDefense * 2) {
+                      const userd20attack = Math.floor(Math.random()*20) + 1 + attack;
+                      const monsterd20defense = Math.floor(Math.random()*20) + 1 + monsterDefense;
+                        if(userd20attack >= monsterd20defense) {
                             //hit
-                            monsterHitpoints -= (d20 - monsterDefense) / 2;
-                            battleLog += `You hit the ${quest.entity} for ${(d20 - monsterDefense) / 2} damage!\n`;
+                            monsterHitpoints -= (userd20attack - monsterd20defense) / 2;
+                            battleLog += `You hit the ${quest.entity} for ${(userd20attack - monsterd20defense) / 2} damage!\n`;
                         } else {
                             battleLog += `You miss the ${quest.entity}!\n`;
                         }
                         if(monsterHitpoints <= 0) break;
                         //monster turn
-                        const monsterD20 = Math.floor(Math.random() * 20) + 1 + monsterAttack - (userDefense * 2 + armorBonus);
-                        if(monsterD20 >= userDefense * 2) {
+                        const monsterD20attack = Math.floor(Math.random() * 20) + 1 + monsterAttack;
+                        const userd20defense = Math.floor(Math.random() * 20) + 1 + defense + armorBonus;
+
+                        if(monsterD20attack >= userd20defense * 2) {
                             //hit
-                            userHitpoints -= (monsterAttack - (userDefense + armorBonus)) / 2;
-                            battleLog += `The ${quest.entity} hits you for ${(monsterAttack - (userDefense + armorBonus)) / 2} damage!\n`;
+                            userHitpoints -= (monsterAttack - (userd20defense)) / 2;
+                            battleLog += `The ${quest.entity} hits you for ${(monsterAttack - (userd20defense)) / 2} damage!\n`;
                         } else {
                             battleLog += `The ${quest.entity} misses you!\n`;
                         }
