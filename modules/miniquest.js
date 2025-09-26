@@ -263,6 +263,7 @@ module.exports = {
                       .setColor(colors[quest.domainId])
                       .setAuthor({
                         name: `The ${quest.entity}`,
+                        iconURL: 'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
                       }));
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const unixTime = Math.floor(Date.now() / 1000);
@@ -313,7 +314,7 @@ module.exports = {
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
                           embeds.push(new EmbedBuilder()
-                            .setTitle("Battle")
+                            .setTitle("⚔️ Battle")
                             .setDescription(battleLog)
                             .setColor(colors[quest.domainId])
                             .addFields(battleField)
@@ -325,6 +326,7 @@ module.exports = {
                               .setColor(colors[quest.domainId])
                               .setAuthor({
                                 name: "Relic Found!",
+                                iconURL: 'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
                               })
                             );
                         }
