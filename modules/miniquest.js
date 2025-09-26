@@ -224,8 +224,8 @@ module.exports = {
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.profession) - 1];
             fields.push({ name: quest.name, value: quest.description, inline: true });
             db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ?').run(quest.coins, interaction.user.id);
+            fields.push({ name: "Coins Earned", value: `+${quest.coins} coins`, inline: true });
             if(quest.perilChance === null) {
-                console.log("peril chance null");
                 let healerQuest;
                 const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
                 if (xp > 0) {
@@ -234,7 +234,6 @@ module.exports = {
                 }
                 db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(xp, interaction.user.id);
             } else {
-                console.log("peril chance not null");
                 const user = db.prepare('SELECT * FROM users WHERE userId = ?').get(interaction.user.id);
                 if(Math.random() < quest.perilChance) {
                     fields.push({ name: quest.entity, value: quest.entityEffect});
@@ -274,6 +273,7 @@ module.exports = {
                         //user won
                         fields.push({ name: "Victory", value: battleLog + `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ?`).run(quest.coins, quest.professionXp, interaction.user.id);
+                        fields.push({ name: "Monster Coins Earned", value: `+${quest.coins} coins`, inline: true });
                         if(Math.random() < quest.relicChance) {
                             fields.push({ name: quest.scholarship, value: quest.relicEffect });
                         }
