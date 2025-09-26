@@ -208,7 +208,12 @@ module.exports = {
           // Complete quest - check timing
           const completeTime = parseInt(parts[2]);
           const currentTime = Math.floor(Date.now() / 1000);
-          const fields = [];
+          const mainFields = [];
+          const embeds = [];
+          let relicEmbed;
+          let perilEmbed;
+          let healerEmbed;
+          let battleEmbed;
           if (currentTime < completeTime) {
             // Not ready yet
             const remainingSeconds = completeTime - currentTime;
@@ -224,15 +229,18 @@ module.exports = {
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
             const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
-            fields.push({ name: quest.name, value: quest.description, inline: true });
+            mainFields.push({ name: quest.name, value: quest.description, inline: true });
             db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?').run(quest.coins, interaction.user.id, interaction.guildId);
-            fields.push({ name: "Coins Earned", value: `+ ${quest.coins} coins`, inline: true });
+            mainFields.push({ name: "Coins Earned", value: `+ ${quest.coins} coins`, inline: true });
             if(quest.perilChance === null) {
                 let healerQuest;
                 const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
                 if (xp > 0) {
                     healerQuest = db.prepare('SELECT * FROM healerMiniquest ORDER BY RANDOM() LIMIT 1').get();
-                    fields.push({ name: healerQuest.name, value: healerQuest.description, inline: true });
+                    healerEmbed = new EmbedBuilder()
+                    .setTitle(healerQuest.name)
+                    .setDescription(healerQuest.description)
+                    .setColor(colors[quest.domainId])
                 }
                 db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(xp, interaction.user.id, interaction.guildId);
             } else {
@@ -240,7 +248,14 @@ module.exports = {
                 if(true) { //always peril for testing
                     //peril
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
-                    fields.push({ name:`Peril!`, value: `As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`});
+                    perilEmbed = new EmbedBuilder()
+                      .setTitle("Peril!")
+                      .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`)
+                      .setColor(colors[quest.domainId])
+                      .setAuthor({
+                        name: quest.entity,
+                        iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
+                      });
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const unixTime = Math.floor(Date.now() / 1000);
                     const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
@@ -280,38 +295,47 @@ module.exports = {
                         }
                         if(userHitpoints <= 0) break;
                     }
-                    fields.push({ name: "Battle", value: battleLog });
+                    let battleField = [];
                     if(userHitpoints <= 0) {
                         //user lost
-                        fields.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
+                        battleField.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
                         db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
                     } else {
                         //user won
-                        fields.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
+                        battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
-                        fields.push({ name: "Monster Coins Earned", value: `+${quest.coins} coins`, inline: true });
+                        battleField.push({ name: "Monster Coins Earned", value: `+${quest.coins} coins`, inline: true });
                         if(Math.random() < quest.relicChance) {
-                            fields.push({ name: quest.scholarship, value: quest.relicEffect });
+                            battleField.push({ name: quest.scholarship, value: quest.relicEffect });
                         }
 
                     };
-                };
+                    battleEmbed = new EmbedBuilder()
+                      .setTitle("Battle")
+                      .setDescription(battleLog)
+                      .setColor(colors[quest.domainId])
+                      .addFields(battleField)
+                   };
             }
-            let completedEmbed = new EmbedBuilder()
+            embeds.push(new EmbedBuilder()
                 .setTitle(quest.questArea)
                 .setDescription(quest.areaDesc || "No description available")
                 .setColor(colors[quest.domainId])
-                .addFields(fields)
+                .addFields(mainFields)
                 .setAuthor({
                   name: user.displayName,
                   iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
-                });
+                }));
             await interaction.update({
               components: []
             });
+            if(healerEmbed) embeds.push(healerEmbed);
+            if(perilEmbed) embeds.push(perilEmbed);
+            if(battleEmbed) embeds.push(battleEmbed);
+            if(relicEmbed) embeds.push(relicEmbed);
             await wait(1000);
             await interaction.followUp({
-              embeds: [completedEmbed]
+              embeds
             });
           }
           break;
