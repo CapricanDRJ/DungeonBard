@@ -120,7 +120,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           .setLabel("Back")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId(`miniquestcomplete-${completeTime}`)
+          .setCustomId(`miniquestcomplete-${selectedQuestId}-${completeTime}`)
           .setLabel("Complete")
           .setStyle(ButtonStyle.Success)
       );
@@ -188,39 +188,55 @@ module.exports = {
         menu(interaction, true, 3, quest?.questArea, questId);
       }
     } else if (interaction.isButton()) {
-      if (interaction.customId === "miniquestback") {
-        // Back to stage 1
-        menu(interaction, true, 1);
-      } else if (interaction.customId.startsWith("miniquestback-")) {
-        // Back to stage 2 with area
-        const area = interaction.customId.replace("miniquestback-", "");
-        menu(interaction, true, 2, area);
-      } else if (interaction.customId.startsWith("miniquestcomplete-")) {
-        // Complete quest - check timing
-        const completeTime = parseInt(interaction.customId.replace("miniquestcomplete-", ""));
-        const currentTime = Math.floor(Date.now() / 1000);
-        
-        if (currentTime < completeTime) {
-          // Not ready yet
-          const remainingSeconds = completeTime - currentTime;
-          const remainingMinutes = Math.ceil(remainingSeconds / 60);
+      const parts = interaction.customId.split('-');
+      const action = parts[0];
+      
+      switch (action) {
+        case "miniquestback":
+          if (parts.length === 1) {
+            // Back to stage 1
+            menu(interaction, true, 1);
+          } else {
+            // Back to stage 2 with area
+            const area = parts[1];
+            menu(interaction, true, 2, area);
+          }
+          break;
           
-          await interaction.reply({
-            content: `You need to wait ${remainingMinutes} more minute${remainingMinutes !== 1 ? 's' : ''} before completing this quest.`,
-            flags: MessageFlags.Ephemeral
-          });
-        } else {
-          // Quest completed
-          const completedEmbed = new EmbedBuilder()
-            .setTitle("Quest Completed!")
-            .setDescription("You have successfully completed the miniquest.")
-            .setColor(0x00ff00);
+        case "miniquestcomplete":
+          // Complete quest - check timing
+          const completeTime = parseInt(parts[2]);
+          const currentTime = Math.floor(Date.now() / 1000);
+          
+          if (currentTime < completeTime) {
+            // Not ready yet
+            const remainingSeconds = completeTime - currentTime;
+            const remainingMinutes = Math.ceil(remainingSeconds / 60);
             
-          await interaction.update({
-            embeds: [completedEmbed],
-            components: []
-          });
-        }
+            await interaction.reply({
+              content: `You need to wait ${remainingMinutes} more minute${remainingMinutes !== 1 ? 's' : ''} before completing this quest.`,
+              flags: MessageFlags.Ephemeral
+            });
+          } else {
+            // Quest completed
+            const id = parts[1];
+            const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
+            if(quest.perilChance === null) {
+                const healerQuest = db.prepare('SELECT * FROM healerQuests ORDER BY RANDOM() LIMIT 1').get();
+                console.log(healerQuest);
+            } else {
+            };
+            const completedEmbed = new EmbedBuilder()
+              .setTitle("Quest Completed!")
+              .setDescription("You have successfully completed the miniquest.")
+              .setColor(colors[quest.domainId]);
+              
+            await interaction.update({
+              embeds: [completedEmbed],
+              components: []
+            });
+          }
+          break;
       }
     }
   },
