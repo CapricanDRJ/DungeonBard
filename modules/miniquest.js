@@ -221,6 +221,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
+            console.log(1, quest.perilChance);
             if(quest.perilChance === null) {
                 const healerQuest = db.prepare('SELECT * FROM healerQuests ORDER BY RANDOM() LIMIT 1').get();
                 console.log(healerQuest);
