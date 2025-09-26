@@ -278,13 +278,14 @@ module.exports = {
                         }
                         if(userHitpoints <= 0) break;
                     }
+                    fields.push({ name: "Battle", value: battleLog });
                     if(userHitpoints <= 0) {
                         //user lost
-                        fields.push({ name: "Defeat", value: battleLog + `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
+                        fields.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
                         db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(quest.professionXp, interaction.user.id);
                     } else {
                         //user won
-                        fields.push({ name: "Victory", value: battleLog + `The ${quest.entity} has been vanquished!`});
+                        fields.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ?`).run(quest.coins, quest.professionXp, interaction.user.id);
                         fields.push({ name: "Monster Coins Earned", value: `+${quest.coins} coins`, inline: true });
                         if(Math.random() < quest.relicChance) {
