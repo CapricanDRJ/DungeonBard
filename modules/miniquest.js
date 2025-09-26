@@ -9,14 +9,15 @@ const {
 } = require('discord.js');
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
+const getDomain = db.prepare("SELECT domainId FROM users WHERE userId = ?");
 const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
-console.log(colors);
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
     let embed;
     let components = [];
+    const domain = getDomain.get(interaction.user.id);
 
     if (stage === 1) {
       // Stage 1: Show quest areas
@@ -26,8 +27,8 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setColor(0x0099ff);
 
       const questAreas = db
-        .prepare("SELECT DISTINCT questArea FROM miniquest WHERE questArea IS NOT NULL ORDER BY questArea ASC")
-        .all();
+        .prepare("SELECT DISTINCT questArea,id FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ?ORDER BY questArea ASC")
+        .all(domain);
 
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
