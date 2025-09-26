@@ -240,7 +240,7 @@ module.exports = {
                 if(true) { //always peril for testing
                     //peril
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
-                    fields.push({ name:`Peril!`, value: `As you embark on your quest, a sudden peril befalls you!\nYou encounter a ${quest.entity}!\n${quest.entityEffect}`});
+                    fields.push({ name:`Peril!`, value: `As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`});
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const unixTime = Math.floor(Date.now() / 1000);
                     const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
