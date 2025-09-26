@@ -107,6 +107,8 @@ module.exports = {
                         displayName = interaction.member?.nickname || 
                         interaction.user.displayName || interaction.user.globalName || interaction.user.username;
                     }
+                    console.log(interaction);
+                    console.log(interaction.member?.nickname, interaction.user.displayName, interaction.user.globalName, interaction.user.username);
                     if (existingUser) {
                         interaction.reply({
                             content: 'You already have a character enrolled. Use `/character delete` first if you want to create a new one.',
