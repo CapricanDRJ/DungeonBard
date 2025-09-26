@@ -18,7 +18,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     let embed;
     let components = [];
     const domain = getDomain.pluck().get(interaction.user.id);
-
+console.log("domain", domain);
     if (stage === 1) {
       // Stage 1: Show quest areas
       embed = new EmbedBuilder()
