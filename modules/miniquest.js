@@ -10,7 +10,8 @@ const {
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
-const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background).unshift(null);
+const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
+colors.unshift(0x000000);
 console.log(colors);
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
