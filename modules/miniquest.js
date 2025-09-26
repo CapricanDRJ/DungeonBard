@@ -302,7 +302,11 @@ module.exports = {
                 .setTitle(quest.questArea)
                 .setDescription(quest.areaDesc || "No description available")
                 .setColor(colors[quest.domainId])
-                .addFields(fields);
+                .addFields(fields)
+                .setAuthor({
+                  name: interaction.user.username, // owner’s display name
+                  iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
+                });
             await interaction.update({
               components: []
             });
