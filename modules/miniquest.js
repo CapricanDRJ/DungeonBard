@@ -235,7 +235,10 @@ module.exports = {
                 db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ?`).run(xp, interaction.user.id);
             } else {
                 const user = db.prepare('SELECT * FROM users WHERE userId = ?').get(interaction.user.id);
-                if(Math.random() < quest.perilChance) {
+                //if(Math.random() < quest.perilChance) {
+                if(true) { //always peril for testing
+                    //peril
+                    fields.push({ name: "Peril!", value: "As you embark on your quest, a sudden peril befalls you!"});
                     fields.push({ name: quest.entity, value: quest.entityEffect});
                     const difficulty = [0.1,0.75,0.9, 1.05][parseInt(quest.difficulty)];
                     const attack = Math.min(20, Math.max(1, user.skill3));
