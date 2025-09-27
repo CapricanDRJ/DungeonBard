@@ -249,17 +249,23 @@ module.exports = {
                 iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
               })
             );
-            if(quest.perilChance === null) {
-                let healerQuest;
-                const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
+            if(quest.beastiary === null) {
+                const relicNoMonster = db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.relic);
+                const xp = Math.random() < relicNoMonster.chance ? quest.bonusXp : 0;
                 if (xp > 0) {
-                    healerQuest = db.prepare('SELECT * FROM healerquest ORDER BY RANDOM() LIMIT 1').get();
-                    embeds.push(new EmbedBuilder()
-                      .setTitle(healerQuest.name)
-                      .setDescription(healerQuest.description)
-                      .setColor(colors[quest.domainId])
-                    );
+                  embeds.push(new EmbedBuilder()
+                    .setAuthor({
+                      name: "Relic Found!",
+                      iconURL: 'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
+                    })
+                    .setTitle(relicNoMonster.name)
+                    .setDescription(relicNoMonster.description)
+                    .setColor(0x996515)
+                  );
                 }
+                if (relicNoMonster.bonusXp < 9) {
+                };
+
                 db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
             } else {
                 //if(Math.random() < quest.perilChance) {
