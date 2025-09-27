@@ -12,7 +12,7 @@ const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
     const embedColor = 0x964B00;
 const storeFront = new EmbedBuilder()
-  .setImage("https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/refs/heads/main/shop.png")
+  .setImage("https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/refs/heads/main/shop.webp")
   .setColor(embedColor);
 async function menu(interaction, isUpdate, selectedItemId = null) {
   try {
