@@ -194,7 +194,7 @@ module.exports = {
             }
             const buttonRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
-                .setCustomId(`purchase-${selectedItemId}`)
+                .setCustomId(`purchase-${item.id}`)
                 .setLabel(`Purchased for 🪙 ${item.cost}`)
                 .setDisabled(true)
                 .setStyle(ButtonStyle.Success)
