@@ -67,7 +67,7 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
         const profession = ["Artisan", "Soldier", "Healer"];
         if(item.skillBonus) statsFields.push({ name: skills[item.skill - 1], value: `+${item.skillBonus}`, inline: true });
         if(item.itemBonus) statsFields.push({ name: profession[item.professionId - 1], value:`${(item.itemBonus < 9 ? 'X' : '+')}${item.itemBonus}`, inline: true });
-        if (item.duration) statsFields.push({ name: "Until", value: `<t:${unixTime + item.duration}:f>`, inline: true });
+        if(item.duration) statsFields.push({ name: "Until", value: `<t:${unixTime + item.duration}:f>`, inline: true });
         
         embed = new EmbedBuilder()
           .setTitle(item.name)
@@ -175,18 +175,26 @@ module.exports = {
       switch (action) {
         case "purchase":
           const itemId = parseInt(parts[1]);
-          const item = db.prepare("SELECT * FROM items WHERE id = ?").get(itemId);
-          const user = db.prepare('SELECT coins FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
-          
+          const item = db.prepare("SELECT * FROM items WHERE id = ? LIMIT 1").get(itemId);
+          const user = db.prepare('SELECT coins FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(interaction.user.id, interaction.guildId);
+          const unixTime = Math.floor(Date.now() / 1000);
           if (!user || user.coins < item.cost) {
             return interaction.reply({
               content: `You don't have enough coins! You need 🪙 ${item.cost} but only have 🪙 ${user?.coins || 0}.`,
               flags: MessageFlags.Ephemeral
             });
           } else {
+            if(item.skillBonus) {
+                db.prepare('UPDATE users SET coins = coins - ?, healerBonus = ?, healerBonusEnd = ? WHERE userId = ? AND guildId = ?').run(item.cost, item.skillBonus, unixTime + item.duration, interaction.user.id, interaction.guildId);
+            }
+            if(item.itemBonus) {
+                const itemColumn = [null, null, "weaponBonus", "armourBonus", null, null][item.skill - 1];
+                const updateQuery = `UPDATE users SET coins = coins - ?, ${itemColumn} = ?, ${itemColumn}End = ? WHERE userId = ? AND guildId = ?`;
+                db.prepare(updateQuery).run(item.cost, item.itemBonus, unixTime + item.duration, interaction.user.id, interaction.guildId);
+            }
             //db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
             return interaction.update({
-              components: [] // Remove buttons and dropdown
+              components: []
             });
           }
           break;
