@@ -6,8 +6,8 @@ CREATE TABLE IF NOT EXISTS "beastiary" (
     "entity" TEXT NOT NULL,
     "entityEffect" TEXT NOT NULL, 
     "difficulty" integer DEFAULT 1, 
-    "iconURL" TEXT DEFAULT NULL,
-    );
+    "iconURL" TEXT DEFAULT NULL
+);
 CREATE INDEX IF NOT EXISTS idx_beastiary_id ON beastiary(id);
 INSERT INTO beastiary VALUES('Initiate1',0.5,'Deadline Demon','A project due date approaches too quickly!','1',NULL);
 INSERT INTO beastiary VALUES('Initiate2',0.4,'Sleep-Stealing Specter','A restless mind delays sleep!','2',NULL);
