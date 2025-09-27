@@ -311,6 +311,15 @@ module.exports = {
                         //user lost
                         battleField.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
                         db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
+                        embeds.push(new EmbedBuilder()
+                            .setAuthor({
+                              name: "Battle",
+                              iconURL: 'https://cdn.discordapp.com/emojis/1421265514474504353.webp'
+                            })
+                            .setDescription(battleLog)
+                            .setColor(0x8b0000)
+                            .addFields(battleField)
+                        );
                     } else {
                         //user won
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
