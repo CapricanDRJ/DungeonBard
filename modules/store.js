@@ -10,6 +10,7 @@ const {
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
+    const embedColor = 0x964B00;
 const storeFront = new EmbedBuilder()
   .setImage("https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/refs/heads/main/shop.png")
   .setColor(embedColor);
@@ -17,7 +18,6 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
   try {
     let embed;
     let components = [];
-    const embedColor = 0x964B00;
 
     if (!selectedItemId) {
       // Initial store view
