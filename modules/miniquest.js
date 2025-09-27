@@ -285,20 +285,22 @@ module.exports = {
                       const monsterd20defense = Math.floor(Math.random()*20) + 1 + monsterDefense;
                         if(userd20attack >= monsterd20defense) {
                             //hit
-                            monsterHitpoints -= (userd20attack - monsterd20defense) / 2;
-                            battleLog += `You hit the ${quest.entity} for ${(userd20attack - monsterd20defense) / 2} damage!\n`;
+                            const monsterDamage = (userd20attack - monsterd20defense) / 2;
+                            battleLog += `You hit the ${quest.entity} for ${monsterDamage}/${monsterHitpoints} damage!\n`;
+                            monsterHitpoints -= monsterDamage;
                         } else {
                             battleLog += `You miss the ${quest.entity}!\n`;
                         }
                         if(monsterHitpoints <= 0) break;
                         //monster turn
                         const monsterD20attack = Math.floor(Math.random() * 20) + 1 + monsterAttack;
-                        const userd20defense = Math.floor(Math.random() * 20) + 1 + defense + armorBonus;
+                        const userd20defense = Math.floor(Math.random() * 20) + 1 + defense;
 
-                        if(monsterD20attack >= userd20defense * 2) {
+                        if(monsterD20attack >= userd20defense) {
                             //hit
-                            userHitpoints -= (monsterAttack - (userd20defense)) / 2;
-                            battleLog += `The ${quest.entity} hits you for ${(monsterAttack - (userd20defense)) / 2} damage!\n`;
+                            const userDamage = (monsterD20attack - (userd20defense)) / 2;
+                            battleLog += `The ${quest.entity} hits you for ${userDamage}/${userHitpoints} damage!\n`;
+                            userHitpoints -= userDamage;
                         } else {
                             battleLog += `The ${quest.entity} misses you!\n`;
                         }
