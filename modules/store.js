@@ -10,7 +10,9 @@ const {
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
-
+const storeFront = new EmbedBuilder()
+  .setImage("https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/refs/heads/main/shop.png")
+  .setColor(embedColor);
 async function menu(interaction, isUpdate, selectedItemId = null) {
   try {
     let embed;
@@ -19,11 +21,6 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
 
     if (!selectedItemId) {
       // Initial store view
-      embed = new EmbedBuilder()
-        .setTitle("Dungeon Store")
-        .setDescription("Choose an item to view:")
-        .setColor(embedColor);
-
       const items = db
         .prepare("SELECT id, name, emojiId FROM items ORDER BY name ASC")
         .all();
@@ -112,9 +109,10 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
         components.push(new ActionRowBuilder().addComponents(dropdown));
       }
     }
-
+    const embeds = [storeFront];
+    if(embed)embeds.push(embed);
     const messageData = {
-      embeds: [embed],
+      embeds,
       components: components,
       flags: MessageFlags.Ephemeral
     };
