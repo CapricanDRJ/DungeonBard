@@ -280,9 +280,7 @@ module.exports = {
                     let battleLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
                     battleLog += `Your Attack: ${attack.toFixed(2)}, Defense: ${defense.toFixed(2)}, Hitpoints: ${userHitpoints.toFixed(2)}\n`;
                     //battle loop
-                    console.log(1);
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
-                      console.log(2);
                       const userd20attack = Math.floor(Math.random()*20) + 1 + attack;
                       const monsterd20defense = Math.floor(Math.random()*20) + 1 + monsterDefense;
                         if(userd20attack >= monsterd20defense) {
@@ -307,18 +305,14 @@ module.exports = {
                             battleLog += `The ${quest.entity} misses you!\n`;
                         }
                         if(userHitpoints <= 0) break;
-                        break;//what happens here
                     };
-                    console.log(3);
                     let battleField = [];
                     if(userHitpoints <= 0) {
                         //user lost
                         battleField.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
                         db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
-                        console.log(4);
                     } else {
                         //user won
-                        console.log(5);
                         battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
                         db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
                         battleField.push({ name: "Monster Coins Earned", value: `🪙 X ${quest.coins}`, inline: true });
@@ -332,7 +326,6 @@ module.exports = {
                             .addFields(battleField)
                         );
                         if(Math.random() < quest.relicChance) {
-                          console.log(6);
                             embeds.push(new EmbedBuilder()
                               .setTitle(quest.scholarship)
                               .setDescription(quest.relicEffect)
