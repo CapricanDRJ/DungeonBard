@@ -14,6 +14,15 @@ const getDomain = db.prepare("SELECT domainId FROM users WHERE userId = ?");
 const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
+const skillNames = [
+  null,
+  [null,"LEARNING","COMMUNICATION","DISCIPLINE","ORGANIZATION","STAMINA","PERSEVERANCE"],
+  [null,"LEARNING","COMMUNICATION","DISCIPLINE","ORGANIZATION","STAMINA","PERSEVERANCE"],
+  [null,"PEDAGOGY","CLASSROOM COMMAND","LESSON CRAFTING","ORGANIZATION","STAMINA","ADAPTABILITY"],
+  [null,"SCHOLARSHIP","RHETORIC","ENDURANCE","ORGANIZATION","STAMINA","RESILIENCE"],
+  [null,"SCHOLARSHIP","RHETORIC","ENDURANCE","ORGANIZATION","STAMINA","RESILIENCE"],
+  [null,"SCHOLARSHIP","RHETORIC","ENDURANCE","ADMINISTRATION","STAMINA","INFLUENCE"]
+];
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
     let embed;
