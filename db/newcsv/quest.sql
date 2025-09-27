@@ -20,7 +20,6 @@ CREATE TABLE IF NOT EXISTS "quest" (
     "relic" TEXT DEFAULT NULL,
     "coins" integer NOT NULL DEFAULT 0, 
     "waitTime" integer NOT NULL DEFAULT 0,
-    PRIMARY KEY("id")
 );
 INSERT INTO quest VALUES(NULL,1,'Hall of Marvels','Where Knowledge is Sought','The Apprentice''s Studies','Complete all assigned homework','Artisan',1,25,10,0,20,10,0,0,'randomPeril',NULL,5,0);
 INSERT INTO quest VALUES(NULL,1,'Vault of Vellum','Where Knowledge is Applied','The Scholar''s Notebook','Take detailed notes in a class','Artisan',1,25,20,0,0,10,0,0,'randomPeril',NULL,5,0);
