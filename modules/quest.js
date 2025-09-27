@@ -363,14 +363,15 @@ module.exports = {
                             .setColor(0x8b0000)
                             .addFields(battleField)
                         );
-                        if(Math.random() < quest.relicChance) {
+                        const relic = quest.relic ? db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.relic) : null;
+                        if(relic && Math.random() < relic.chance) {
                             embeds.push(new EmbedBuilder()
-                              .setTitle(quest.scholarship)
-                              .setDescription(quest.relicEffect)
+                              .setTitle(relic.name)
+                              .setDescription(relic.description)
                               .setColor(0x996515)
                               .setAuthor({
                                 name: "Relic Found!",
-                                iconURL: 'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
+                                iconURL: relic.iconURL ||'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
                               })
                             );
                         }
