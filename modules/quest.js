@@ -72,9 +72,13 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           const endIdx = Math.min(startIdx + maxOptionsPerDropdown, quests.length);
           const questSlice = quests.slice(startIdx, endIdx);
 
+          const firstLetter = questSlice[0]?.name.charAt(0).toUpperCase() || '';
+          const lastLetter = questSlice[questSlice.length - 1]?.name.charAt(0).toUpperCase() || '';
+          const letterRange = firstLetter === lastLetter ? firstLetter : `${firstLetter}-${lastLetter}`;
+
           const dropdown = new StringSelectMenuBuilder()
             .setCustomId(`questSelect_${i}`)
-            .setPlaceholder(`Select a quest ${numDropdowns > 1 ? `(${i + 1}/${numDropdowns})` : ''}`)
+            .setPlaceholder(`Select a quest ${letterRange}`)
             .addOptions(
               questSlice.map(quest => ({
                 label: quest.name,
