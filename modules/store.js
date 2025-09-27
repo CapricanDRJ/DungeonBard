@@ -52,18 +52,25 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
           .setDescription("Item not found.")
           .setColor(embedColor);
       } else {
-        const skillBonusText = item.skillBonus ? `+${item.skillBonus} Skill Bonus` : '';
-        const itemBonusText = item.itemBonus ? `+${item.itemBonus} Item Bonus` : '';
-        const skillText = item.skill ? `Skill: ${item.skill}` : '';
-        const professionText = item.professionId ? `Profession: ${item.professionId}` : '';
-        const durationText = item.duration ? `Duration: ${Math.floor(item.duration / 86400)} days` : '';
-
+        const unixTime = Math.floor(Date.now() / 1000);
+/*
+        CREATE TABLE items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    skillBonus INTEGER,
+    itemBonus INTEGER,
+    skill INTEGER,
+    professionId INTEGER,
+    cost INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    emojiId TEXT NOT NULL
+);*/
         const statsFields = [];
-        if (skillBonusText) statsFields.push({ name: "Skill Bonus", value: skillBonusText, inline: true });
-        if (itemBonusText) statsFields.push({ name: "Item Bonus", value: itemBonusText, inline: true });
-        if (skillText) statsFields.push({ name: "Skill", value: skillText, inline: true });
-        if (professionText) statsFields.push({ name: "Profession", value: professionText, inline: true });
-        if (durationText) statsFields.push({ name: "Duration", value: durationText, inline: true });
+        const skills = ["Intelligence", "Charisma", "Attack", "Defense", "Hitpoints", "Dexterity"];
+        const profession = ["Artisan", "Soldier", "Healer"];
+        if(item.skillBonus) statsFields.push({ name: skills[item.skill - 1], value: `+${item.skillBonus}`, inline: true });
+        if(item.itemBonus) statsFields.push({ name: profession[item.professionId - 1], value: `+${item.itemBonus}`, inline: true });
+        if (item.duration) statsFields.push({ name: "Until", value: `<t:${unixTime + item.duration}:f>`, inline: true });
         
         embed = new EmbedBuilder()
           .setTitle(item.name)
