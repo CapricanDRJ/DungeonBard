@@ -69,7 +69,7 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
         const skills = ["Intelligence", "Charisma", "Attack", "Defense", "Hitpoints", "Dexterity"];
         const profession = ["Artisan", "Soldier", "Healer"];
         if(item.skillBonus) statsFields.push({ name: skills[item.skill - 1], value: `+${item.skillBonus}`, inline: true });
-        if(item.itemBonus) statsFields.push({ name: profession[item.professionId - 1], value: `+${item.itemBonus}`, inline: true });
+        if(item.itemBonus) statsFields.push({ name: profession[item.professionId - 1], value:`${(item.itemBonus < 9 ? 'X' : '+')}${item.itemBonus}`, inline: true });
         if (item.duration) statsFields.push({ name: "Until", value: `<t:${unixTime + item.duration}:f>`, inline: true });
         
         embed = new EmbedBuilder()
