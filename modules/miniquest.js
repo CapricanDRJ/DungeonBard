@@ -252,7 +252,7 @@ module.exports = {
                       .setColor(colors[quest.domainId])
                     );
                 }
-                db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(xp, interaction.user.id, interaction.guildId);
+                db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
             } else {
                 //if(Math.random() < quest.perilChance) {
                 if(true) { //always peril for testing
@@ -286,7 +286,7 @@ module.exports = {
                         if(userd20attack >= monsterd20defense) {
                             //hit
                             const monsterDamage = (userd20attack - monsterd20defense) / 2;
-                            battleLog += `You hit the ${quest.entity} for ${monsterDamage}/${monsterHitpoints} damage!\n`;
+                            battleLog += `You hit the ${quest.entity} for ${monsterDamage.toFixed(2)}/${monsterHitpoints.toFixed(2)} damage!\n`;
                             monsterHitpoints -= monsterDamage;
                         } else {
                             battleLog += `You miss the ${quest.entity}!\n`;
@@ -299,7 +299,7 @@ module.exports = {
                         if(monsterD20attack >= userd20defense) {
                             //hit
                             const userDamage = (monsterD20attack - (userd20defense)) / 2;
-                            battleLog += `The ${quest.entity} hits you for ${userDamage}/${userHitpoints} damage!\n`;
+                            battleLog += `The ${quest.entity} hits you for ${userDamage.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
                             userHitpoints -= userDamage;
                         } else {
                             battleLog += `The ${quest.entity} misses you!\n`;
