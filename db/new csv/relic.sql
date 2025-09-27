@@ -8,7 +8,7 @@ CREATE TABLE IF NOT EXISTS "relic" (
     "bonusXp" INTEGER NOT NULL DEFAULT 0,
     "profession" TEXT DEFAULT NULL, 
     "duration" INTEGER NOT NULL DEFAULT 0, 
-    "iconURL" TEXT DEFAULT NULL,
+    "iconURL" TEXT DEFAULT NULL
 );
 CREATE INDEX IF NOT EXISTS idx_relic_id ON relic(id);
 INSERT INTO relic VALUES('Initiate1',0.5,'Notebook of Infinite Recall','Boosts memory for exams!',100,'Soldier',1,NULL);
