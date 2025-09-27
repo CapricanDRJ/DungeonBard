@@ -9,8 +9,8 @@ CREATE TABLE IF NOT EXISTS "relic" (
     "profession" TEXT DEFAULT NULL, 
     "duration" INTEGER NOT NULL DEFAULT 0, 
     "iconURL" TEXT DEFAULT NULL,
-    PRIMARY KEY("id","name")
 );
+CREATE INDEX IF NOT EXISTS idx_relic_id ON relic(id);
 INSERT INTO relic VALUES('Initiate1',0.5,'Notebook of Infinite Recall','Boosts memory for exams!',100,'Soldier',1,NULL);
 INSERT INTO relic VALUES('Initiate2',0.5,'Pen of Confidence','Feel confident to speak up in class!',2,'Soldier',604800,NULL);
 INSERT INTO relic VALUES('Initiate3',0.5,'Annotated Tome of Study','Homework becomes a breeze!',2,'Artisan',604800,NULL);
