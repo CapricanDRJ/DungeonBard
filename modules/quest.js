@@ -215,11 +215,11 @@ module.exports = {
         case "questcomplete":
           // Complete quest - check timing
           const completeTime = parseInt(parts[2]);
-          const currentTime = Math.floor(Date.now() / 1000);
+          const unixTime = Math.floor(Date.now() / 1000);
           const embeds = [];
-          if (currentTime < completeTime) {
+          if (unixTime < completeTime) {
             // Not ready yet
-            const remainingSeconds = completeTime - currentTime;
+            const remainingSeconds = completeTime - unixTime;
             const remainingMinutes = Math.ceil(remainingSeconds / 60);
             
             await interaction.reply({
@@ -235,13 +235,15 @@ module.exports = {
             const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
             const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
-            db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?').run(quest.coins, interaction.user.id, interaction.guildId);
+            db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.skill1, quest.skill2, quest.skill3, quest.skill4, quest.skill5, quest.skill6, quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
+
             embeds.push(new EmbedBuilder()
               .setTitle(quest.questArea)
               .setDescription(quest.areaDesc || "No description available")
               .setColor(colors[quest.domainId])
               .addFields(
                 { name: quest.name, value: quest.description, inline: true },
+                { name: `${['Artisan', 'Soldier', 'Healer'][parseInt(quest.professionId) - 1]} XP Earned`, value: `${quest.professionXp}`, inline: true },
                 { name: "Quest Coins Earned", value: `🪙 X ${quest.coins}`, inline: true }
               )
               .setAuthor({
@@ -251,36 +253,43 @@ module.exports = {
             );
             if(quest.beastiary === null) {
                 const relicNoMonster = db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.relic);
-                const xp = Math.random() < relicNoMonster.chance ? quest.bonusXp : 0;
-                if (xp > 0) {
+                if (Math.random() < relicNoMonster.chance) {
+                  let bonusResult = '';
+                  if(relicNoMonster.bonusXp) {
+                    const profBonus = ['artisan', 'soldier', 'healer'][parseInt(relicNoMonster.professionId) - 1];
+                    if (relicNoMonster.bonusXp < 9) {
+                      const bonusUntil =  unixTime+relicNoMonster.duration
+                      bonusResult = `\nX${relicNoMonster.bonusXp} ${profBonus} bonus until <t:${bonusUntil}:f>`;
+                      db.prepare(`UPDATE users SET ${profBonus}Bonus = ?, ${profBonus}BonusEnd = ? WHERE userId = ? AND guildId = ?`).run(relicNoMonster.bonusXp, bonusUntil, interaction.user.id, interaction.guildId);
+                    } else {
+                      bonusResult = `\n+${relicNoMonster.bonusXp} ${profBonus} XP`;
+                      db.prepare(`UPDATE users SET ${profBonus}Exp = ${profBonus}Exp + ? WHERE userId = ? AND guildId = ?`).run(relicNoMonster.bonusXp, interaction.user.id, interaction.guildId);
+                    }
+                  }
                   embeds.push(new EmbedBuilder()
                     .setAuthor({
                       name: "Relic Found!",
                       iconURL: 'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
                     })
                     .setTitle(relicNoMonster.name)
-                    .setDescription(relicNoMonster.description)
+                    .setDescription(relicNoMonster.description+bonusResult)
                     .setColor(0x996515)
                   );
                 }
-                if (relicNoMonster.bonusXp < 9) {
-                };
 
-                db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
             } else {
-                //if(Math.random() < quest.perilChance) {
-                if(true) { //always peril for testing
+                const beast = quest.beastiary ? db.prepare('SELECT * FROM beastiary where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.beastiary) : null;
+                if(Math.random() < beast.chance) {
                     //peril
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
                     embeds.push(new EmbedBuilder()
-                      .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${quest.entity}**!\n*${quest.entityEffect}*`)
+                      .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${beast.entity}**!\n*${beast.entityEffect}*`)
                       .setColor(0xa6ce2a)
                       .setAuthor({
-                        name: `The ${quest.entity}`,
-                        iconURL: 'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
+                        name: `The ${beast.entity}`,
+                        iconURL: beast.iconURL ||'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
                       }));
-                    const difficulty = [0.01,0.75,0.9, 1.05][parseInt(quest.difficulty)];
-                    const unixTime = Math.floor(Date.now() / 1000);
+                    const difficulty = [0.01,0.75,0.9, 1.05][parseInt(beast.difficulty)];
                     const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
                     const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
                     const attack = skillMod(user.skill3) + (weaponBonus || 0);
@@ -294,37 +303,42 @@ module.exports = {
                     let battleLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
                     battleLog += `Your Attack: ${attack.toFixed(2)}, Defense: ${defense.toFixed(2)}, Hitpoints: ${userHitpoints.toFixed(2)}\n`;
                     //battle loop
+                    let i = 0;
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
                       const userd20attack = Math.floor(Math.random()*20) + 1 + attack;
                       const monsterd20defense = Math.floor(Math.random()*20) + 1 + monsterDefense;
                         if(userd20attack >= monsterd20defense) {
                             //hit
                             const monsterDamage = (userd20attack - monsterd20defense) / 2;
-                            battleLog += `You hit the ${quest.entity} for ${monsterDamage.toFixed(2)}/${monsterHitpoints.toFixed(2)} damage!\n`;
+                            battleLog += `You hit the ${beast.entity} for ${monsterDamage.toFixed(2)}/${monsterHitpoints.toFixed(2)} damage!\n`;
                             monsterHitpoints -= monsterDamage;
                         } else {
-                            battleLog += `You miss the ${quest.entity}!\n`;
+                            battleLog += `You miss the ${beast.entity}!\n`;
                         }
                         if(monsterHitpoints <= 0) break;
                         //monster turn
                         const monsterD20attack = Math.floor(Math.random() * 20) + 1 + monsterAttack;
                         const userd20defense = Math.floor(Math.random() * 20) + 1 + defense;
-
+                        if(i>6) {
+                          battleLog += `The ${beast.entity} hits you for ${userHitpoints.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
+                          userHitpoints = 0;
+                          break;
+                        };
                         if(monsterD20attack >= userd20defense) {
                             //hit
                             const userDamage = (monsterD20attack - (userd20defense)) / 2;
-                            battleLog += `The ${quest.entity} hits you for ${userDamage.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
+                            battleLog += `The ${beast.entity} hits you for ${userDamage.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
                             userHitpoints -= userDamage;
                         } else {
-                            battleLog += `The ${quest.entity} misses you!\n`;
+                            battleLog += `The ${beast.entity} misses you!\n`;
                         }
                         if(userHitpoints <= 0) break;
+                        i++;
                     };
                     let battleField = [];
                     if(userHitpoints <= 0) {
                         //user lost
-                        battleField.push({ name: "Defeat", value: `The ${quest.entity} lands a perilous blow. Thou retreatest in defeat!`});
-                        db.prepare(`UPDATE users SET ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.professionXp, interaction.user.id, interaction.guildId);
+                        battleField.push({ name: "Defeat", value: `The ${beast.entity} lands a perilous blow. Thou retreatest in defeat!`});
                         embeds.push(new EmbedBuilder()
                             .setAuthor({
                               name: "Battle",
@@ -336,9 +350,10 @@ module.exports = {
                         );
                     } else {
                         //user won
-                        battleField.push({ name: "Victory", value: `The ${quest.entity} has been vanquished!`});
-                        db.prepare(`UPDATE users SET coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
-                        battleField.push({ name: "Monster Coins Earned", value: `🪙 X ${quest.coins}`, inline: true });
+                        battleField.push({ name: "Victory", value: `The ${beast.entity} has been vanquished!`});
+                        const beastCoin = Math.floor(quest.coins * ((beast.difficulty * 0.3) + (0.5 * Math.random())));
+                        db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`).run(beastCoin, interaction.user.id, interaction.guildId);
+                        battleField.push({ name: "Monster Coins Earned", value: `🪙 X ${beastCoin}`, inline: true });
                           embeds.push(new EmbedBuilder()
                             .setAuthor({
                               name: "Battle",
