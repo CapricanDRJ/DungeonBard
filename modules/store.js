@@ -199,8 +199,6 @@ module.exports = {
                 .setDisabled(true)
                 .setStyle(ButtonStyle.Success)
             );
-        components.push(buttonRow);
-            //db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
             return interaction.update({
               components: [buttonRow]
             });
