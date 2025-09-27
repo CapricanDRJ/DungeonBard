@@ -179,16 +179,10 @@ module.exports = {
               flags: MessageFlags.Ephemeral
             });
           } else {
+            //db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
             return interaction.update({
               components: [] // Remove buttons and dropdown
             });
-            
-            // TODO: Add database update for purchased item here
-            // This will subtract coins and add item effects to user
-            
-            // Subtract coins from user
-            db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
-
           }
           break;
       }
