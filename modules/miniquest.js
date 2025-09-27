@@ -122,7 +122,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId(`miniquestcomplete-${selectedQuestId}-${completeTime}`)
-          .setLabel("Complete")
+          .setLabel("Claim Quest")
           .setStyle(ButtonStyle.Success)
       );
       components.push(buttonRow);
