@@ -31,15 +31,15 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     if (stage === 1) {
       // Stage 1: Show quest areas
       embed = new EmbedBuilder()
-        .setTitle("Miniquest Explorer")
+        .setTitle("Quest Explorer")
         .setDescription("Choose a quest area to explore:")
         .setColor(embedColor);
       const questAreas = db
-        .prepare("SELECT DISTINCT questArea FROM miniquest WHERE questArea IS NOT NULL AND domainId <= ? ORDER BY questArea ASC")
+        .prepare("SELECT DISTINCT questArea FROM quest WHERE questArea IS NOT NULL AND domainId <= ? ORDER BY questArea ASC")
         .all(domain);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
-          .setCustomId("miniquestAreaSelect")
+          .setCustomId("questAreaSelect")
           .setPlaceholder("Select a quest area")
           .addOptions(
             questAreas.map(area => ({
@@ -52,14 +52,14 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       }
     } else if (stage === 2) {
       // Stage 2: Show quests in area
-      const areaData = db.prepare("SELECT DISTINCT questArea, areaDesc FROM miniquest WHERE questArea = ? LIMIT 1").get(selectedArea);
+      const areaData = db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1").get(selectedArea);
       embed = new EmbedBuilder()
         .setTitle(selectedArea)
-        .setDescription(areaData?.areaDesc || "Select a miniquest:")
+        .setDescription(areaData?.areaDesc || "Select a quest:")
         .setColor(embedColor);
 
       const quests = db
-        .prepare("SELECT id, name, description FROM miniquest WHERE questArea = ? ORDER BY name ASC")
+        .prepare("SELECT id, name, description FROM quest WHERE questArea = ? ORDER BY name ASC")
         .all(selectedArea);
 
       if (quests.length > 0) {
@@ -73,13 +73,13 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           const questSlice = quests.slice(startIdx, endIdx);
 
           const dropdown = new StringSelectMenuBuilder()
-            .setCustomId(`miniquestSelect_${i}`)
+            .setCustomId(`questSelect_${i}`)
             .setPlaceholder(`Select a quest ${numDropdowns > 1 ? `(${i + 1}/${numDropdowns})` : ''}`)
             .addOptions(
               questSlice.map(quest => ({
                 label: quest.name,
                 description: quest.description ? quest.description.substring(0, 100) : 'No description available',
-                value: `miniquest${quest.id}`
+                value: `quest${quest.id}`
               }))
             );
 
@@ -90,7 +90,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       // Back button
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`miniquestback`)
+          .setCustomId(`questback`)
           .setLabel("Back")
           .setStyle(ButtonStyle.Danger)
       );
@@ -98,7 +98,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 
     } else if (stage === 3) {
       // Stage 3: Show quest details
-      const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(selectedQuestId);
+      const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(selectedQuestId);
       
       if (!quest) {
         embed = new EmbedBuilder()
@@ -125,11 +125,11 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
-          .setCustomId(`miniquestback-${selectedArea}`)
+          .setCustomId(`questback-${selectedArea}`)
           .setLabel("Back")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId(`miniquestcomplete-${selectedQuestId}-${completeTime}`)
+          .setCustomId(`questcomplete-${selectedQuestId}-${completeTime}`)
           .setLabel("Claim Quest")
           .setStyle(ButtonStyle.Success)
       );
@@ -149,7 +149,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     }
 
   } catch (error) {
-    console.error(`[MINIQUEST_ERROR] ${error.message}`, { userId: interaction.user.id });
+    console.error(`[quest_ERROR] ${error.message}`, { userId: interaction.user.id });
     
     const errorEmbed = new EmbedBuilder()
       .setTitle("Error")
@@ -172,13 +172,13 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 
 module.exports = {
   commandData: new SlashCommandBuilder()
-    .setName("miniquest")
-    .setDescription("Browse and explore miniquests by area"),
+    .setName("quest")
+    .setDescription("Browse and explore quests by area"),
 
-  allowedButtons: ["miniquestback", "miniquestcomplete"],
+  allowedButtons: ["questback", "questcomplete"],
 
   executeCommand: async (interaction) => {
-    if (interaction.commandName === "miniquest") {
+    if (interaction.commandName === "quest") {
       menu(interaction, false, 1);
     }
   },
@@ -187,13 +187,13 @@ module.exports = {
     if (interaction.isCommand()) {
       module.exports.executeCommand(interaction);
     } else if (interaction.isStringSelectMenu()) {
-      if (interaction.customId === "miniquestAreaSelect") {
+      if (interaction.customId === "questAreaSelect") {
         // Area selected - go to stage 2
         menu(interaction, true, 2, interaction.values[0]);
-      } else if (interaction.customId.startsWith("miniquestSelect_")) {
+      } else if (interaction.customId.startsWith("questSelect_")) {
         // Quest selected - go to stage 3
-        const questId = parseInt(interaction.values[0].replace('miniquest', ''));
-        const quest = db.prepare("SELECT questArea FROM miniquest WHERE id = ?").get(questId);
+        const questId = parseInt(interaction.values[0].replace('quest', ''));
+        const quest = db.prepare("SELECT questArea FROM quest WHERE id = ?").get(questId);
         menu(interaction, true, 3, quest?.questArea, questId);
       }
     } else if (interaction.isButton()) {
@@ -201,7 +201,7 @@ module.exports = {
       const action = parts[0];
       
       switch (action) {
-        case "miniquestback":
+        case "questback":
           if (parts.length === 1) {
             // Back to stage 1
             menu(interaction, true, 1);
@@ -212,7 +212,7 @@ module.exports = {
           }
           break;
           
-        case "miniquestcomplete":
+        case "questcomplete":
           // Complete quest - check timing
           const completeTime = parseInt(parts[2]);
           const currentTime = Math.floor(Date.now() / 1000);
@@ -232,7 +232,7 @@ module.exports = {
             });
             // Quest completed
             const id = parts[1];
-            const quest = db.prepare("SELECT * FROM miniquest WHERE id = ?").get(id);
+            const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
             const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
             db.prepare('UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?').run(quest.coins, interaction.user.id, interaction.guildId);
@@ -253,7 +253,7 @@ module.exports = {
                 let healerQuest;
                 const xp = Math.random() < quest.relicChance ? quest.professionXp : 0;
                 if (xp > 0) {
-                    healerQuest = db.prepare('SELECT * FROM healerMiniquest ORDER BY RANDOM() LIMIT 1').get();
+                    healerQuest = db.prepare('SELECT * FROM healerquest ORDER BY RANDOM() LIMIT 1').get();
                     embeds.push(new EmbedBuilder()
                       .setTitle(healerQuest.name)
                       .setDescription(healerQuest.description)
@@ -368,6 +368,6 @@ module.exports = {
   },
 
   main: (client) => {
-    console.log("Slash commands for miniquest module have been loaded.");
+    console.log("Slash commands for quest module have been loaded.");
   }
 };
