@@ -271,7 +271,7 @@ module.exports = {
                     const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
                     const attack = skillMod(user.skill3) + (weaponBonus || 0);
                     const defense = skillMod(user.skill4) + (armorBonus || 0);
-                    const hp = Math.min(20, Math.max(1, user.skill5));
+                    const hp = skillMod(user.skill5);
 
                     const monsterAttack = skillMod(user.skill3) * difficulty;
                     const monsterDefense = skillMod(user.skill4) * difficulty;
@@ -307,6 +307,7 @@ module.exports = {
                             battleLog += `The ${quest.entity} misses you!\n`;
                         }
                         if(userHitpoints <= 0) break;
+                        break;//what happens here
                     };
                     console.log(3);
                     let battleField = [];
