@@ -74,7 +74,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 
           const firstLetter = questSlice[0]?.name.charAt(0).toUpperCase() || '';
           const lastLetter = questSlice[questSlice.length - 1]?.name.charAt(0).toUpperCase() || '';
-          const letterRange = firstLetter === lastLetter ? firstLetter : `${firstLetter}-${lastLetter}`;
+          const letterRange = firstLetter === lastLetter ? firstLetter : `[${firstLetter}-${lastLetter}]`;
 
           const dropdown = new StringSelectMenuBuilder()
             .setCustomId(`questSelect_${i}`)
