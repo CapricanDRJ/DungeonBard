@@ -192,9 +192,17 @@ module.exports = {
                 const updateQuery = `UPDATE users SET coins = coins - ?, ${itemColumn} = ?, ${itemColumn}End = ? WHERE userId = ? AND guildId = ?`;
                 db.prepare(updateQuery).run(item.cost, item.itemBonus, unixTime + item.duration, interaction.user.id, interaction.guildId);
             }
+            const buttonRow = new ActionRowBuilder().addComponents(
+            new ButtonBuilder()
+                .setCustomId(`purchase-${selectedItemId}`)
+                .setLabel(`Purchased for 🪙 ${item.cost}`)
+                .setDisabled(true)
+                .setStyle(ButtonStyle.Success)
+            );
+        components.push(buttonRow);
             //db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
             return interaction.update({
-              components: []
+              components: [buttonRow]
             });
           }
           break;
