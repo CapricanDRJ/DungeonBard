@@ -14,6 +14,14 @@ const MessageFlags = MessageFlagsBitField.Flags;
 const storeFront = new EmbedBuilder()
   .setImage("https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/refs/heads/main/shop.webp")
   .setColor(embedColor);
+const skillNames = [
+  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
+  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
+  ["Pedagogy","Classroom Command","Lesson Crafting","Organization","Stamina","Adaptability"],
+  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
+  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
+  ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
+];
 async function menu(interaction, isUpdate, selectedItemId = null) {
   try {
     let embed;
@@ -24,6 +32,7 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
       const items = db
         .prepare("SELECT id, name, emojiId FROM items ORDER BY name ASC")
         .all();
+      const user = db.prepare('SELECT coins,domainId FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(interaction.user.id, interaction.guildId);
 
       if (items.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
@@ -63,9 +72,8 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
     emojiId TEXT NOT NULL
 );*/
         const statsFields = [];
-        const skills = ["Intelligence", "Charisma", "Attack", "Defense", "Hitpoints", "Dexterity"];
         const profession = ["Artisan", "Soldier", "Healer"];
-        if(item.skillBonus) statsFields.push({ name: skills[item.skill - 1], value: `+${item.skillBonus}`, inline: true });
+        if(item.skillBonus) statsFields.push({ name: skillNames[user.domainId - 1][item.skill - 1], value: `+${item.skillBonus}`, inline: true });
         if(item.itemBonus) statsFields.push({ name: profession[item.professionId - 1], value:`${(item.itemBonus < 9 ? 'X' : '+')}${item.itemBonus}`, inline: true });
         if(item.duration) statsFields.push({ name: "Until", value: `<t:${unixTime + item.duration}:f>`, inline: true });
         
@@ -84,6 +92,7 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
           new ButtonBuilder()
             .setCustomId(`purchase-${selectedItemId}`)
             .setLabel(`Purchase for 🪙 ${item.cost}`)
+            .setDisabled((user.coins > item.cost) ? false : true)
             .setStyle(ButtonStyle.Success)
         );
         components.push(buttonRow);
@@ -93,14 +102,17 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
       const items = db
         .prepare("SELECT id, name, emojiId FROM items ORDER BY name ASC")
         .all();
-
+      const ownedItems = Object.fromEntries(
+        db.prepare("SELECT shopId, COUNT(*) as quantity FROM inventory WHERE userId = ? AND guildId = ? AND shopId IS NOT NULL GROUP BY shopId").all(interaction.user.id, interaction.guildId)
+          .map(row => [row.shopId, row.quantity])
+      );
       if (items.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("itemSelect")
           .setPlaceholder("Select another item to view")
           .addOptions(
             items.map(item => ({
-              label: item.name,
+              label: ownedItems[item.id] ? `[${ownedItems[item.id]}] ${item.name}` : item.name,
               value: `item${item.id}`,
               emoji: item.emojiId
             }))

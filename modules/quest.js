@@ -22,6 +22,7 @@ const skillNames = [
   ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
   ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
 ];
+
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
   const days = Math.floor(seconds / 86400); // 86400 = 24*60*60
