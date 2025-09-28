@@ -391,27 +391,27 @@ module.exports = {
                         if(userd20attack >= monsterd20defense) {
                             //hit
                             const monsterDamage = (userd20attack - monsterd20defense) / 2;
-                            battleLog += `You hit the ${beast.entity} for ${monsterDamage.toFixed(2)}/${monsterHitpoints.toFixed(2)} damage!\n`;
+                            battleLog += `You hit the **${beast.entity}** for ${monsterDamage.toFixed(2)}/${monsterHitpoints.toFixed(2)} damage!\n`;
                             monsterHitpoints -= monsterDamage;
                         } else {
-                            battleLog += `You miss the ${beast.entity}!\n`;
+                            battleLog += `You miss the **${beast.entity}**!\n`;
                         }
                         if(monsterHitpoints <= 0) break;
                         //monster turn
                         const monsterD20attack = Math.floor(Math.random() * 20) + 1 + monsterAttack;
                         const userd20defense = Math.floor(Math.random() * 20) + 1 + defense;
                         if(i>6) {
-                          battleLog += `The ${beast.entity} hits you for ${userHitpoints.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
+                          battleLog += `The **${beast.entity}** hits you for ${userHitpoints.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
                           userHitpoints = 0;
                           break;
                         };
                         if(monsterD20attack >= userd20defense) {
                             //hit
                             const userDamage = (monsterD20attack - (userd20defense)) / 2;
-                            battleLog += `The ${beast.entity} hits you for ${userDamage.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
+                            battleLog += `The **${beast.entity}** hits you for ${userDamage.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
                             userHitpoints -= userDamage;
                         } else {
-                            battleLog += `The ${beast.entity} misses you!\n`;
+                            battleLog += `The **${beast.entity}** misses you!\n`;
                         }
                         if(userHitpoints <= 0) break;
                         i++;
