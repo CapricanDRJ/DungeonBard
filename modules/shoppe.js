@@ -26,21 +26,21 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
   try {
     let embed;
     let components = [];
-
-    if (!selectedItemId) {
-      // Initial store view
-      const items = db
-        .prepare("SELECT id, name, emojiId FROM items ORDER BY name ASC")
-        .all();
-      const user = db.prepare('SELECT coins,domainId FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(interaction.user.id, interaction.guildId);
-
+    const user = db.prepare('SELECT coins,domainId FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(interaction.user.id, interaction.guildId);
+    const items = db
+      .prepare("SELECT id, name, emojiId FROM items ORDER BY name ASC")
+      .all();
+    const ownedItems = Object.fromEntries(
+      db.prepare("SELECT shopId, COUNT(*) as quantity FROM inventory WHERE userId = ? AND guildId = ? AND shopId IS NOT NULL GROUP BY shopId").all(interaction.user.id, interaction.guildId)
+        .map(row => [row.shopId, row.quantity])
+    );
       if (items.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("itemSelect")
           .setPlaceholder("Select an item to view")
           .addOptions(
             items.map(item => ({
-              label: item.name,
+              label: ownedItems[item.id] ? `[${ownedItems[item.id]}] ${item.name}` : item.name,
               value: `item${item.id}`,
               emoji: item.emojiId
             }))
@@ -48,7 +48,7 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
 
         components.push(new ActionRowBuilder().addComponents(dropdown));
       }
-    } else {
+    if (selectedItemId) {
       // Item details view
       const item = db.prepare("SELECT * FROM items WHERE id = ?").get(selectedItemId);
       
@@ -59,18 +59,6 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
           .setColor(embedColor);
       } else {
         const unixTime = Math.floor(Date.now() / 1000);
-/*
-        CREATE TABLE items (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    name TEXT NOT NULL,
-    skillBonus INTEGER,
-    itemBonus INTEGER,
-    skill INTEGER,
-    professionId INTEGER,
-    cost INTEGER NOT NULL,
-    duration INTEGER NOT NULL,
-    emojiId TEXT NOT NULL
-);*/
         const statsFields = [];
         const profession = ["Artisan", "Soldier", "Healer"];
         if(item.skillBonus) statsFields.push({ name: skillNames[user.domainId - 1][item.skill - 1], value: `+${item.skillBonus}`, inline: true });
@@ -96,29 +84,6 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
             .setStyle(ButtonStyle.Success)
         );
         components.push(buttonRow);
-      }
-
-      // Back button dropdown
-      const items = db
-        .prepare("SELECT id, name, emojiId FROM items ORDER BY name ASC")
-        .all();
-      const ownedItems = Object.fromEntries(
-        db.prepare("SELECT shopId, COUNT(*) as quantity FROM inventory WHERE userId = ? AND guildId = ? AND shopId IS NOT NULL GROUP BY shopId").all(interaction.user.id, interaction.guildId)
-          .map(row => [row.shopId, row.quantity])
-      );
-      if (items.length > 0) {
-        const dropdown = new StringSelectMenuBuilder()
-          .setCustomId("itemSelect")
-          .setPlaceholder("Select another item to view")
-          .addOptions(
-            items.map(item => ({
-              label: ownedItems[item.id] ? `[${ownedItems[item.id]}] ${item.name}` : item.name,
-              value: `item${item.id}`,
-              emoji: item.emojiId
-            }))
-          );
-
-        components.push(new ActionRowBuilder().addComponents(dropdown));
       }
     }
     const embeds = [storeFront];
@@ -189,7 +154,6 @@ module.exports = {
           const itemId = parseInt(parts[1]);
           const item = db.prepare("SELECT * FROM items WHERE id = ? LIMIT 1").get(itemId);
           const user = db.prepare('SELECT coins FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(interaction.user.id, interaction.guildId);
-          const unixTime = Math.floor(Date.now() / 1000);
           if (!user || user.coins < item.cost) {
             return interaction.reply({
               content: `You don't have enough coins! You need 🪙 ${item.cost} but only have 🪙 ${user?.coins || 0}.`,
