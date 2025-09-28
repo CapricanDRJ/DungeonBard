@@ -71,6 +71,16 @@ module.exports = {
             subcommand
                 .setName('delete')
                 .setDescription('Delete your character data')
+        )
+        .addSubcommand(subcommand =>
+            subcommand
+                .setName('rename')
+                .setDescription('Change your character name')
+                .addStringOption(option =>
+                    option.setName('name')
+                        .setDescription('Enter your new character name')
+                        .setRequired(true)
+                )
         ),
 
     allowedButtons: [],
@@ -256,7 +266,36 @@ module.exports = {
                         embeds: [embed]
                     });
                     break;
+                    case 'rename':
+                        const renameUser = db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                        
+                        if (!renameUser) {
+                            interaction.reply({
+                                content: 'No character found. Use `/character enroll` to create one first.',
+                                flags: MessageFlags.Ephemeral
+                            });
+                            return;
+                        }
 
+                        let newName = interaction.options.getString('name').trim();
+                        
+                        if (newName === '' || newName.length > 32) {
+                            interaction.reply({
+                                content: 'Character name must be between 1-32 characters.',
+                                flags: MessageFlags.Ephemeral
+                            });
+                            return;
+                        }
+
+                        setTimeout(() => {
+                            db.prepare('UPDATE users SET displayName = ? WHERE userId = ? AND guildId = ?').run(newName, userId, guildId);
+                        }, 0);
+
+                        interaction.reply({
+                            content: `Character renamed from "${renameUser.displayName}" to "${newName}".`,
+                            flags: MessageFlags.Ephemeral
+                        });
+                        break;
                 default:
                     interaction.reply({
                         content: 'Unknown subcommand.',
