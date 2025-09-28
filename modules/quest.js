@@ -307,7 +307,6 @@ module.exports = {
                             { name: skillNames[user.domainId - 1][4], value: user.skill5.toString(), inline: true },
                             { name: skillNames[user.domainId - 1][5], value: user.skill6.toString(), inline: true }
                         )
-                        .setColor(domain.background)
                         .setTimestamp();
             await interaction.update({
               embeds: [endStats],
