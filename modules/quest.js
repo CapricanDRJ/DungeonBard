@@ -291,21 +291,21 @@ module.exports = {
             db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
             .run(quest.skill1, quest.skill2, quest.skill3 , quest.skill4, quest.skill5, quest.skill6, quest.coins, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1], interaction.user.id, interaction.guildId);
                     const endStats = new EmbedBuilder()
-                        .setTitle(`${statsUser.displayName}`)
+                        .setTitle(`${user.displayName}`)
                         .setThumbnail(interaction.user.displayAvatarURL())
                         .addFields(
-                            { name: 'Overall Exp', value: statsUser.overallExp.toString(), inline: true },
-                            { name: 'Coins', value: statsUser.coins.toString(), inline: true },
-                            { name: 'Party', value: statsUser.partyName || 'None', inline: true },
-                            { name: 'Artisan Exp', value: statsUser.artisanExp.toString(), inline: true },
-                            { name: 'Soldier Exp', value: statsUser.soldierExp.toString(), inline: true },
-                            { name: 'Healer Exp', value: statsUser.healerExp.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][0], value: statsUser.skill1.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][1], value: statsUser.skill2.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][2], value: statsUser.skill3.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][3], value: statsUser.skill4.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][4], value: statsUser.skill5.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][5], value: statsUser.skill6.toString(), inline: true }
+                            { name: 'Overall Exp', value: user.overallExp.toString(), inline: true },
+                            { name: 'Coins', value: user.coins.toString(), inline: true },
+                            { name: 'Party', value: user.partyName || 'None', inline: true },
+                            { name: 'Artisan Exp', value: user.artisanExp.toString(), inline: true },
+                            { name: 'Soldier Exp', value: user.soldierExp.toString(), inline: true },
+                            { name: 'Healer Exp', value: user.healerExp.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][0], value: user.skill1.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][1], value: user.skill2.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][2], value: user.skill3.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][3], value: user.skill4.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][4], value: user.skill5.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][5], value: user.skill6.toString(), inline: true }
                         )
                         .setColor(domain.background)
                         .setTimestamp();
