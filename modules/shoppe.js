@@ -68,9 +68,9 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
         
         embed = new EmbedBuilder()
           .setTitle(item.name)
-          .setAuthor({
+          .setFooter({
             iconURL: "https://cdn.discordapp.com/emojis/1421988790813196400.webp",
-            name: `🪙 X ${user.coins.toString()}`
+            text: `🪙 X ${user.coins.toString()}`
           })
           .setDescription(`Cost: 🪙 ${item.cost}`)
           .setColor(embedColor)
