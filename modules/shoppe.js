@@ -38,12 +38,12 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("itemSelect")
           .setPlaceholder("Select an item to view")
-          .setDefaultValues(selectedItemId ? [`item${selectedItemId}`] : [])
           .addOptions(
             items.map(item => ({
               label: ownedItems[item.id] ? `[${ownedItems[item.id]}] ${item.name}` : item.name,
               value: `item${item.id}`,
-              emoji: item.emojiId
+              emoji: item.emojiId,
+              default: selectedItemId === item.id
             }))
           );
 
