@@ -22,6 +22,7 @@ const skillNames = [
   ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
   ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
 ];
+const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
   const days = Math.floor(seconds / 86400); // 86400 = 24*60*60
   const hours = Math.floor((seconds % 86400) / 3600);
@@ -244,7 +245,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(id);
-            const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
+            const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
               db.prepare(`DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?`).run(interaction.user.id, interaction.guildId);
@@ -283,9 +284,12 @@ module.exports = {
             `).all(interaction.user.id, interaction.guildId);
             const skillBonuses = [1, 1, 1, 1, 1, 1];
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
+            let itemString = '';
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
+              itemString += item.skillBonus ? `\n- ${item.name} (Skill: ${skillNames[item.skill - 1]}, X${item.skillBonus})` : '';
+              itemString += item.professionBonus ? `\n- ${item.name} (Profession: ${professionNames[parseInt(item.professionId) - 1]} +${item.professionBonus})` : '';
             }
             const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
             db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
@@ -305,7 +309,8 @@ module.exports = {
                             { name: skillNames[user.domainId - 1][2], value: user.skill3.toString(), inline: true },
                             { name: skillNames[user.domainId - 1][3], value: user.skill4.toString(), inline: true },
                             { name: skillNames[user.domainId - 1][4], value: user.skill5.toString(), inline: true },
-                            { name: skillNames[user.domainId - 1][5], value: user.skill6.toString(), inline: true }
+                            { name: skillNames[user.domainId - 1][5], value: user.skill6.toString(), inline: true },
+                            { name: 'Active Items', value: itemString || 'None', inline: false }
                         )
                         .setTimestamp();
             await interaction.update({
@@ -333,7 +338,7 @@ module.exports = {
                   if(relicNoMonster.bonusXp) {
                     db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, iconURL) VALUES (?, ?, ?, ?, ?, ?, ?)')
                       .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, `relicNoMonster.emojiId`);
-                    const profBonus = ['Artisan', 'Soldier', 'Healer'][parseInt(relicNoMonster.professionId) - 1];
+                    const profBonus = professionNames[parseInt(relicNoMonster.professionId) - 1];
                     if (relicNoMonster.bonusXp < 9) {
                       db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)')
                       .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, relicNoMonster.emojiId);
