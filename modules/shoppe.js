@@ -70,7 +70,7 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
           .setTitle(item.name)
           .setAuthor({
             iconURL: "https://cdn.discordapp.com/emojis/1421988790813196400.webp",
-            name: `🪙 [${user.coins.toString()}]`
+            name: `[🪙 X ${user.coins.toString()}]`
           })
           .setDescription(`Cost: 🪙 ${item.cost}`)
           .setColor(embedColor)
