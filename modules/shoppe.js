@@ -147,13 +147,13 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
 
 module.exports = {
   commandData: new SlashCommandBuilder()
-    .setName("shop")
-    .setDescription("Browse and purchase items from the shop"),
+    .setName("shoppe")
+    .setDescription("Browse and purchase items from the shoppe"),
 
   allowedButtons: ["purchase"],
 
   executeCommand: async (interaction) => {
-    if (interaction.commandName === "shop") {
+    if (interaction.commandName === "shoppe") {
       menu(interaction, false);
     }
   },
