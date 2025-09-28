@@ -59,8 +59,8 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setColor(embedColor);
 
       const quests = db
-        .prepare("SELECT id, name, description FROM quest WHERE questArea = ? ORDER BY name ASC")
-        .all(selectedArea);
+        .prepare("SELECT id, name, description FROM quest WHERE questArea = ?  AND domainId <= ? ORDER BY name ASC")
+        .all(selectedArea, domain);
 
       if (quests.length > 0) {
         // Create dropdowns (max 25 options each)
