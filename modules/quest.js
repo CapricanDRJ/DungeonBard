@@ -15,12 +15,12 @@ const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
 const skillNames = [
-  ["LEARNING","COMMUNICATION","DISCIPLINE","ORGANIZATION","STAMINA","PERSEVERANCE"],
-  ["LEARNING","COMMUNICATION","DISCIPLINE","ORGANIZATION","STAMINA","PERSEVERANCE"],
-  ["PEDAGOGY","CLASSROOM COMMAND","LESSON CRAFTING","ORGANIZATION","STAMINA","ADAPTABILITY"],
-  ["SCHOLARSHIP","RHETORIC","ENDURANCE","ORGANIZATION","STAMINA","RESILIENCE"],
-  ["SCHOLARSHIP","RHETORIC","ENDURANCE","ORGANIZATION","STAMINA","RESILIENCE"],
-  ["SCHOLARSHIP","RHETORIC","ENDURANCE","ADMINISTRATION","STAMINA","INFLUENCE"]
+  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
+  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
+  ["Pedagogy","Classroom Command","Lesson Crafting","Organization","Stamina","Adaptability"],
+  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
+  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
+  ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
 ];
 function formatTime(seconds) {
   const days = Math.floor(seconds / 86400); // 86400 = 24*60*60
@@ -240,16 +240,79 @@ module.exports = {
               flags: MessageFlags.Ephemeral
             });
           } else {
-            await interaction.update({//remove buttons, no extra pressing
-                components: []
-            });
+
             // Quest completed
             const id = parts[1];
             const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(id);
             const profession = ['artisanExp', 'soldierExp', 'healerExp'][parseInt(quest.professionId) - 1];
-            const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
-            db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`).run(quest.skill1, quest.skill2, quest.skill3, quest.skill4, quest.skill5, quest.skill6, quest.coins, quest.professionXp, interaction.user.id, interaction.guildId);
+            db.transaction(() => {
+              //expire items past their duration
+              db.prepare(`DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?`).run(interaction.user.id, interaction.guildId);
+                        
+              //reset all items durations
+              db.prepare(`UPDATE inventory SET duration = duration - strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND duration > 31536000`).run(interaction.user.id, interaction.guildId);
 
+              // Activate highest profession bonuses
+              db.prepare(`
+              UPDATE inventory 
+              SET duration = duration + strftime('%s', 'now') 
+              WHERE userId = ? AND guildId = ? AND professionId != 0
+                AND professionBonus = (
+                  SELECT MAX(professionBonus) FROM inventory i2 
+                  WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId 
+                  AND i2.professionId = inventory.professionId
+                )
+              `).run(interaction.user.id, interaction.guildId);
+
+              // Activate highest skill bonuses  
+              db.prepare(`
+              UPDATE inventory 
+              SET duration = duration + strftime('%s', 'now') 
+              WHERE userId = ? AND guildId = ? AND skill != 0
+                AND skillBonus = (
+                  SELECT MAX(skillBonus) FROM inventory i2 
+                  WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId 
+                  AND i2.skill = inventory.skill
+                )
+              `).run(interaction.user.id, interaction.guildId);
+            })();
+            // Calculate active bonuses
+            const activeItems = db.prepare(`
+            SELECT * FROM inventory 
+            WHERE userId = ? AND guildId = ? AND duration > 31536000
+            `).all(interaction.user.id, interaction.guildId);
+            const skillBonuses = [1, 1, 1, 1, 1, 1];
+            const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
+            for (const item of activeItems) {
+              skillBonuses[item.skill - 1] = item.skillBonus;
+              professionBonuses[item.professionId - 1] = item.professionBonus;
+            }
+            const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
+            db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
+            .run(quest.skill1, quest.skill2, quest.skill3 , quest.skill4, quest.skill5, quest.skill6, quest.coins, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1], interaction.user.id, interaction.guildId);
+                    const endStats = new EmbedBuilder()
+                        .setTitle(`${statsUser.displayName}`)
+                        .setThumbnail(interaction.user.displayAvatarURL())
+                        .addFields(
+                            { name: 'Overall Exp', value: statsUser.overallExp.toString(), inline: true },
+                            { name: 'Coins', value: statsUser.coins.toString(), inline: true },
+                            { name: 'Party', value: statsUser.partyName || 'None', inline: true },
+                            { name: 'Artisan Exp', value: statsUser.artisanExp.toString(), inline: true },
+                            { name: 'Soldier Exp', value: statsUser.soldierExp.toString(), inline: true },
+                            { name: 'Healer Exp', value: statsUser.healerExp.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][0], value: statsUser.skill1.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][1], value: statsUser.skill2.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][2], value: statsUser.skill3.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][3], value: statsUser.skill4.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][4], value: statsUser.skill5.toString(), inline: true },
+                            { name: skillNames[user.domainId - 1][5], value: statsUser.skill6.toString(), inline: true }
+                        )
+                        .setColor(domain.background)
+                        .setTimestamp();
+            await interaction.update({
+              embeds: [endStats],
+                components: []//remove buttons, no extra pressing
+            });
             embeds.push(new EmbedBuilder()
               .setTitle(quest.questArea)
               .setDescription(quest.areaDesc || "No description available")
@@ -278,7 +341,7 @@ module.exports = {
                       bonusResult = `\nX${relicNoMonster.bonusXp} ${profBonus} Effect lasts ${formatTime(relicNoMonster.duration)}`;
                     } else {
                       bonusResult = `\n+${relicNoMonster.bonusXp} ${profBonus} XP`;
-                      db.prepare(`UPDATE users SET ${profBonus}Exp = ${profBonus}Exp + ? WHERE userId = ? AND guildId = ?`).run(relicNoMonster.bonusXp, interaction.user.id, interaction.guildId);
+                      db.prepare(`UPDATE users SET ${profBonus}Exp = ${profBonus}Exp + ? WHERE userId = ? AND guildId = ?`).run(relicNoMonster.bonusXp * professionBonuses[parseInt(relicNoMonster.professionId) - 1], interaction.user.id, interaction.guildId);
                     }
                   }
                   embeds.push(new EmbedBuilder()
@@ -305,10 +368,8 @@ module.exports = {
                         iconURL: beast.iconURL ||'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
                       }));
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(beast.difficulty)];
-                    const weaponBonus = user.weaponBonusEnd > unixTime ? user.weaponBonus : 0;
-                    const armorBonus = user.armorBonusEnd > unixTime ? user.armorBonus : 0;
-                    const attack = skillMod(user.skill3) + (weaponBonus || 0);
-                    const defense = skillMod(user.skill4) + (armorBonus || 0);
+                    const attack = skillMod(user.skill3) + skillBonuses[3-1];
+                    const defense = skillMod(user.skill4) + skillBonuses[4-1];
                     const hp = skillMod(user.skill5);
 
                     const monsterAttack = skillMod(user.skill3) * difficulty;

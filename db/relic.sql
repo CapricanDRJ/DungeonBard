@@ -10,6 +10,12 @@ CREATE TABLE IF NOT EXISTS "relic" (
     "duration" INTEGER NOT NULL DEFAULT 0, 
     "emojiId" TEXT DEFAULT NULL
 );
+profession id
+-- 1 = artisan
+-- 2 = soldier
+-- 3 = healer
+-- 4 = armor
+-- 5 = weapon
 INSERT INTO relic VALUES('Initiate1',0.5,'Notebook of Infinite Recall','Boosts memory for exams!',100,2,1,'1421933923151380560');
 INSERT INTO relic VALUES('Initiate2',0.5,'Pen of Confidence','Feel confident to speak up in class!',2,2,604800,'1421936603944849470');
 INSERT INTO relic VALUES('Initiate3',0.5,'Annotated Tome of Study','Homework becomes a breeze!',2,1,604800,'1421932860990034082');
