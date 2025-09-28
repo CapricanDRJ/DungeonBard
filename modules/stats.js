@@ -328,12 +328,12 @@ module.exports = {
             const imageBuffer = await generateCharacterImage(userData, domainData, userData.avatar);
             const fileName = `${userData.displayName}-stats.png`;
             const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
+            const embeds = new EmbedBuilder()
+                .setImage(`attachment://${fileName}`)
+                .setColor(domainData.background);
 
             interaction.reply({
-                embeds: [{
-                    color: domainData.background,
-                    image: { url: `attachment://${fileName}` }
-                }],
+                embeds,
                 files: [attachment]
             });
 
