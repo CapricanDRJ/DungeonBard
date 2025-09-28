@@ -71,11 +71,6 @@ module.exports = {
             subcommand
                 .setName('delete')
                 .setDescription('Delete your character data')
-        )
-        .addSubcommand(subcommand =>
-            subcommand
-                .setName('stats')
-                .setDescription('Display your character profile card')
         ),
 
     allowedButtons: [],
