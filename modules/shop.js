@@ -184,8 +184,8 @@ module.exports = {
               flags: MessageFlags.Ephemeral
             });
           } else {
-            const purchase = db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, professionBonus, skill, professionId, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
-              .run(interaction.user.id, interaction.guildId, item.name, item.skillBonus, item.itemBonus, item.skill, item.professionId, item.duration, item.emojiId);
+            const purchase = db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, professionBonus, skill, professionId, duration, emojiId, shopId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)')
+              .run(interaction.user.id, interaction.guildId, item.name, item.skillBonus, item.itemBonus, item.skill, item.professionId, item.duration, item.emojiId, item.id);
             if (purchase.changes > 0) {
               db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
             }

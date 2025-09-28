@@ -60,7 +60,8 @@ CREATE TABLE inventory (
     skill INTEGER,
     professionId INTEGER,
     duration INTEGER NOT NULL,
-    emojiId TEXT NOT NULL
+    emojiId TEXT NOT NULL,
+    shopId INTEGER DEFAULT NULL
 );
 
             if(item.skillBonus) {
