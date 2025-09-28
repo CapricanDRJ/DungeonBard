@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageFlagsBitField, AttachmentBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlagsBitField, AttachmentBuilder, EmbedBuilder } = require('discord.js');
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const sharp = require('sharp');
