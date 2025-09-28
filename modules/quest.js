@@ -35,7 +35,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setDescription("Choose a quest area to explore:")
         .setColor(embedColor);
       const questAreas = db
-        .prepare("SELECT DISTINCT questArea FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC")
+        .prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC")
         .all(domain);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
@@ -44,6 +44,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           .addOptions(
             questAreas.map(area => ({
               label: area.questArea,
+              description: area.areaDesc ? area.areaDesc.substring(0, 100) : 'No description available',
               value: area.questArea
             }))
           );
