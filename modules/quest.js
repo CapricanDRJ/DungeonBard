@@ -288,8 +288,8 @@ module.exports = {
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
-              itemString += item.skillBonus ? `\n- ${item.name} (Skill: ${skillNames[item.skill - 1]}, X${item.skillBonus})` : '';
-              itemString += item.professionBonus ? `\n- ${item.name} (Profession: ${professionNames[parseInt(item.professionId) - 1]} +${item.professionBonus})` : '';
+              itemString += item.skillBonus ? `\n- <:${item.emojiId}> ${item.name} (Skill: ${skillNames[item.skill - 1]}, X${item.skillBonus})` : '';
+              itemString += item.professionBonus ? `\n- <:${item.emojiId}> ${item.name} (Profession: ${professionNames[parseInt(item.professionId) - 1]} +${item.professionBonus})` : '';
             }
             const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
             db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
