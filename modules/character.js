@@ -267,7 +267,6 @@ module.exports = {
                     });
                     break;
                 case 'rename':
-                    console.log('Rename command invoked');
                         const renameUser = db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
                         
                         if (!renameUser) {
