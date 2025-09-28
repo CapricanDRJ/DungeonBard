@@ -184,13 +184,10 @@ module.exports = {
               flags: MessageFlags.Ephemeral
             });
           } else {
-            if(item.skillBonus) {
-                db.prepare('UPDATE users SET coins = coins - ?, healerBonus = ?, healerBonusEnd = ? WHERE userId = ? AND guildId = ?').run(item.cost, item.skillBonus, unixTime + item.duration, interaction.user.id, interaction.guildId);
-            }
-            if(item.itemBonus) {
-                const itemColumn = [null, null, "weaponBonus", "armourBonus", null, null][item.skill - 1];
-                const updateQuery = `UPDATE users SET coins = coins - ?, ${itemColumn} = ?, ${itemColumn}End = ? WHERE userId = ? AND guildId = ?`;
-                db.prepare(updateQuery).run(item.cost, item.itemBonus, unixTime + item.duration, interaction.user.id, interaction.guildId);
+            const purchase = db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, professionBonus, skill, professionId, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)')
+              .run(interaction.user.id, interaction.guildId, item.name, item.skillBonus, item.itemBonus, item.skill, item.professionId, item.duration, item.emojiId);
+            if (purchase.changes > 0) {
+              db.prepare('UPDATE users SET coins = coins - ? WHERE userId = ? AND guildId = ?').run(item.cost, interaction.user.id, interaction.guildId);
             }
             const buttonRow = new ActionRowBuilder().addComponents(
             new ButtonBuilder()
