@@ -285,13 +285,13 @@ module.exports = {
             const skillBonuses = [1, 1, 1, 1, 1, 1];
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
+            const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
               itemString += item.skillBonus ? `\n- <:emoji:${item.emojiId}> ${item.name}\n - - ${skillNames[user.professionId - 1][item.skill - 1]} X${item.skillBonus})` : '';
               itemString += item.professionBonus ? `\n- <:emoji:${item.emojiId}> ${item.name}\n - - ${professionNames[parseInt(item.professionId) - 1]} +${item.professionBonus})` : '';
             }
-            const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
             db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
             .run(quest.skill1, quest.skill2, quest.skill3 , quest.skill4, quest.skill5, quest.skill6, quest.coins, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1], interaction.user.id, interaction.guildId);
                     const endStats = new EmbedBuilder()
