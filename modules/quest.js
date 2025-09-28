@@ -452,7 +452,7 @@ module.exports = {
                               .setColor(0x996515)
                               .setAuthor({
                                 name: "Relic Found!",
-                                iconURL: relic.iconURL ||'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
+                                iconURL: `https://cdn.discordapp.com/emojis/${relic.emojiId}.webp`
                               })
                             );
                         }
