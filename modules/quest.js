@@ -22,6 +22,14 @@ const skillNames = [
   ["SCHOLARSHIP","RHETORIC","ENDURANCE","ORGANIZATION","STAMINA","RESILIENCE"],
   ["SCHOLARSHIP","RHETORIC","ENDURANCE","ADMINISTRATION","STAMINA","INFLUENCE"]
 ];
+function formatTime(seconds) {
+  const days = Math.floor(seconds / 86400); // 86400 = 24*60*60
+  const hours = Math.floor((seconds % 86400) / 3600);
+
+  if (days > 0) return `${days} day${days !== 1 ? "s" : ""}`;
+  if (hours > 0) return `${hours} hour${hours !== 1 ? "s" : ""}`;
+  return `${Math.floor(seconds / 60)} minute${seconds >= 120 ? "s" : ""}`;
+}
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
     let embed;
@@ -261,11 +269,13 @@ module.exports = {
                 if (Math.random() < relicNoMonster.chance) {
                   let bonusResult = '';
                   if(relicNoMonster.bonusXp) {
-                    const profBonus = ['artisan', 'soldier', 'healer'][parseInt(relicNoMonster.professionId) - 1];
+                    db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, iconURL) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                      .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, `relicNoMonster.emojiId`);
+                    const profBonus = ['Artisan', 'Soldier', 'Healer'][parseInt(relicNoMonster.professionId) - 1];
                     if (relicNoMonster.bonusXp < 9) {
-                      const bonusUntil =  unixTime+relicNoMonster.duration
-                      bonusResult = `\nX${relicNoMonster.bonusXp} ${profBonus} bonus until <t:${bonusUntil}:f>`;
-                      db.prepare(`UPDATE users SET ${profBonus}Bonus = ?, ${profBonus}BonusEnd = ? WHERE userId = ? AND guildId = ?`).run(relicNoMonster.bonusXp, bonusUntil, interaction.user.id, interaction.guildId);
+                      db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                      .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, relicNoMonster.emojiId);
+                      bonusResult = `\nX${relicNoMonster.bonusXp} ${profBonus} Effect lasts ${formatTime(relicNoMonster.duration)}`;
                     } else {
                       bonusResult = `\n+${relicNoMonster.bonusXp} ${profBonus} XP`;
                       db.prepare(`UPDATE users SET ${profBonus}Exp = ${profBonus}Exp + ? WHERE userId = ? AND guildId = ?`).run(relicNoMonster.bonusXp, interaction.user.id, interaction.guildId);
@@ -274,7 +284,7 @@ module.exports = {
                   embeds.push(new EmbedBuilder()
                     .setAuthor({
                       name: "Relic Found!",
-                      iconURL: 'https://cdn.discordapp.com/emojis/1421265478331928646.webp'
+                      iconURL: `https://cdn.discordapp.com/emojis/${relicNoMonster.emojiId}.webp`
                     })
                     .setTitle(relicNoMonster.name)
                     .setDescription(relicNoMonster.description+bonusResult)
