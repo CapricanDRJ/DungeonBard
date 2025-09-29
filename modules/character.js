@@ -3,6 +3,17 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
 
+const dbQuery = {
+    getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
+    insertUser: db.prepare(`INSERT INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
+    insertAvatarBlob: db.prepare(`INSERT INTO avatars (userId, guildId, avatar) VALUES (?, ?, ?)`),
+    confirmExistingUser: db.prepare('SELECT 1 FROM users WHERE userId = ? AND guildId = ? LIMIT 1'),
+    getDisplayName: db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?'),
+    updateDisplayName: db.prepare('UPDATE users SET displayName = ? WHERE userId = ? AND guildId = ?'),
+    deleteUser: db.prepare('DELETE FROM users WHERE userId = ? AND guildId = ?'),
+    resetUser: db.prepare(`UPDATE users SET domainId = ?, artisanExp = 0, soldierExp = 0, healerExp = 0, skill1 = 0, skill2 = 0, skill3 = 0, skill4 = 0, skill5 = 0, skill6 = 0, coins = 0 WHERE userId = ? AND guildId = ?`),
+};
+
 // Load domains from database
 const domains = (() => {
     const domainData = db.prepare('SELECT * FROM domains ORDER BY id').all();
@@ -17,24 +28,7 @@ const domains = (() => {
     });
     return domainsObj;
 })();
-const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
-    const currentFileName = currentAvatarURL.split('/').pop().split('?')[0];
-    const user = db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
-    
-    if (!user || user.avatarFile !== currentFileName) {
-        try {
-            const response = await fetch(currentAvatarURL);
-            if (response.ok) {
-                const arrayBuffer = await response.arrayBuffer();
-                const avatarBlob = Buffer.from(arrayBuffer);
-                db.prepare('UPDATE users SET avatarFile = ?, avatar = ? WHERE userId = ? AND guildId = ?')
-                  .run(currentFileName, avatarBlob, userId, guildId);
-            }
-        } catch (error) {
-            console.error('Error updating avatar:', error, `userId:${userId}`);
-        }
-    }
-};
+
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('character')
@@ -107,7 +101,7 @@ module.exports = {
                     const domainId = interaction.options.getInteger('domain');
 
                     // Check if user already exists
-                    const existingUser = db.prepare('SELECT 1 FROM users WHERE userId = ? AND guildId = ? LIMIT 1').get(userId, guildId);
+                    const existingUser = dbQuery.confirmExistingUser.get(userId, guildId);
                     if(displayName === null || displayName.trim() === '') {
                         displayName = interaction.member?.nick || 
                         interaction.user.displayName || interaction.user.globalName || interaction.user.username;
@@ -139,9 +133,8 @@ module.exports = {
                         } catch (error) {
                             console.error('Error downloading avatar:', error, `userId:${userId}`);
                         }
-
-                        db.prepare(`INSERT INTO users (userId, guildId, displayName, avatarFile, avatar, domainId) 
-                                   VALUES (?, ?, ?, ?, ?, ?)`).run(userId, guildId, displayName, avatarFileName, avatarBlob, domainId);
+                        dbQuery.insertUser.run(userId, guildId, displayName, avatarFileName, domainId);
+                        dbQuery.insertAvatarBlob.run(userId, guildId, avatarBlob);
                     }, 0);
 
                     interaction.reply({
@@ -151,7 +144,7 @@ module.exports = {
                     break;
 
                 case 'restart':
-                    const restartUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                    const restartUser = dbQuery.getUserData.get(userId, guildId);
                     
                     if (!restartUser) {
                         interaction.reply({
@@ -162,13 +155,7 @@ module.exports = {
                     }
 
                     setTimeout(() => {
-                        db.prepare(`UPDATE users SET artisanExp = 0, soldierExp = 0, healerExp = 0, 
-                                   skill1 = 0, skill2 = 0, skill3 = 0, skill4 = 0, skill5 = 0, skill6 = 0, 
-                                   coins = 0, armourId = 0, weaponId = 0,
-                                   artisanBonus = 0, artisanBonusEnd = 0, soldierBonus = 0, soldierBonusEnd = 0,
-                                   healerBonus = 0, healerBonusEnd = 0, weaponBonus = 0, weaponBonusEnd = 0,
-                                   armourBonus = 0, armourBonusEnd = 0
-                                   WHERE userId = ? AND guildId = ?`).run(userId, guildId);
+                        dbQuery.resetUser.run(userId, guildId);
                     }, 0);
 
                     interaction.reply({
@@ -178,7 +165,7 @@ module.exports = {
                     break;
 
                 case 'graduate':
-                    const graduateUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                    const graduateUser = dbQuery.getUserData.get(userId, guildId);
                     
                     if (!graduateUser) {
                         interaction.reply({
@@ -199,13 +186,7 @@ module.exports = {
                     const newDomainId = graduateUser.domainId + 1;
 
                     setTimeout(() => {
-                        db.prepare(`UPDATE users SET domainId = ?, artisanExp = 0, soldierExp = 0, healerExp = 0,
-                                   skill1 = 0, skill2 = 0, skill3 = 0, skill4 = 0, skill5 = 0, skill6 = 0,
-                                   coins = 0, armourId = 0, weaponId = 0,
-                                   artisanBonus = 0, artisanBonusEnd = 0, soldierBonus = 0, soldierBonusEnd = 0,
-                                   healerBonus = 0, healerBonusEnd = 0, weaponBonus = 0, weaponBonusEnd = 0,
-                                   armourBonus = 0, armourBonusEnd = 0
-                                   WHERE userId = ? AND guildId = ?`).run(newDomainId, userId, guildId);
+                        dbQuery.resetUser.run(newDomainId, userId, guildId);
                     }, 0);
 
                     interaction.reply({
@@ -215,7 +196,7 @@ module.exports = {
                     break;
 
                 case 'delete':
-                    const userToDelete = db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                    const userToDelete = dbQuery.getDisplayName.get(userId, guildId);
                     
                     if (!userToDelete) {
                         interaction.reply({
@@ -226,7 +207,7 @@ module.exports = {
                     }
 
                     setTimeout(() => {
-                        db.prepare('DELETE FROM users WHERE userId = ? AND guildId = ?').run(userId, guildId);
+                        dbQuery.deleteUser.run(userId, guildId);
                     }, 0);
 
                     interaction.reply({
@@ -236,7 +217,7 @@ module.exports = {
                     break;
 
                 case 'stats':
-                    const statsUser = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                    const statsUser = dbQuery.getUserData.get(userId, guildId);
                     
                     if (!statsUser) {
                         interaction.reply({
@@ -267,7 +248,7 @@ module.exports = {
                     });
                     break;
                 case 'rename':
-                        const renameUser = db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+                        const renameUser = dbQuery.getDisplayName.get(userId, guildId);
                         
                         if (!renameUser) {
                             interaction.reply({
@@ -288,7 +269,7 @@ module.exports = {
                         }
 
                         setTimeout(() => {
-                            db.prepare('UPDATE users SET displayName = ? WHERE userId = ? AND guildId = ?').run(newName, userId, guildId);
+                            dbQuery.updateDisplayName.run(newName, userId, guildId);
                         }, 0);
 
                         interaction.reply({

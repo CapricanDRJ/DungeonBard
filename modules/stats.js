@@ -3,7 +3,6 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const sharp = require('sharp');
 const MessageFlags = MessageFlagsBitField.Flags;
-
 const professions = {
     1: [0, 50, 500, 1000, 2000, 3500, 5000],
     2: [0, 250, 1250, 2500, 5000, 7500, 10000],
@@ -15,7 +14,35 @@ const professions = {
     soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
     artisan: ['Novice', 'Apprentice', 'Artisan', 'Mason', 'Grandmaster', 'Guildmaster']
 }
+const dbQuery = {
+    getUserAvatarFile:  db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ?'),
+    updateAvatarFileName: db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ?'),
+    updateAvatarBlob: db.prepare('INSERT OR REPLACE INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)'),
+    getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ?'),
+    getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?')
+};
+const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
+      const avatarURL = currentAvatarURL.replace(/\/a_/, '/')
+    .replace(/\.[a-zA-Z]{3,4}$/, '')
+    + '.png?size=64';
 
+    const avatarFileName = avatarURL.split('/').pop().split('?')[0];
+    const user = dbQuery.getUserAvatarFile.get(userId, guildId);
+
+    if (!user || user.avatarFile !== avatarFileName) {
+        try {
+            const response = await fetch(avatarURL);
+            if (response.ok) {
+                const arrayBuffer = await response.arrayBuffer();
+                const avatarBlob = Buffer.from(arrayBuffer);
+                dbQuery.updateAvatarFileName.run(avatarFileName, userId, guildId);
+                dbQuery.updateAvatarBlob.run(userId, guildId, avatarBlob);
+            }
+        } catch (error) {
+            console.error('Error updating avatar:', error, `userId:${userId}`);
+        }
+    }
+};
 // Load domains from database
 const domains = (() => {
     const domainData = db.prepare('SELECT * FROM domains ORDER BY id').all();
@@ -301,10 +328,10 @@ module.exports = {
     executeCommand: async (interaction) => {
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
-
         try {
             // Get user data from database
-            const userData = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(userId, guildId);
+            const userData = dbQuery.getUserData.get(userId, guildId);
+            const avatarBlob = dbQuery.getAvatarBlob.get(userId, guildId)?.avatarBlob || null;
             
             if (!userData) {
                 interaction.reply({
@@ -336,7 +363,7 @@ module.exports = {
                 embeds,
                 files: [attachment]
             });
-
+            setTimeout(() => { avatarUpdate(userId, guildId, interaction.user.displayAvatarURL()) }, 0);
         } catch (error) {
             console.error('Error executing stats command:', error, `userId:${userId}`);
             interaction.reply({
