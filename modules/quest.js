@@ -361,7 +361,7 @@ module.exports = {
                 }
 
             } else {
-                const beast = quest.beastiary ? db.prepare('SELECT * FROM beastiary where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.beastiary) : null;
+                const beast = quest.beastiary ? db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1').get(quest.beastiary) : null;
                 if(Math.random() < beast.chance) {
                     //peril
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
@@ -370,7 +370,7 @@ module.exports = {
                       .setColor(0xa6ce2a)
                       .setAuthor({
                         name: `The ${beast.entity}`,
-                        iconURL: beast.iconURL ||'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
+                        iconURL: beast.emojiId ? `https://cdn.discordapp.com/emojis/${beast.emojiId}.webp` : 'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
                       }));
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(beast.difficulty)];
                     const attack = skillMod(user.skill3) + skillBonuses[3-1];
