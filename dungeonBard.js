@@ -58,6 +58,67 @@ client.once('clientReady', async () => {
     modules.forEach(mod => {
         if (mod.main) mod.main(client);
     });
+
+
+//emoji upload for beastiary, remove later
+const sqlite3 = require('better-sqlite3');
+const db = new sqlite3('db/dungeonbard.db');
+const downloadAndResizeEmojis = async () => {
+    // Get unique emojiIds from both tables
+    const relicEmojis = db.prepare('SELECT DISTINCT emojiId FROM relic WHERE emojiId IS NOT NULL').all();
+    const inventoryEmojis = db.prepare('SELECT DISTINCT emojiId FROM inventory WHERE emojiId IS NOT NULL').all();
+    
+    // Combine and deduplicate
+    const allEmojiIds = [...new Set([...relicEmojis.map(r => r.emojiId), ...inventoryEmojis.map(i => i.emojiId)])];
+    
+    console.log(`Checking ${allEmojiIds.length} emojis...`);
+    
+    let downloaded = 0;
+    let skipped = 0;
+    
+    for (let i = 0; i < allEmojiIds.length; i++) {
+        const emojiId = allEmojiIds[i];
+        
+        // Check if emoji already exists
+        const existing = db.prepare('SELECT emojiId FROM itemEmojis WHERE emojiId = ?').get(emojiId);
+        if (existing) {
+            skipped++;
+            console.log(`Skipped ${i+1}/${allEmojiIds.length}: ${emojiId} (already exists)`);
+            continue;
+        }
+        
+        try {
+            // Download emoji from Discord CDN
+            const emojiUrl = `https://cdn.discordapp.com/emojis/${emojiId}.png?size=32`;
+            const response = await fetch(emojiUrl);
+            
+            if (!response.ok) {
+                console.error(`Failed to fetch emoji ${emojiId}: ${response.status}`);
+                return;
+            }
+            
+            const buffer = Buffer.from(await response.arrayBuffer());
+            
+            // Store in database
+            db.prepare('INSERT INTO itemEmojis (emojiId, emoji) VALUES (?, ?)').run(emojiId, buffer);
+            downloaded++;
+            console.log(`Downloaded ${i+1}/${allEmojiIds.length}: ${emojiId}`);
+            
+            // Wait 2 seconds between downloads
+            await new Promise(resolve => setTimeout(resolve, 2000));
+            
+        } catch (error) {
+            console.error(`Error downloading emoji ${emojiId}:`, error);
+            return;
+        }
+    }
+    
+    console.log(`Emoji download complete: ${downloaded} downloaded, ${skipped} skipped`);
+};
+downloadAndResizeEmojis();
+
+
+
 });
 
 client.on("interactionCreate", (interaction) => {
