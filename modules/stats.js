@@ -353,7 +353,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         {
         name: 'Smelly Socks',
         emojiId: '1422294273235353640',
-        bonusText: '+10 to ward off unwanted guests',
+        bonusText: '+10 Ward off All Guests',
         }
       ];
       const randomItem = jokeItem[Math.floor(Math.random() * jokeItem.length)];
