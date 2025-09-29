@@ -331,7 +331,6 @@ module.exports = {
         try {
             // Get user data from database
             const userData = dbQuery.getUserData.get(userId, guildId);
-            const avatarBlob = dbQuery.getAvatarBlob.get(userId, guildId)?.avatarBlob || null;
             
             if (!userData) {
                 interaction.reply({
@@ -350,9 +349,9 @@ module.exports = {
                 });
                 return;
             }
-
+            const avatarBlob = dbQuery.getAvatarBlob.get(userId, guildId)?.avatarBlob || null;
             // Generate character image
-            const imageBuffer = await generateCharacterImage(userData, domainData, userData.avatar);
+            const imageBuffer = await generateCharacterImage(userData, domainData, avatarBlob);
             const fileName = `${userData.displayName.replace(/[<>:"/\\|?*]/g, '_')}-stats.png`;
             const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
             const embeds = [new EmbedBuilder()
