@@ -90,21 +90,27 @@ const uploadBeastiaryEmojis = async (client) => {
                 db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(emoji.id, beast.id);
                 console.log(`Uploaded ${i+1}/${beasts.length}: ${beast.type} (${emoji.id})`);
                 
-            } catch (nameError) {
-                if (nameError.message.includes('already exists') || nameError.code === 50035) {
-                    // Find existing emoji with same name and use its ID
-                    const existingEmoji = client.application.emojis.cache.find(e => e.name === emojiName);
-                    if (existingEmoji) {
-                        db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(existingEmoji.id, beast.id);
-                        console.log(`Used existing ${i+1}/${beasts.length}: ${beast.type} (${existingEmoji.id})`);
-                    } else {
-                        console.log(`DUPLICATE: ${beast.type} name "${emojiName}" exists but not found in cache - skipping`);
-                    }
-                    continue;
-                } else {
-                    throw nameError;
-                }
+} catch (nameError) {
+    if (nameError.message.includes('already exists') || nameError.code === 50035) {
+        try {
+            // Fetch all application emojis to find the existing one
+            const allEmojis = await client.application.emojis.fetch();
+            const existingEmoji = allEmojis.find(e => e.name === emojiName);
+            
+            if (existingEmoji) {
+                db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(existingEmoji.id, beast.id);
+                console.log(`Used existing ${i+1}/${beasts.length}: ${beast.type} (${existingEmoji.id})`);
+            } else {
+                console.log(`DUPLICATE: ${beast.type} name "${emojiName}" exists but could not fetch - skipping`);
             }
+        } catch (fetchError) {
+            console.log(`Error fetching emojis for ${beast.type}: ${fetchError.message}`);
+        }
+        continue;
+    } else {
+        throw nameError;
+    }
+}
             
             await new Promise(resolve => setTimeout(resolve, 5000));
             
