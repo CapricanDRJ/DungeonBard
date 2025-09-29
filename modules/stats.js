@@ -141,10 +141,10 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
           </filter>
         </defs>
         <style>
-          .title { font-family: 'MedievalSharp', serif; font-size: 16px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: 'MedievalSharp', serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
+          .title { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE+4}px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE+2}px; font-weight: bold; fill: ${textColor}; }
           .text { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-          .section { font-family: 'MedievalSharp', serif; font-size: 15px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+          .section { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE+2}px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
         </style>
         
         <!-- Aged parchment background with texture -->
@@ -366,7 +366,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
       const jokeEmoji = dbQuery.selectEmoji.pluck().get(randomItem.emojiId);
             const base64Emoji = jokeEmoji.toString('base64');
             svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${randomItem.name}:</text>`;
+          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${randomItem.name}</text>`;
           col2Y += LINE_HEIGHT;
           svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">+${randomItem.bonusText}</text>`;
           col2Y += LINE_HEIGHT;
@@ -378,7 +378,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
             const base64Emoji = item.emoji.toString('base64');
             svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
           }
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}:</text>`;
+          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}</text>`;
           col2Y += LINE_HEIGHT;
           svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">+${item.skillBonus} ${skillNames[userData.domainId - 1][item.skill - 1]}</text>`;
           col2Y += LINE_HEIGHT;
@@ -389,7 +389,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
             const base64Emoji = item.emoji.toString('base64');
             svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
           }
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}:</text>`;
+          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}</text>`;
           col2Y += LINE_HEIGHT;
           svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
           col2Y += LINE_HEIGHT;
