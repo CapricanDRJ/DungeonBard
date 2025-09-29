@@ -134,10 +134,10 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
           </filter>
         </defs>
         <style>
-          .title { font-family: 'UnifrakturMaguntia', 'Cinzel', 'IM Fell English', serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: 'Cinzel', 'IM Fell English', serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
+          .title { font-family: 'MedievalSharp', 'Cinzel', 'IM Fell English', serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: 'MedievalSharp', 'IM Fell English', serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
           .text { font-family: 'Gentium Book Basic', 'IM Fell English', serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-          .section { font-family: 'Cinzel', 'IM Fell English', serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+          .section { font-family: 'MedievalSharp', 'IM Fell English', serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
         </style>
         
         <!-- Aged parchment background with texture -->
