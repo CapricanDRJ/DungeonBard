@@ -39,12 +39,19 @@ const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
     const avatarFileName = avatarURL.split('/').pop().split('?')[0];
     const user = dbQuery.getUserAvatarFile.get(userId, guildId);
 
-    if (!user || user.avatarFile !== avatarFileName) {
+    //if (!user || user.avatarFile !== avatarFileName) {
+    if (!user || true) {
         try {
             const response = await fetch(avatarURL);
             if (response.ok) {
                 const arrayBuffer = await response.arrayBuffer();
-                const avatarBlob = Buffer.from(arrayBuffer);
+                const avatarBlob = Buffer.from(arrayBuffer)
+                    .composite([{
+                        input: Buffer.from(`<svg width="64" height="64"><circle cx="32" cy="32" r="32" fill="white"/></svg>`),
+                        blend: 'dest-in'
+                    }])
+                    .png()
+                    .toBuffer();
                 dbQuery.updateAvatarFileName.run(avatarFileName, userId, guildId);
                 dbQuery.updateAvatarBlob.run(userId, guildId, avatarBlob);
             }
