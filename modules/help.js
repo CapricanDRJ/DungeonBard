@@ -61,7 +61,6 @@ const embed = new EmbedBuilder()
     .setTitle('Dungeon Bard Help')
     .setColor(0x5865F2)
     .setDescription('Welcome to the Quest of the Learned Scholar, Adventurer! This application is designed to reward you for engaging in scholarly work, while also balancing your health and wellbeing. This file will tell you a bit about the app and the seven commands [denoted by >>] that are used to play the DungeonBard quest.')
-    .addFields(helpSections)
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('help')
