@@ -142,7 +142,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         </defs>
         <style>
           .title { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE+4}px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE+2}px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE}px; font-weight: bold; fill: ${textColor}; }
           .text { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
           .section { font-family: 'MedievalSharp', serif; font-size: ${FONT_SIZE+2}px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
         </style>
