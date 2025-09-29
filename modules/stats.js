@@ -186,8 +186,8 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${userData.coins}</text>`;
     col2Y += 30;
 
-    // Equipment Section (Column 2)
-    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Equipment</text>`;
+    // Equipment Section (Column 1+2)
+    svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Equipment</text>`;
     col2Y += 18;
 
 for (const item of items) {
