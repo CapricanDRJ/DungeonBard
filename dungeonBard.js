@@ -83,7 +83,7 @@ const downloadAndResizeEmojis = async () => {
         const existing = db.prepare('SELECT emojiId FROM itemEmojis WHERE emojiId = ?').get(emojiId);
         if (existing) {
             skipped++;
-            console.log(`Skipped ${i+1}/${allEmojiIds.length}: ${emojiId} (already exists)`);
+            //console.log(`Skipped ${i+1}/${allEmojiIds.length}: ${emojiId} (already exists)`);
             continue;
         }
         
