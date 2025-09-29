@@ -53,7 +53,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     let components = [];
     const domain = dbQuery.getDomain.pluck().get(interaction.user.id, interaction.guildId);
     if(!domain) {
-      return interaction.reply({ content: "Please use /character to get registered.", ephemeral: true });
+      return interaction.reply({ content: "Please use /character enroll to register.", ephemeral: true });
     };
     const embedColor = colors[domain];
     if (stage === 1) {
