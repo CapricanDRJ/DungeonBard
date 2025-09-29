@@ -337,8 +337,8 @@ module.exports = {
                 if (Math.random() < relicNoMonster.chance) {
                   let bonusResult = '';
                   if(relicNoMonster.bonusXp) {
-                    db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, iconURL) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                      .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, `relicNoMonster.emojiId`);
+                    db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)')
+                      .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, relicNoMonster.emojiId);
                     const profBonus = professionNames[parseInt(relicNoMonster.professionId) - 1];
                     if (relicNoMonster.bonusXp < 9) {
                       db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)')
