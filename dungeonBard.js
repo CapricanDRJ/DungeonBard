@@ -67,14 +67,10 @@ const downloadAndResizeEmojis = async () => {
     // Get unique emojiIds from both tables
     const relicEmojis = db.prepare('SELECT DISTINCT emojiId FROM relic WHERE emojiId IS NOT NULL').all();
     const itemEmojis = db.prepare('SELECT DISTINCT emojiId FROM items WHERE emojiId IS NOT NULL').all();
-    const additionalEmojiIds = [
-        '1422312824285302784',//smelly socks
-        '1422335681333825627',//broken sundial
-        '1422337220735668234',//broken mirror
-    ];
+    const cursedItems = db.prepare('SELECT DISTINCT emojiId FROM cursedItems WHERE emojiId IS NOT NULL').all();
     
     // Combine and deduplicate
-    const allEmojiIds = [...new Set([...relicEmojis.map(r => r.emojiId), ...itemEmojis.map(i => i.emojiId), ...additionalEmojiIds])];
+    const allEmojiIds = [...new Set([...relicEmojis.map(r => r.emojiId), ...itemEmojis.map(i => i.emojiId), ...cursedItems.map(c => c.emojiId), ...additionalEmojiIds])];
 
     console.log(`Checking ${allEmojiIds.length} emojis...`);
     

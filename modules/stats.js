@@ -29,7 +29,8 @@ const dbQuery = {
     getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ?'),
     getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
     getActiveItems: db.prepare(`SELECT inventory.*, itemEmojis.emoji FROM inventory LEFT JOIN itemEmojis ON inventory.emojiId = itemEmojis.emojiId WHERE inventory.userId = ? AND inventory.guildId = ? AND inventory.duration > 31536000`),
-    selectEmoji: db.prepare('SELECT emoji FROM itemEmojis WHERE emojiId = ? LIMIT 1')
+    selectEmoji: db.prepare('SELECT emoji FROM itemEmojis WHERE emojiId = ? LIMIT 1'),
+    getCursedItem: db.prepare('SELECT * FROM cursedItems ORDER BY RANDOM() LIMIT 1')
   };
 const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
       const avatarURL = currentAvatarURL.replace(/\/a_/, '/')
@@ -355,32 +356,14 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Equipment</text>`;
     col2Y += 18;
     if(items.length === 0) {
-      const jokeItem = [
-        {
-        name: 'Smelly Socks',
-        emojiId: '1422312824285302784',
-        bonusText: '+10 Ward off All Guests',
-        },
-        {
-        name: 'Broken Sundial',
-        emojiId: '1422335681333825627',
-        bonusText: '+0.0001 Time Travel',
-        },
-        {
-        name: 'Cracked Mirror',
-        emojiId: '1422337220735668234',
-        bonusText: '+7 years Bad Luck',
-        },
-        
-      ];
-      const randomItem = jokeItem[Math.floor(Math.random() * jokeItem.length)];
-      const jokeEmoji = dbQuery.selectEmoji.pluck().get(randomItem.emojiId);
-            const base64Emoji = jokeEmoji.toString('base64');
-            svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${randomItem.name}</text>`;
-          col2Y += LINE_HEIGHT;
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${randomItem.bonusText}</text>`;
-          col2Y += LINE_HEIGHT;
+      const cursedItem = dbQuery.getCursedItem.get();
+      const cursedEmoji = dbQuery.selectEmoji.pluck().get(cursedItem.emojiId);
+      const base64Emoji = cursedEmoji.toString('base64');
+      svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
+      svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.name}</text>`;
+      col2Y += LINE_HEIGHT;
+      svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.bonusText}</text>`;
+      col2Y += LINE_HEIGHT;
     } else {
       for (const item of items) {
         if(item.skillBonus) {
