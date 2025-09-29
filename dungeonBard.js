@@ -104,7 +104,7 @@ const uploadBeastiaryEmojis = async (client) => {
     }
 };
 
-uploadBeastiaryEmojis(client).catch(console.error);
+
 
 });
 
