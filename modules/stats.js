@@ -14,12 +14,21 @@ const professions = {
     soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
     artisan: ['Novice', 'Apprentice', 'Artisan', 'Mason', 'Grandmaster', 'Guildmaster']
 }
+const skillNames = [
+  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
+  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
+  ["Pedagogy","Classroom Command","Lesson Crafting","Organization","Stamina","Adaptability"],
+  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
+  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
+  ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
+];
 const dbQuery = {
     getUserAvatarFile:  db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ?'),
     updateAvatarFileName: db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ?'),
     updateAvatarBlob: db.prepare('INSERT OR REPLACE INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)'),
     getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ?'),
-    getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?')
+    getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
+    getActiveItems: db.prepare(`SELECT * FROM inventory WHERE userId = ? AND guildId = ? AND duration > 31536000`)
 };
 const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
       const avatarURL = currentAvatarURL.replace(/\/a_/, '/')
@@ -90,7 +99,7 @@ const LINE_HEIGHT = 16;
 const MARGIN = 10;
 const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2; // Two columns with margins
 
-async function generateCharacterImage(userData, domainData, avatarBlob = null) {
+async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
   try {
     // Create base canvas with domain background color
     const canvas = sharp({
@@ -181,13 +190,17 @@ async function generateCharacterImage(userData, domainData, avatarBlob = null) {
     svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Equipment</text>`;
     col2Y += 18;
 
-    const armourName = getEquipmentName(userData.armourId, 'armour') || 'None';
-    const weaponName = getEquipmentName(userData.weaponId, 'weapon') || 'None';
+for (const item of items) {
+ if(item.skillBonus) {
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${item.name}: +${item.skillBonus}</text>`;
+    col2Y += LINE_HEIGHT;
+  }
+  if(item.professionBonus) {
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${item.name}: X${item.professionBonus}</text>`;
+    col2Y += LINE_HEIGHT;
+  }
+}
 
-    svgContent += `
-      <text x="${col2X}" y="${col2Y}" class="text">Armour: ${armourName}</text>
-      <text x="${col2X}" y="${col2Y + LINE_HEIGHT}" class="text">Weapon: ${weaponName}</text>`;
-    
     col2Y += LINE_HEIGHT * 2 + 10;
 
     // Attributes Section (Column 1)
@@ -286,14 +299,18 @@ function calculateRank(domain, experience, profession) {
 return professions[profession][level];
 }
 
-function getEquipmentName(equipmentId, type) {
-  // You'll need to query your equipment tables here
-  // This is a placeholder - replace with actual database query
-  if (equipmentId === 0) return null;
-  
-  // Example query (you'll need to implement):
-  // const equipment = db.prepare('SELECT name FROM equipment WHERE id = ? AND type = ?').get(equipmentId, type);
-  // return equipment?.name || null;
+function getEquipment(userId, guildId, domainId) {
+            const activeItems = dbQuery.getActiveItems.all(userId, guildId);
+            const skillBonuses = [1, 1, 1, 1, 1, 1];
+            const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
+            let itemString = '';
+            const user = dbQuery.getUser.get(userId, guildId);
+            for (const item of activeItems) {
+              skillBonuses[item.skill - 1] = item.skillBonus;
+              professionBonuses[item.professionId - 1] = item.professionBonus;
+              itemString += item.skillBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${skillNames[domainId - 1][item.skill - 1]} +${item.skillBonus} *Expires* <t:${item.duration}:R>` : '';
+              itemString += item.professionBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${professionNames[parseInt(item.professionId) - 1]} X${item.professionBonus} *Expires* <t:${item.duration}:R>` : '';
+            }
   
   return `${type} ${equipmentId}`; // Placeholder
 }
@@ -350,8 +367,9 @@ module.exports = {
                 return;
             }
             const avatarBlob = dbQuery.getAvatarBlob.get(userId, guildId)?.avatarBlob || null;
+            const items = dbQuery.getActiveItems.all(userId, guildId);
             // Generate character image
-            const imageBuffer = await generateCharacterImage(userData, domainData, avatarBlob);
+            const imageBuffer = await generateCharacterImage(userData, domainData, items, avatarBlob);
             const fileName = `${userData.displayName.replace(/[<>:"/\\|?*]/g, '_')}-stats.png`;
             const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
             const embeds = [new EmbedBuilder()
