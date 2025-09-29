@@ -213,6 +213,7 @@ for (const item of items) {
     svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
     col2Y += LINE_HEIGHT;
   }
+  col2Y += LINE_HEIGHT;
 }
 
     col2Y += LINE_HEIGHT * 2 + 10;
