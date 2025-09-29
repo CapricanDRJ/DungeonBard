@@ -192,25 +192,25 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
 
 for (const item of items) {
   if(item.skillBonus) {
-    // Add emoji image before the name
+    // Add emoji image spanning 2 lines
     if(item.emoji) {
       const base64Emoji = item.emoji.toString('base64');
-      svgContent += `<image x="${col1X}" y="${col2Y - 12}" width="16" height="16" href="data:image/png;base64,${base64Emoji}"/>`;
+      svgContent += `<image x="${col1X}" y="${col2Y - 24}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
     }
-    svgContent += `<text x="${col1X + 18}" y="${col2Y}" class="text">${item.name}:</text>`;
+    svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}:</text>`;
     col2Y += LINE_HEIGHT;
-    svgContent += `<text x="${col1X + 20}" y="${col2Y}" class="text">+${item.skillBonus} ${skillNames[userData.domainId - 1][item.skill - 1]}</text>`;
+    svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">+${item.skillBonus} ${skillNames[userData.domainId - 1][item.skill - 1]}</text>`;
     col2Y += LINE_HEIGHT;
   }
   if(item.professionBonus) {
-    // Add emoji image before the name
+    // Add emoji image spanning 2 lines
     if(item.emoji) {
       const base64Emoji = item.emoji.toString('base64');
-      svgContent += `<image x="${col1X}" y="${col2Y - 12}" width="16" height="16" href="data:image/png;base64,${base64Emoji}"/>`;
+      svgContent += `<image x="${col1X}" y="${col2Y - 24}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
     }
-    svgContent += `<text x="${col1X + 18}" y="${col2Y}" class="text">${item.name}:</text>`;
+    svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}:</text>`;
     col2Y += LINE_HEIGHT;
-    svgContent += `<text x="${col1X + 20}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
+    svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
     col2Y += LINE_HEIGHT;
   }
 }
