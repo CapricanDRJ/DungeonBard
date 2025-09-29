@@ -191,12 +191,16 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     col2Y += 18;
 
 for (const item of items) {
- if(item.skillBonus) {
+  if(item.skillBonus) {
     svgContent += `<text x="${col1X}" y="${col2Y}" class="text">${item.name}: +${item.skillBonus}</text>`;
+    col2Y += LINE_HEIGHT;
+    svgContent += `<text x="${col1X + 20}" y="${col2Y}" class="text">${skillNames[userData.domainId - 1][item.skill - 1]}</text>`;
     col2Y += LINE_HEIGHT;
   }
   if(item.professionBonus) {
     svgContent += `<text x="${col1X}" y="${col2Y}" class="text">${item.name}: X${item.professionBonus}</text>`;
+    col2Y += LINE_HEIGHT;
+    svgContent += `<text x="${col1X + 20}" y="${col2Y}" class="text">${professionNames[item.professionId - 1]}</text>`;
     col2Y += LINE_HEIGHT;
   }
 }
