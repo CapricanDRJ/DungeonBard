@@ -129,40 +129,60 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
 
     // Build SVG text overlay
 // Build SVG text overlay
-let svgContent = `
-  <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-    <defs>
-      <filter id="bevel">
-        <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
-        <feOffset in="blur" dx="1" dy="1" result="offsetBlur"/>
-        <feSpecularLighting in="blur" surfaceScale="5" specularConstant="0.5" specularExponent="10" lighting-color="white" result="specular">
-          <fePointLight x="-5000" y="-10000" z="20000"/>
-        </feSpecularLighting>
-        <feComposite in="specular" in2="SourceAlpha" operator="in" result="specularOut"/>
-        <feComposite in="SourceGraphic" in2="specularOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
-      </filter>
-    </defs>
-    <style>
-      .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
-      .header { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
-      .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-      .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
-    </style>
-    
-    <!-- Outer decorative border -->
-    <rect x="2" y="2" width="${IMAGE_WIDTH - 4}" height="${IMAGE_HEIGHT - 4}" 
-          fill="none" stroke="${textColor}" stroke-width="3" opacity="0.6" filter="url(#bevel)"/>
-    
-    <!-- Inner border -->
-    <rect x="5" y="5" width="${IMAGE_WIDTH - 10}" height="${IMAGE_HEIGHT - 10}" 
-          fill="none" stroke="${textColor}" stroke-width="1" opacity="0.4"/>
-    
-    <!-- Corner ornaments -->
-    <path d="M 8,8 L 20,8 L 20,10 L 10,10 L 10,20 L 8,20 Z" fill="${textColor}" opacity="0.5"/>
-    <path d="M ${IMAGE_WIDTH - 8},8 L ${IMAGE_WIDTH - 20},8 L ${IMAGE_WIDTH - 20},10 L ${IMAGE_WIDTH - 10},10 L ${IMAGE_WIDTH - 10},20 L ${IMAGE_WIDTH - 8},20 Z" fill="${textColor}" opacity="0.5"/>
-    <path d="M 8,${IMAGE_HEIGHT - 8} L 20,${IMAGE_HEIGHT - 8} L 20,${IMAGE_HEIGHT - 10} L 10,${IMAGE_HEIGHT - 10} L 10,${IMAGE_HEIGHT - 20} L 8,${IMAGE_HEIGHT - 20} Z" fill="${textColor}" opacity="0.5"/>
-    <path d="M ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 8} L ${IMAGE_WIDTH - 20},${IMAGE_HEIGHT - 8} L ${IMAGE_WIDTH - 20},${IMAGE_HEIGHT - 10} L ${IMAGE_WIDTH - 10},${IMAGE_HEIGHT - 10} L ${IMAGE_WIDTH - 10},${IMAGE_HEIGHT - 20} L ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 20} Z" fill="${textColor}" opacity="0.5"/>`;
-
+ let svgContent = `
+      <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+        <defs>
+          <!-- Parchment texture pattern -->
+          <filter id="parchment">
+            <feTurbulence type="fractalNoise" baseFrequency="0.04" numOctaves="5" result="noise"/>
+            <feColorMatrix in="noise" type="saturate" values="0" result="desaturatedNoise"/>
+            <feComponentTransfer in="desaturatedNoise" result="theNoise">
+              <feFuncA type="table" tableValues="0 0 0.05 0"/>
+            </feComponentTransfer>
+            <feBlend in="SourceGraphic" in2="theNoise" mode="multiply"/>
+          </filter>
+        </defs>
+        <style>
+          .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
+          .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
+          .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+        </style>
+        
+        <!-- Aged parchment background with texture -->
+        <rect x="0" y="0" width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" fill="#ebe4c3" filter="url(#parchment)"/>
+        
+        <!-- Decorative border with domain color accents -->
+        <!-- Outer frame -->
+        <rect x="3" y="3" width="${IMAGE_WIDTH - 6}" height="${IMAGE_HEIGHT - 6}" 
+              fill="none" stroke="${accentColor}" stroke-width="2" opacity="0.7"/>
+        
+        <!-- Inner decorative line -->
+        <rect x="6" y="6" width="${IMAGE_WIDTH - 12}" height="${IMAGE_HEIGHT - 12}" 
+              fill="none" stroke="${textColor}" stroke-width="1" opacity="0.3"/>
+        
+        <!-- Corner ornaments - top left -->
+        <path d="M 8,8 L 8,25 Q 8,15 15,15 L 25,15 Q 15,15 15,8 Z" fill="${accentColor}" opacity="0.6"/>
+        <circle cx="15" cy="15" r="4" fill="${textColor}" opacity="0.4"/>
+        
+        <!-- Corner ornaments - top right -->
+        <path d="M ${IMAGE_WIDTH - 8},8 L ${IMAGE_WIDTH - 8},25 Q ${IMAGE_WIDTH - 8},15 ${IMAGE_WIDTH - 15},15 L ${IMAGE_WIDTH - 25},15 Q ${IMAGE_WIDTH - 15},15 ${IMAGE_WIDTH - 15},8 Z" fill="${accentColor}" opacity="0.6"/>
+        <circle cx="${IMAGE_WIDTH - 15}" cy="15" r="4" fill="${textColor}" opacity="0.4"/>
+        
+        <!-- Corner ornaments - bottom left -->
+        <path d="M 8,${IMAGE_HEIGHT - 8} L 8,${IMAGE_HEIGHT - 25} Q 8,${IMAGE_HEIGHT - 15} 15,${IMAGE_HEIGHT - 15} L 25,${IMAGE_HEIGHT - 15} Q 15,${IMAGE_HEIGHT - 15} 15,${IMAGE_HEIGHT - 8} Z" fill="${accentColor}" opacity="0.6"/>
+        <circle cx="15" cy="${IMAGE_HEIGHT - 15}" r="4" fill="${textColor}" opacity="0.4"/>
+        
+        <!-- Corner ornaments - bottom right -->
+        <path d="M ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 8} L ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 25} Q ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 15} ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 15} L ${IMAGE_WIDTH - 25},${IMAGE_HEIGHT - 15} Q ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 15} ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 8} Z" fill="${accentColor}" opacity="0.6"/>
+        <circle cx="${IMAGE_WIDTH - 15}" cy="${IMAGE_HEIGHT - 15}" r="4" fill="${textColor}" opacity="0.4"/>
+        
+        <!-- Decorative side accents -->
+        <line x1="3" y1="${IMAGE_HEIGHT/2}" x2="10" y2="${IMAGE_HEIGHT/2}" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>
+        <line x1="${IMAGE_WIDTH - 3}" y1="${IMAGE_HEIGHT/2}" x2="${IMAGE_WIDTH - 10}" y2="${IMAGE_HEIGHT/2}" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>
+        <line x1="${IMAGE_WIDTH/2}" y1="3" x2="${IMAGE_WIDTH/2}" y2="10" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>
+        <line x1="${IMAGE_WIDTH/2}" y1="${IMAGE_HEIGHT - 3}" x2="${IMAGE_WIDTH/2}" y2="${IMAGE_HEIGHT - 10}" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>`;
+        
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
     let col1Y = MARGIN + AVATAR_SIZE + 20;
