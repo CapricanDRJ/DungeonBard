@@ -28,8 +28,8 @@ const dbQuery = {
     updateAvatarBlob: db.prepare('INSERT OR REPLACE INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)'),
     getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ?'),
     getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
-    getActiveItems: db.prepare(`SELECT * FROM inventory WHERE userId = ? AND guildId = ? AND duration > 31536000`)
-};
+    getActiveItems: db.prepare(`SELECT inventory.*, itemEmojis.emoji FROM inventory LEFT JOIN itemEmojis ON inventory.emojiId = itemEmojis.emojiId WHERE inventory.userId = ? AND inventory.guildId = ? AND inventory.duration > 31536000
+`)};
 const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
       const avatarURL = currentAvatarURL.replace(/\/a_/, '/')
     .replace(/\.[a-zA-Z]{3,4}$/, '')
@@ -301,22 +301,6 @@ for (const item of items) {
 function calculateRank(domain, experience, profession) {
     const level = professions[domain].findLastIndex(level => experience >= level) || 0;
 return professions[profession][level];
-}
-
-function getEquipment(userId, guildId, domainId) {
-            const activeItems = dbQuery.getActiveItems.all(userId, guildId);
-            const skillBonuses = [1, 1, 1, 1, 1, 1];
-            const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
-            let itemString = '';
-            const user = dbQuery.getUser.get(userId, guildId);
-            for (const item of activeItems) {
-              skillBonuses[item.skill - 1] = item.skillBonus;
-              professionBonuses[item.professionId - 1] = item.professionBonus;
-              itemString += item.skillBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${skillNames[domainId - 1][item.skill - 1]} +${item.skillBonus} *Expires* <t:${item.duration}:R>` : '';
-              itemString += item.professionBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${professionNames[parseInt(item.professionId) - 1]} X${item.professionBonus} *Expires* <t:${item.duration}:R>` : '';
-            }
-  
-  return `${type} ${equipmentId}`; // Placeholder
 }
 
 function formatTimeRemaining(seconds) {
