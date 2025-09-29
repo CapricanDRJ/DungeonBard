@@ -352,7 +352,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
       const jokeItem = [
         {
         name: 'Smelly Socks',
-        emojiId: '1422294273235353640',
+        emojiId: '1422312824285302784',
         bonusText: '+10 Ward off All Guests',
         }
       ];
