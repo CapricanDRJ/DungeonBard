@@ -92,10 +92,15 @@ const uploadBeastiaryEmojis = async (client) => {
                 
             } catch (nameError) {
                 if (nameError.message.includes('already exists') || nameError.code === 50035) {
-                    // Find existing emoji with same name
+                    // Find existing emoji with same name and use its ID
                     const existingEmoji = client.application.emojis.cache.find(e => e.name === emojiName);
-                    console.log(`DUPLICATE: ${beast.type} name "${emojiName}" already exists with ID: ${existingEmoji?.id || 'unknown'} - skipping upload`);
-                    continue; // Skip to next beast
+                    if (existingEmoji) {
+                        db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(existingEmoji.id, beast.id);
+                        console.log(`Used existing ${i+1}/${beasts.length}: ${beast.type} (${existingEmoji.id})`);
+                    } else {
+                        console.log(`DUPLICATE: ${beast.type} name "${emojiName}" exists but not found in cache - skipping`);
+                    }
+                    continue;
                 } else {
                     throw nameError;
                 }
