@@ -368,7 +368,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
             svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
           svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${randomItem.name}</text>`;
           col2Y += LINE_HEIGHT;
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">+${randomItem.bonusText}</text>`;
+          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${randomItem.bonusText}</text>`;
           col2Y += LINE_HEIGHT;
     } else {
       for (const item of items) {
