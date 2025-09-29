@@ -419,7 +419,7 @@ module.exports = {
                     let battleField = [];
                     if(userHitpoints <= 0) {
                         //user lost
-                        battleField.push({ name: "Defeat", value: `The ${beast.entity} lands a perilous blow. Thou retreatest in defeat!`});
+                        battleField.push({ name: "Defeat", value: `The **${beast.entity}** lands a perilous blow. Thou retreatest in defeat!`});
                         embeds.push(new EmbedBuilder()
                             .setAuthor({
                               name: "Battle",
@@ -431,7 +431,7 @@ module.exports = {
                         );
                     } else {
                         //user won
-                        battleField.push({ name: "Victory", value: `The ${beast.entity} has been vanquished!`});
+                        battleField.push({ name: "Victory", value: `The **${beast.entity}** has been vanquished!`});
                         const beastCoin = Math.floor(quest.coins * ((beast.difficulty * 0.3) + (0.5 * Math.random())));
                         db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`).run(beastCoin, interaction.user.id, interaction.guildId);
                         battleField.push({ name: "Monster Coins Earned", value: `🪙 X ${beastCoin}`, inline: true });
