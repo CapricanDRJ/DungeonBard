@@ -23,7 +23,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Professions')
-        .setColor(0xFAA61A)
+        .setColor(0xEB459E)
         .setDescription(
             "In DungeonBard, you will gain experience towards professions for attempting quests and facing some of the perils. \n"+
             "* `/stats` [This command will generate a character card that includes information such as your profession ranks, attribute scores, and active equipment and relic bonuses.]\n"+
