@@ -23,7 +23,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Professions')
-        .setColor(0xFAA61A)
+        .setColor(0x964B00)
         .setDescription(
             "In DungeonBard, you will gain experience towards professions for attempting quests and facing some of the perils. \n"+
             "* `/stats` [This command will generate a character card that includes information such as your profession ranks, attribute scores, and active equipment and relic bonuses.]\n"+
@@ -63,7 +63,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('The Shoppe')
-        .setColor(0x964B00)
+        .setColor(0xFAA61A)
         .setDescription(
             "The Shoppe will let you purchase items that give combat bonuses or profession experience boosts using the coins you earn from claiming quests and vanquishing perils. All items in the Shoppe will expire 7 days from purchase. \n"+
             "* `/shoppe` [This command will call up the list of available items for purchase from the shoppe. You will be prompted to purchase or cancel the purchase.]"
