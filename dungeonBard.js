@@ -103,7 +103,6 @@ const uploadBeastiaryEmojis = async (client) => {
         }
     }
 };
-uploadBeastiaryEmojis(client);
 
 
 
