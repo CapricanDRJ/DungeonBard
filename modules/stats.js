@@ -104,7 +104,7 @@ const IMAGE_HEIGHT = 450; // Increased for better proportions
 const AVATAR_SIZE = 64;
 const FONT_SIZE = 12;
 const LINE_HEIGHT = 16;
-const MARGIN = 45; // Increased for elaborate border
+const MARGIN = 50; // Increased for elaborate border
 const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2;
 
 async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
