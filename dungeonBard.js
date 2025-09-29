@@ -63,9 +63,8 @@ client.once('clientReady', async () => {
 //emoji upload for beastiary, remove later
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
-
 const uploadBeastiaryEmojis = async (client) => {
-    const beasts = db.prepare('SELECT id, entity, iconURL FROM beastiary_new WHERE iconURL IS NOT NULL AND emojiId IS NULL').all();
+    const beasts = db.prepare('SELECT id, type, entity, iconURL FROM beastiary_new WHERE iconURL IS NOT NULL AND emojiId IS NULL').all();
     
     console.log(`Uploading ${beasts.length} application emoji(s)...`);
     
@@ -75,34 +74,42 @@ const uploadBeastiaryEmojis = async (client) => {
         try {
             const response = await fetch(beast.iconURL);
             if (!response.ok) {
-                console.error(`Failed to fetch ${beast.id}: ${response.status}`);
+                console.error(`Failed to fetch ${beast.type}: ${response.status}`);
                 continue;
             }
             
             const buffer = Buffer.from(await response.arrayBuffer());
-            const emojiName = beast.entity.replace(/[^a-zA-Z]/g, '');
+            let emojiName = beast.entity.replace(/[^a-zA-Z]/g, '');
             
-            // Upload to application emoji list (not guild)
-            const emoji = await client.application.emojis.create({
-                attachment: buffer,
-                name: emojiName
-            });
+            try {
+                const emoji = await client.application.emojis.create({
+                    attachment: buffer,
+                    name: emojiName
+                });
+                
+                db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(emoji.id, beast.id);
+                console.log(`Uploaded ${i+1}/${beasts.length}: ${beast.type} (${emoji.id})`);
+                
+            } catch (nameError) {
+                if (nameError.message.includes('already exists') || nameError.code === 50035) {
+                    // Find existing emoji with same name
+                    const existingEmoji = client.application.emojis.cache.find(e => e.name === emojiName);
+                    console.log(`DUPLICATE: ${beast.type} name "${emojiName}" already exists with ID: ${existingEmoji?.id || 'unknown'} - skipping upload`);
+                    continue; // Skip to next beast
+                } else {
+                    throw nameError;
+                }
+            }
             
-            db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(emoji.id, beast.id);
-            console.log(`Uploaded ${i+1}/${beasts.length}: ${beast.id} (${emoji.id})`);
-            
-            // Conservative 5-second delay until we know the real rate limits
             await new Promise(resolve => setTimeout(resolve, 5000));
             
         } catch (error) {
-            console.error(`Error uploading ${beast.id}:`, error);
-            if (error.message.includes('rate')) {
-                console.log('Rate limited - waiting 10 minutes...');
-                await new Promise(resolve => setTimeout(resolve, 10 * 60 * 1000));
-            }
+            console.error(`Error uploading ${beast.type}:`, error);
+            return; // Stop on any unhandled error
         }
     }
 };
+uploadBeastiaryEmojis(client);
 
 
 
