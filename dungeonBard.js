@@ -58,6 +58,55 @@ client.once('ready', async () => {
     modules.forEach(mod => {
         if (mod.main) mod.main(client);
     });
+
+
+//emoji upload for beastiary, remove later
+const sqlite3 = require('better-sqlite3');
+const db = new sqlite3('db/dungeonbard.db');
+
+const uploadBeastiaryEmojis = async (client) => {
+    const beasts = db.prepare('SELECT id, entity, iconURL FROM beastiary_new WHERE iconURL IS NOT NULL AND emojiId IS NULL').all();
+    
+    console.log(`Uploading ${beasts.length} application emoji(s)...`);
+    
+    for (let i = 0; i < beasts.length; i++) {
+        const beast = beasts[i];
+        
+        try {
+            const response = await fetch(beast.iconURL);
+            if (!response.ok) {
+                console.error(`Failed to fetch ${beast.id}: ${response.status}`);
+                continue;
+            }
+            
+            const buffer = Buffer.from(await response.arrayBuffer());
+            const emojiName = beast.entity.replace(/[^a-zA-Z]/g, '');
+            
+            // Upload to application emoji list (not guild)
+            const emoji = await client.application.emojis.create({
+                image: buffer,
+                name: emojiName
+            });
+            
+            db.prepare('UPDATE beastiary_new SET emojiId = ? WHERE id = ?').run(emoji.id, beast.id);
+            console.log(`Uploaded ${i+1}/${beasts.length}: ${beast.id} (${emoji.id})`);
+            
+            // Conservative 5-second delay until we know the real rate limits
+            await new Promise(resolve => setTimeout(resolve, 5000));
+            
+        } catch (error) {
+            console.error(`Error uploading ${beast.id}:`, error);
+            if (error.message.includes('rate')) {
+                console.log('Rate limited - waiting 10 minutes...');
+                await new Promise(resolve => setTimeout(resolve, 10 * 60 * 1000));
+            }
+        }
+    }
+};
+
+
+
+
 });
 
 client.on("interactionCreate", (interaction) => {
