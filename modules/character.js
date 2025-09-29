@@ -5,8 +5,8 @@ const MessageFlags = MessageFlagsBitField.Flags;
 
 const dbQuery = {
     getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
-    insertUser: db.prepare(`INSERT INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
-    insertAvatarBlob: db.prepare(`INSERT INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)`),
+    insertUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
+    insertAvatarBlob: db.prepare(`INSERT OR REPLACE INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)`),
     confirmExistingUser: db.prepare('SELECT 1 FROM users WHERE userId = ? AND guildId = ? LIMIT 1'),
     getDisplayName: db.prepare('SELECT displayName FROM users WHERE userId = ? AND guildId = ?'),
     updateDisplayName: db.prepare('UPDATE users SET displayName = ? WHERE userId = ? AND guildId = ?'),
@@ -147,11 +147,10 @@ module.exports = {
                     const restartUser = dbQuery.getUserData.get(userId, guildId);
                     
                     if (!restartUser) {
-                        interaction.reply({
+                        return interaction.reply({
                             content: 'No character found. Use `/character enroll` to create one first.',
                             flags: MessageFlags.Ephemeral
                         });
-                        return;
                     }
 
                     setTimeout(() => {
