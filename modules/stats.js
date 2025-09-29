@@ -101,18 +101,20 @@ const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2; // Two columns with margins
 
 async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
   try {
-    // Create base canvas with domain background color
+ 
+
     const canvas = sharp({
       create: {
         width: IMAGE_WIDTH,
         height: IMAGE_HEIGHT,
         channels: 4,
-        background: { r: (domainData.background >> 16) & 255, g: (domainData.background >> 8) & 255, b: domainData.background & 255, alpha: 1 }
+        background: { r: 235, g: 220, b: 195, alpha: 1 } // Aged parchment color
       }
     });
 
     const compositeLayers = [];
     const textColor = `#${domainData.text.toString(16).padStart(6, '0')}`;
+    const accentColor = `#${domainData.background.toString(16).padStart(6, '0')}`;
     
     // Add avatar if available (Column 1)
     if (avatarBlob) {
@@ -126,7 +128,6 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         left: MARGIN,
       });
     }
-
     // Build SVG text overlay
 // Build SVG text overlay
  let svgContent = `
@@ -182,7 +183,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         <line x1="${IMAGE_WIDTH - 3}" y1="${IMAGE_HEIGHT/2}" x2="${IMAGE_WIDTH - 10}" y2="${IMAGE_HEIGHT/2}" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>
         <line x1="${IMAGE_WIDTH/2}" y1="3" x2="${IMAGE_WIDTH/2}" y2="10" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>
         <line x1="${IMAGE_WIDTH/2}" y1="${IMAGE_HEIGHT - 3}" x2="${IMAGE_WIDTH/2}" y2="${IMAGE_HEIGHT - 10}" stroke="${accentColor}" stroke-width="2" opacity="0.6"/>`;
-        
+
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
     let col1Y = MARGIN + AVATAR_SIZE + 20;
