@@ -68,7 +68,9 @@ const downloadAndResizeEmojis = async () => {
     const relicEmojis = db.prepare('SELECT DISTINCT emojiId FROM relic WHERE emojiId IS NOT NULL').all();
     const itemEmojis = db.prepare('SELECT DISTINCT emojiId FROM items WHERE emojiId IS NOT NULL').all();
     const additionalEmojiIds = [
-        '1422312824285302784'//smelly socks
+        '1422312824285302784',//smelly socks
+        '1422335681333825627',//broken sundial
+        '1422337220735668234',//broken mirror
     ];
     
     // Combine and deduplicate

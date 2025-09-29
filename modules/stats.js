@@ -360,7 +360,18 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         name: 'Smelly Socks',
         emojiId: '1422312824285302784',
         bonusText: '+10 Ward off All Guests',
-        }
+        },
+        {
+        name: 'Broken Sundial',
+        emojiId: '1422335681333825627',
+        bonusText: '+0.0001 Time Travel',
+        },
+        {
+        name: 'Cracked Mirror',
+        emojiId: '1422337220735668234',
+        bonusText: '+7 years Bad Luck',
+        },
+        
       ];
       const randomItem = jokeItem[Math.floor(Math.random() * jokeItem.length)];
       const jokeEmoji = dbQuery.selectEmoji.pluck().get(randomItem.emojiId);
