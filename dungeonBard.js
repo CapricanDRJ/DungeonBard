@@ -66,11 +66,11 @@ const db = new sqlite3('db/dungeonbard.db');
 const downloadAndResizeEmojis = async () => {
     // Get unique emojiIds from both tables
     const relicEmojis = db.prepare('SELECT DISTINCT emojiId FROM relic WHERE emojiId IS NOT NULL').all();
-    const inventoryEmojis = db.prepare('SELECT DISTINCT emojiId FROM inventory WHERE emojiId IS NOT NULL').all();
+    const itemEmojis = db.prepare('SELECT DISTINCT emojiId FROM items WHERE emojiId IS NOT NULL').all();
     
     // Combine and deduplicate
-    const allEmojiIds = [...new Set([...relicEmojis.map(r => r.emojiId), ...inventoryEmojis.map(i => i.emojiId)])];
-    
+    const allEmojiIds = [...new Set([...relicEmojis.map(r => r.emojiId), ...itemEmojis.map(i => i.emojiId)])];
+
     console.log(`Checking ${allEmojiIds.length} emojis...`);
     
     let downloaded = 0;
