@@ -10,6 +10,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Character Commands')
+        .setColor(0x5865F2)
         .setDescription(
             "In this section, you will learn how to create and manage a character for interacting with the application’s content. We have tried to use a few simple commands to navigate the app.\n"+
             "* `/character enroll` [This command creates a new character.]\n"+
@@ -22,6 +23,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Professions')
+        .setColor(0xFAA61A)
         .setDescription(
             "In DungeonBard, you will gain experience towards professions for attempting quests and facing some of the perils. \n"+
             "* `/stats` [This command will generate a character card that includes information such as your profession ranks, attribute scores, and active equipment and relic bonuses.]\n"+
@@ -33,17 +35,19 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Attributes')
+        .setColor(0xEB459E)
         .setDescription(
             "Some of the quests will also help level your character’s attributes. Certain key quests require specific knowledge or skills to complete, and these level when you complete them. As with professions, levelling becomes slower as you progress through the academic domains. \n"+
             "* *  Initiate and Collegiate [LEARNING (LRN), COMMUNICATION (COM), DISCIPLINE (DIS), ORGANIZATION (ORG), STAMINA (STA), PERSEVERANCE (PRS)]\n"+
-            "* *  Pedagogue [PEDAGOGY (PDG), CLASSROOM COMMAND (CMC), LESSON CRAFTING (LCR), ORGANIZATION (ORG), STAMINA (STA), ADAPTABILITY (ADP)]\n"+
-            "* *  Masters and Doctoral [SCHOLARSHIP (SCH), RHETORIC (RHT), ENDURANCE (END), ORGANIZATION (ORG), STAMINA (STA), RESILIENCE (RES)]\n"+
-            "* *  Sage [SCHOLARSHIP (SCH), RHETORIC (RHT), ENDURANCE (END), ADMINISTRATION (ADM), STAMINA (STA), INFLUENCE (INF)]\n"+
+            "* *  Pedagogue [Pedagogy (PDG), Classroom Command (CMC), Lesson Crafting (LCR), Organization (ORG), Stamina (STA), Adaptability (ADP)]\n"+
+            "* *  Masters and Doctoral [Scholarship (SCH), Rhetoric (RHT), Endurance (END), Organization (ORG), Stamina (STA), Resilience (RES)]\n"+
+            "* *  Sage [Scholarship (SCH), Rhetoric (RHT), Endurance (END), Administration (ADM), Stamina (STA), Influence (INF)]\n"+
             "Perils faced on quests will scale to your attribute levels. You may purchase weapons and armour within the shop that will give you a seven-day bonus in attack or defense. Only the highest bonus will apply for attack and for defense at any time. "
         )
     ,
     new EmbedBuilder()
         .setTitle('Quests')
+        .setColor(0x57F287)
         .setDescription(
             "Quests may be claimed for engaging in activities related to academics and self-care. Some quests are tied to certain academic domains (and these generate more experience towards professions and attributes, as well as chances for profession-boosting relics), but there are a great many that represent smaller, incremental tasks. \n"+
             "* `/quest` [This command will ask you to select a quest area and then shows a lists of quests available in that area as well as what is needed to claim them.]\n"+
@@ -59,6 +63,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('The Shoppe')
+        .setColor(0x964B00)
         .setDescription(
             "The Shoppe will let you purchase items that give combat bonuses or profession experience boosts using the coins you earn from claiming quests and vanquishing perils. All items in the Shoppe will expire 7 days from purchase. \n"+
             "* `/shoppe` [This command will call up the list of available items for purchase from the shoppe. You will be prompted to purchase or cancel the purchase.]"
