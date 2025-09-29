@@ -10,7 +10,6 @@ const {
 const wait = require('node:timers/promises').setTimeout;
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
-const getDomain = db.prepare("SELECT domainId FROM users WHERE userId = ?");
 const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
@@ -36,7 +35,8 @@ const dbQuery = {
   getRandomBeast: db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1'),
   addCoins: db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
-  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC")
+  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC"),
+  getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?")
 };
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -51,7 +51,10 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
   try {
     let embed;
     let components = [];
-    const domain = getDomain.pluck().get(interaction.user.id);
+    const domain = dbQuery.getDomain.pluck().get(interaction.user.id, interaction.guildId);
+    if(!domain) {
+      return interaction.reply({ content: "Please use /character to get registered.", ephemeral: true });
+    };
     const embedColor = colors[domain];
     if (stage === 1) {
       // Stage 1: Show quest areas
