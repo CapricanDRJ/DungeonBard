@@ -100,9 +100,8 @@ const MARGIN = 10;
 const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2; // Two columns with margins
 
 async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
-  try {
- 
-
+   try {
+    // Create base canvas with parchment background
     const canvas = sharp({
       create: {
         width: IMAGE_WIDTH,
@@ -115,22 +114,9 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     const compositeLayers = [];
     const textColor = `#${domainData.text.toString(16).padStart(6, '0')}`;
     const accentColor = `#${domainData.background.toString(16).padStart(6, '0')}`;
-    
-    // Add avatar if available (Column 1)
-    if (avatarBlob) {
-      const processedAvatar = await sharp(avatarBlob)
-        .png()
-        .toBuffer();
-      
-      compositeLayers.push({
-        input: processedAvatar,
-        top: MARGIN,
-        left: MARGIN,
-      });
-    }
-    // Build SVG text overlay
-// Build SVG text overlay
- let svgContent = `
+
+    // Build SVG text overlay with decorative border
+    let svgContent = `
       <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
         <defs>
           <!-- Parchment texture pattern -->
@@ -334,13 +320,24 @@ for (const item of items) {
     }
 
     svgContent += '</svg>';
-
-    // Add text overlay to composite layers
     compositeLayers.push({
       input: Buffer.from(svgContent),
       top: 0,
       left: 0
     });
+
+    // Add avatar on top if available
+    if (avatarBlob) {
+      const processedAvatar = await sharp(avatarBlob)
+        .png()
+        .toBuffer();
+      
+      compositeLayers.push({
+        input: processedAvatar,
+        top: MARGIN,
+        left: MARGIN,
+      });
+    }
 
     // Generate final image
     const finalBuffer = await canvas
@@ -349,7 +346,6 @@ for (const item of items) {
       .toBuffer();
 
     return finalBuffer;
-
   } catch (error) {
     throw new Error(`Character image generation failed: ${error.message}`);
   }
