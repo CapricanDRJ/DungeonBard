@@ -195,7 +195,7 @@ for (const item of items) {
     // Add emoji image spanning 2 lines
     if(item.emoji) {
       const base64Emoji = item.emoji.toString('base64');
-      svgContent += `<image x="${col1X}" y="${col2Y - 16}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
+      svgContent += `<image x="${col1X}" y="${col2Y - 8}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
     }
     svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}:</text>`;
     col2Y += LINE_HEIGHT;
@@ -206,7 +206,7 @@ for (const item of items) {
     // Add emoji image spanning 2 lines
     if(item.emoji) {
       const base64Emoji = item.emoji.toString('base64');
-      svgContent += `<image x="${col1X}" y="${col2Y - 16}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
+      svgContent += `<image x="${col1X}" y="${col2Y - 8}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
     }
     svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}:</text>`;
     col2Y += LINE_HEIGHT;
