@@ -91,13 +91,14 @@ return attrObj;
 })();
 
 // Image layout constants
-const IMAGE_WIDTH = 250;
-const IMAGE_HEIGHT = 350;
+// Image layout constants
+const IMAGE_WIDTH = 300;  // Increased from 250
+const IMAGE_HEIGHT = 420; // Increased from 350
 const AVATAR_SIZE = 64;
 const FONT_SIZE = 12;
 const LINE_HEIGHT = 16;
-const MARGIN = 10;
-const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2; // Two columns with margins
+const MARGIN = 50; // Increased from 10 to accommodate border
+const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2;
 
 async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
    try {
@@ -116,6 +117,8 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     const accentColor = `#${domainData.background.toString(16).padStart(6, '0')}`;
 
     // Build SVG text overlay with decorative border
+ 
+// Build SVG text overlay with decorative border
     let svgContent = `
       <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
         <defs>
@@ -130,102 +133,136 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
           </filter>
         </defs>
         <style>
-          .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
-          .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-          .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+          .title { font-family: 'UnifrakturMaguntia', 'Cinzel', 'IM Fell English', serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
+          .header { font-family: 'Cinzel', 'IM Fell English', serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
+          .text { font-family: 'Gentium Book Basic', 'IM Fell English', serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
+          .section { font-family: 'Cinzel', 'IM Fell English', serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
         </style>
         
-<!-- Aged parchment background with texture -->
+        <!-- Aged parchment background with texture -->
         <rect x="0" y="0" width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" fill="#ebe4c3" filter="url(#parchment)"/>
         
-        <!-- Decorative D&D-themed border -->
-        <!-- Outer ornate frame -->
+        <!-- Decorative D&D-themed border in black -->
+        <!-- Outer ornate frame in black -->
         <rect x="2" y="2" width="${IMAGE_WIDTH - 4}" height="${IMAGE_HEIGHT - 4}" 
-              fill="none" stroke="${accentColor}" stroke-width="4" opacity="0.8"/>
+              fill="none" stroke="#000000" stroke-width="4"/>
         
-        <!-- Inner frame -->
+        <!-- Domain color accent inside -->
         <rect x="8" y="8" width="${IMAGE_WIDTH - 16}" height="${IMAGE_HEIGHT - 16}" 
-              fill="none" stroke="${textColor}" stroke-width="2" opacity="0.5"/>
+              fill="none" stroke="${accentColor}" stroke-width="3" opacity="0.8"/>
         
-        <!-- Middle decorative band -->
-        <rect x="5" y="5" width="${IMAGE_WIDTH - 10}" height="${IMAGE_HEIGHT - 10}" 
-              fill="none" stroke="${accentColor}" stroke-width="1" opacity="0.4"/>
+        <!-- Inner frame in black -->
+        <rect x="13" y="13" width="${IMAGE_WIDTH - 26}" height="${IMAGE_HEIGHT - 26}" 
+              fill="none" stroke="#000000" stroke-width="1.5"/>
         
         <!-- Elaborate corner ornaments - Top Left -->
-        <g opacity="0.7">
-          <path d="M 2,2 L 2,40 L 10,40 L 10,10 L 40,10 L 40,2 Z" fill="${accentColor}" opacity="0.3"/>
-          <circle cx="25" cy="25" r="12" fill="none" stroke="${accentColor}" stroke-width="2"/>
-          <circle cx="25" cy="25" r="8" fill="${textColor}" opacity="0.3"/>
-          <path d="M 15,15 Q 20,20 25,15 Q 30,20 35,15" stroke="${textColor}" stroke-width="1.5" fill="none"/>
-          <path d="M 15,35 Q 20,30 25,35 Q 30,30 35,35" stroke="${textColor}" stroke-width="1.5" fill="none"/>
-          <path d="M 15,25 Q 20,20 15,15 M 35,25 Q 30,20 35,15" stroke="${textColor}" stroke-width="1.5" fill="none"/>
+        <g>
+          <path d="M 2,2 L 2,45 L 15,45 L 15,15 L 45,15 L 45,2 Z" fill="#000000"/>
+          <circle cx="28" cy="28" r="14" fill="none" stroke="${accentColor}" stroke-width="3" opacity="0.8"/>
+          <circle cx="28" cy="28" r="9" fill="${accentColor}" opacity="0.4"/>
+          <path d="M 18,18 Q 23,23 28,18 Q 33,23 38,18" stroke="#000000" stroke-width="1.5" fill="none"/>
+          <path d="M 18,38 Q 23,33 28,38 Q 33,33 38,38" stroke="#000000" stroke-width="1.5" fill="none"/>
         </g>
         
         <!-- Elaborate corner ornaments - Top Right -->
-        <g opacity="0.7">
-          <path d="M ${IMAGE_WIDTH - 2},2 L ${IMAGE_WIDTH - 2},40 L ${IMAGE_WIDTH - 10},40 L ${IMAGE_WIDTH - 10},10 L ${IMAGE_WIDTH - 40},10 L ${IMAGE_WIDTH - 40},2 Z" fill="${accentColor}" opacity="0.3"/>
-          <circle cx="${IMAGE_WIDTH - 25}" cy="25" r="12" fill="none" stroke="${accentColor}" stroke-width="2"/>
-          <circle cx="${IMAGE_WIDTH - 25}" cy="25" r="8" fill="${textColor}" opacity="0.3"/>
-          <path d="M ${IMAGE_WIDTH - 35},15 Q ${IMAGE_WIDTH - 30},20 ${IMAGE_WIDTH - 25},15 Q ${IMAGE_WIDTH - 20},20 ${IMAGE_WIDTH - 15},15" stroke="${textColor}" stroke-width="1.5" fill="none"/>
-          <path d="M ${IMAGE_WIDTH - 35},35 Q ${IMAGE_WIDTH - 30},30 ${IMAGE_WIDTH - 25},35 Q ${IMAGE_WIDTH - 20},30 ${IMAGE_WIDTH - 15},35" stroke="${textColor}" stroke-width="1.5" fill="none"/>
+        <g>
+          <path d="M ${IMAGE_WIDTH - 2},2 L ${IMAGE_WIDTH - 2},45 L ${IMAGE_WIDTH - 15},45 L ${IMAGE_WIDTH - 15},15 L ${IMAGE_WIDTH - 45},15 L ${IMAGE_WIDTH - 45},2 Z" fill="#000000"/>
+          <circle cx="${IMAGE_WIDTH - 28}" cy="28" r="14" fill="none" stroke="${accentColor}" stroke-width="3" opacity="0.8"/>
+          <circle cx="${IMAGE_WIDTH - 28}" cy="28" r="9" fill="${accentColor}" opacity="0.4"/>
+          <path d="M ${IMAGE_WIDTH - 38},18 Q ${IMAGE_WIDTH - 33},23 ${IMAGE_WIDTH - 28},18 Q ${IMAGE_WIDTH - 23},23 ${IMAGE_WIDTH - 18},18" stroke="#000000" stroke-width="1.5" fill="none"/>
+          <path d="M ${IMAGE_WIDTH - 38},38 Q ${IMAGE_WIDTH - 33},33 ${IMAGE_WIDTH - 28},38 Q ${IMAGE_WIDTH - 23},33 ${IMAGE_WIDTH - 18},38" stroke="#000000" stroke-width="1.5" fill="none"/>
         </g>
         
         <!-- Elaborate corner ornaments - Bottom Left -->
-        <g opacity="0.7">
-          <path d="M 2,${IMAGE_HEIGHT - 2} L 2,${IMAGE_HEIGHT - 40} L 10,${IMAGE_HEIGHT - 40} L 10,${IMAGE_HEIGHT - 10} L 40,${IMAGE_HEIGHT - 10} L 40,${IMAGE_HEIGHT - 2} Z" fill="${accentColor}" opacity="0.3"/>
-          <circle cx="25" cy="${IMAGE_HEIGHT - 25}" r="12" fill="none" stroke="${accentColor}" stroke-width="2"/>
-          <circle cx="25" cy="${IMAGE_HEIGHT - 25}" r="8" fill="${textColor}" opacity="0.3"/>
-          <path d="M 15,${IMAGE_HEIGHT - 35} Q 20,${IMAGE_HEIGHT - 30} 25,${IMAGE_HEIGHT - 35} Q 30,${IMAGE_HEIGHT - 30} 35,${IMAGE_HEIGHT - 35}" stroke="${textColor}" stroke-width="1.5" fill="none"/>
-          <path d="M 15,${IMAGE_HEIGHT - 15} Q 20,${IMAGE_HEIGHT - 20} 25,${IMAGE_HEIGHT - 15} Q 30,${IMAGE_HEIGHT - 20} 35,${IMAGE_HEIGHT - 15}" stroke="${textColor}" stroke-width="1.5" fill="none"/>
+        <g>
+          <path d="M 2,${IMAGE_HEIGHT - 2} L 2,${IMAGE_HEIGHT - 45} L 15,${IMAGE_HEIGHT - 45} L 15,${IMAGE_HEIGHT - 15} L 45,${IMAGE_HEIGHT - 15} L 45,${IMAGE_HEIGHT - 2} Z" fill="#000000"/>
+          <circle cx="28" cy="${IMAGE_HEIGHT - 28}" r="14" fill="none" stroke="${accentColor}" stroke-width="3" opacity="0.8"/>
+          <circle cx="28" cy="${IMAGE_HEIGHT - 28}" r="9" fill="${accentColor}" opacity="0.4"/>
+          <path d="M 18,${IMAGE_HEIGHT - 38} Q 23,${IMAGE_HEIGHT - 33} 28,${IMAGE_HEIGHT - 38} Q 33,${IMAGE_HEIGHT - 33} 38,${IMAGE_HEIGHT - 38}" stroke="#000000" stroke-width="1.5" fill="none"/>
+          <path d="M 18,${IMAGE_HEIGHT - 18} Q 23,${IMAGE_HEIGHT - 23} 28,${IMAGE_HEIGHT - 18} Q 33,${IMAGE_HEIGHT - 23} 38,${IMAGE_HEIGHT - 18}" stroke="#000000" stroke-width="1.5" fill="none"/>
         </g>
         
         <!-- Elaborate corner ornaments - Bottom Right -->
-        <g opacity="0.7">
-          <path d="M ${IMAGE_WIDTH - 2},${IMAGE_HEIGHT - 2} L ${IMAGE_WIDTH - 2},${IMAGE_HEIGHT - 40} L ${IMAGE_WIDTH - 10},${IMAGE_HEIGHT - 40} L ${IMAGE_WIDTH - 10},${IMAGE_HEIGHT - 10} L ${IMAGE_WIDTH - 40},${IMAGE_HEIGHT - 10} L ${IMAGE_WIDTH - 40},${IMAGE_HEIGHT - 2} Z" fill="${accentColor}" opacity="0.3"/>
-          <circle cx="${IMAGE_WIDTH - 25}" cy="${IMAGE_HEIGHT - 25}" r="12" fill="none" stroke="${accentColor}" stroke-width="2"/>
-          <circle cx="${IMAGE_WIDTH - 25}" cy="${IMAGE_HEIGHT - 25}" r="8" fill="${textColor}" opacity="0.3"/>
-          <path d="M ${IMAGE_WIDTH - 35},${IMAGE_HEIGHT - 35} Q ${IMAGE_WIDTH - 30},${IMAGE_HEIGHT - 30} ${IMAGE_WIDTH - 25},${IMAGE_HEIGHT - 35} Q ${IMAGE_WIDTH - 20},${IMAGE_HEIGHT - 30} ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 35}" stroke="${textColor}" stroke-width="1.5" fill="none"/>
-          <path d="M ${IMAGE_WIDTH - 35},${IMAGE_HEIGHT - 15} Q ${IMAGE_WIDTH - 30},${IMAGE_HEIGHT - 20} ${IMAGE_WIDTH - 25},${IMAGE_HEIGHT - 15} Q ${IMAGE_WIDTH - 20},${IMAGE_HEIGHT - 20} ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 15}" stroke="${textColor}" stroke-width="1.5" fill="none"/>
+        <g>
+          <path d="M ${IMAGE_WIDTH - 2},${IMAGE_HEIGHT - 2} L ${IMAGE_WIDTH - 2},${IMAGE_HEIGHT - 45} L ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 45} L ${IMAGE_WIDTH - 15},${IMAGE_HEIGHT - 15} L ${IMAGE_WIDTH - 45},${IMAGE_HEIGHT - 15} L ${IMAGE_WIDTH - 45},${IMAGE_HEIGHT - 2} Z" fill="#000000"/>
+          <circle cx="${IMAGE_WIDTH - 28}" cy="${IMAGE_HEIGHT - 28}" r="14" fill="none" stroke="${accentColor}" stroke-width="3" opacity="0.8"/>
+          <circle cx="${IMAGE_WIDTH - 28}" cy="${IMAGE_HEIGHT - 28}" r="9" fill="${accentColor}" opacity="0.4"/>
+          <path d="M ${IMAGE_WIDTH - 38},${IMAGE_HEIGHT - 38} Q ${IMAGE_WIDTH - 33},${IMAGE_HEIGHT - 33} ${IMAGE_WIDTH - 28},${IMAGE_HEIGHT - 38} Q ${IMAGE_WIDTH - 23},${IMAGE_HEIGHT - 33} ${IMAGE_WIDTH - 18},${IMAGE_HEIGHT - 38}" stroke="#000000" stroke-width="1.5" fill="none"/>
+          <path d="M ${IMAGE_WIDTH - 38},${IMAGE_HEIGHT - 18} Q ${IMAGE_WIDTH - 33},${IMAGE_HEIGHT - 23} ${IMAGE_WIDTH - 28},${IMAGE_HEIGHT - 18} Q ${IMAGE_WIDTH - 23},${IMAGE_HEIGHT - 23} ${IMAGE_WIDTH - 18},${IMAGE_HEIGHT - 18}" stroke="#000000" stroke-width="1.5" fill="none"/>
         </g>
         
         <!-- Celtic knotwork pattern along top -->
-        <path d="M 50,5 Q 60,5 60,10 Q 60,15 50,15 M 60,5 Q 70,5 70,10 Q 70,15 60,15" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 80,5 Q 90,5 90,10 Q 90,15 80,15 M 90,5 Q 100,5 100,10 Q 100,15 90,15" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 110,5 Q 120,5 120,10 Q 120,15 110,15 M 120,5 Q 130,5 130,10 Q 130,15 120,15" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 140,5 Q 150,5 150,10 Q 150,15 140,15 M 150,5 Q 160,5 160,10 Q 160,15 150,15" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 170,5 Q 180,5 180,10 Q 180,15 170,15 M 180,5 Q 190,5 190,10 Q 190,15 180,15" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 200,5 Q 210,5 210,10 Q 210,15 200,15 M 210,5 Q 220,5 220,10 Q 220,15 210,15" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
+        <path d="M 55,6 Q 65,6 65,11 Q 65,16 55,16 M 65,6 Q 75,6 75,11 Q 75,16 65,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 85,6 Q 95,6 95,11 Q 95,16 85,16 M 95,6 Q 105,6 105,11 Q 105,16 95,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 115,6 Q 125,6 125,11 Q 125,16 115,16 M 125,6 Q 135,6 135,11 Q 135,16 125,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 145,6 Q 155,6 155,11 Q 155,16 145,16 M 155,6 Q 165,6 165,11 Q 165,16 155,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 175,6 Q 185,6 185,11 Q 185,16 175,16 M 185,6 Q 195,6 195,11 Q 195,16 185,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 205,6 Q 215,6 215,11 Q 215,16 205,16 M 215,6 Q 225,6 225,11 Q 225,16 215,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 235,6 Q 245,6 245,11 Q 245,16 235,16 M 245,6 Q 255,6 255,11 Q 255,16 245,16" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 265,6 Q 275,6 275,11 Q 275,16 265,16 M 275,6 Q 285,6 285,11 Q 285,16 275,16" stroke="#000000" stroke-width="1.5" fill="none"/>
         
         <!-- Celtic knotwork pattern along bottom -->
-        <path d="M 50,${IMAGE_HEIGHT - 5} Q 60,${IMAGE_HEIGHT - 5} 60,${IMAGE_HEIGHT - 10} Q 60,${IMAGE_HEIGHT - 15} 50,${IMAGE_HEIGHT - 15} M 60,${IMAGE_HEIGHT - 5} Q 70,${IMAGE_HEIGHT - 5} 70,${IMAGE_HEIGHT - 10} Q 70,${IMAGE_HEIGHT - 15} 60,${IMAGE_HEIGHT - 15}" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 80,${IMAGE_HEIGHT - 5} Q 90,${IMAGE_HEIGHT - 5} 90,${IMAGE_HEIGHT - 10} Q 90,${IMAGE_HEIGHT - 15} 80,${IMAGE_HEIGHT - 15} M 90,${IMAGE_HEIGHT - 5} Q 100,${IMAGE_HEIGHT - 5} 100,${IMAGE_HEIGHT - 10} Q 100,${IMAGE_HEIGHT - 15} 90,${IMAGE_HEIGHT - 15}" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 110,${IMAGE_HEIGHT - 5} Q 120,${IMAGE_HEIGHT - 5} 120,${IMAGE_HEIGHT - 10} Q 120,${IMAGE_HEIGHT - 15} 110,${IMAGE_HEIGHT - 15} M 120,${IMAGE_HEIGHT - 5} Q 130,${IMAGE_HEIGHT - 5} 130,${IMAGE_HEIGHT - 10} Q 130,${IMAGE_HEIGHT - 15} 120,${IMAGE_HEIGHT - 15}" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 140,${IMAGE_HEIGHT - 5} Q 150,${IMAGE_HEIGHT - 5} 150,${IMAGE_HEIGHT - 10} Q 150,${IMAGE_HEIGHT - 15} 140,${IMAGE_HEIGHT - 15} M 150,${IMAGE_HEIGHT - 5} Q 160,${IMAGE_HEIGHT - 5} 160,${IMAGE_HEIGHT - 10} Q 160,${IMAGE_HEIGHT - 15} 150,${IMAGE_HEIGHT - 15}" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 170,${IMAGE_HEIGHT - 5} Q 180,${IMAGE_HEIGHT - 5} 180,${IMAGE_HEIGHT - 10} Q 180,${IMAGE_HEIGHT - 15} 170,${IMAGE_HEIGHT - 15} M 180,${IMAGE_HEIGHT - 5} Q 190,${IMAGE_HEIGHT - 5} 190,${IMAGE_HEIGHT - 10} Q 190,${IMAGE_HEIGHT - 15} 180,${IMAGE_HEIGHT - 15}" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
-        <path d="M 200,${IMAGE_HEIGHT - 5} Q 210,${IMAGE_HEIGHT - 5} 210,${IMAGE_HEIGHT - 10} Q 210,${IMAGE_HEIGHT - 15} 200,${IMAGE_HEIGHT - 15} M 210,${IMAGE_HEIGHT - 5} Q 220,${IMAGE_HEIGHT - 5} 220,${IMAGE_HEIGHT - 10} Q 220,${IMAGE_HEIGHT - 15} 210,${IMAGE_HEIGHT - 15}" stroke="${accentColor}" stroke-width="1.5" fill="none" opacity="0.6"/>
+        <path d="M 55,${IMAGE_HEIGHT - 6} Q 65,${IMAGE_HEIGHT - 6} 65,${IMAGE_HEIGHT - 11} Q 65,${IMAGE_HEIGHT - 16} 55,${IMAGE_HEIGHT - 16} M 65,${IMAGE_HEIGHT - 6} Q 75,${IMAGE_HEIGHT - 6} 75,${IMAGE_HEIGHT - 11} Q 75,${IMAGE_HEIGHT - 16} 65,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 85,${IMAGE_HEIGHT - 6} Q 95,${IMAGE_HEIGHT - 6} 95,${IMAGE_HEIGHT - 11} Q 95,${IMAGE_HEIGHT - 16} 85,${IMAGE_HEIGHT - 16} M 95,${IMAGE_HEIGHT - 6} Q 105,${IMAGE_HEIGHT - 6} 105,${IMAGE_HEIGHT - 11} Q 105,${IMAGE_HEIGHT - 16} 95,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 115,${IMAGE_HEIGHT - 6} Q 125,${IMAGE_HEIGHT - 6} 125,${IMAGE_HEIGHT - 11} Q 125,${IMAGE_HEIGHT - 16} 115,${IMAGE_HEIGHT - 16} M 125,${IMAGE_HEIGHT - 6} Q 135,${IMAGE_HEIGHT - 6} 135,${IMAGE_HEIGHT - 11} Q 135,${IMAGE_HEIGHT - 16} 125,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 145,${IMAGE_HEIGHT - 6} Q 155,${IMAGE_HEIGHT - 6} 155,${IMAGE_HEIGHT - 11} Q 155,${IMAGE_HEIGHT - 16} 145,${IMAGE_HEIGHT - 16} M 155,${IMAGE_HEIGHT - 6} Q 165,${IMAGE_HEIGHT - 6} 165,${IMAGE_HEIGHT - 11} Q 165,${IMAGE_HEIGHT - 16} 155,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 175,${IMAGE_HEIGHT - 6} Q 185,${IMAGE_HEIGHT - 6} 185,${IMAGE_HEIGHT - 11} Q 185,${IMAGE_HEIGHT - 16} 175,${IMAGE_HEIGHT - 16} M 185,${IMAGE_HEIGHT - 6} Q 195,${IMAGE_HEIGHT - 6} 195,${IMAGE_HEIGHT - 11} Q 195,${IMAGE_HEIGHT - 16} 185,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 205,${IMAGE_HEIGHT - 6} Q 215,${IMAGE_HEIGHT - 6} 215,${IMAGE_HEIGHT - 11} Q 215,${IMAGE_HEIGHT - 16} 205,${IMAGE_HEIGHT - 16} M 215,${IMAGE_HEIGHT - 6} Q 225,${IMAGE_HEIGHT - 6} 225,${IMAGE_HEIGHT - 11} Q 225,${IMAGE_HEIGHT - 16} 215,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 235,${IMAGE_HEIGHT - 6} Q 245,${IMAGE_HEIGHT - 6} 245,${IMAGE_HEIGHT - 11} Q 245,${IMAGE_HEIGHT - 16} 235,${IMAGE_HEIGHT - 16} M 245,${IMAGE_HEIGHT - 6} Q 255,${IMAGE_HEIGHT - 6} 255,${IMAGE_HEIGHT - 11} Q 255,${IMAGE_HEIGHT - 16} 245,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
+        <path d="M 265,${IMAGE_HEIGHT - 6} Q 275,${IMAGE_HEIGHT - 6} 275,${IMAGE_HEIGHT - 11} Q 275,${IMAGE_HEIGHT - 16} 265,${IMAGE_HEIGHT - 16} M 275,${IMAGE_HEIGHT - 6} Q 285,${IMAGE_HEIGHT - 6} 285,${IMAGE_HEIGHT - 11} Q 285,${IMAGE_HEIGHT - 16} 275,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
         
         <!-- Decorative diamonds along left side -->
-        <path d="M 5,60 L 10,65 L 5,70 L 0,65 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,90 L 10,95 L 5,100 L 0,95 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,120 L 10,125 L 5,130 L 0,125 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,150 L 10,155 L 5,160 L 0,155 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,180 L 10,185 L 5,190 L 0,185 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,210 L 10,215 L 5,220 L 0,215 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,240 L 10,245 L 5,250 L 0,245 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,270 L 10,275 L 5,280 L 0,275 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M 5,300 L 10,305 L 5,310 L 0,305 Z" fill="${accentColor}" opacity="0.5"/>
+        <path d="M 6,70 L 11,75 L 6,80 L 1,75 Z" fill="#000000"/>
+        <path d="M 6,100 L 11,105 L 6,110 L 1,105 Z" fill="#000000"/>
+        <path d="M 6,130 L 11,135 L 6,140 L 1,135 Z" fill="#000000"/>
+        <path d="M 6,160 L 11,165 L 6,170 L 1,165 Z" fill="#000000"/>
+        <path d="M 6,190 L 11,195 L 6,200 L 1,195 Z" fill="#000000"/>
+        <path d="M 6,220 L 11,225 L 6,230 L 1,225 Z" fill="#000000"/>
+        <path d="M 6,250 L 11,255 L 6,260 L 1,255 Z" fill="#000000"/>
+        <path d="M 6,280 L 11,285 L 6,290 L 1,285 Z" fill="#000000"/>
+        <path d="M 6,310 L 11,315 L 6,320 L 1,315 Z" fill="#000000"/>
+        <path d="M 6,340 L 11,345 L 6,350 L 1,345 Z" fill="#000000"/>
+        <path d="M 6,370 L 11,375 L 6,380 L 1,375 Z" fill="#000000"/>
+        
+        <!-- Domain color accent dots in diamonds (left) -->
+        <circle cx="6" cy="75" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="105" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="135" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="165" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="195" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="225" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="255" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="285" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="315" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="345" r="2" fill="${accentColor}"/>
+        <circle cx="6" cy="375" r="2" fill="${accentColor}"/>
         
         <!-- Decorative diamonds along right side -->
-        <path d="M ${IMAGE_WIDTH - 5},60 L ${IMAGE_WIDTH - 10},65 L ${IMAGE_WIDTH - 5},70 L ${IMAGE_WIDTH},65 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},90 L ${IMAGE_WIDTH - 10},95 L ${IMAGE_WIDTH - 5},100 L ${IMAGE_WIDTH},95 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},120 L ${IMAGE_WIDTH - 10},125 L ${IMAGE_WIDTH - 5},130 L ${IMAGE_WIDTH},125 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},150 L ${IMAGE_WIDTH - 10},155 L ${IMAGE_WIDTH - 5},160 L ${IMAGE_WIDTH},155 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},180 L ${IMAGE_WIDTH - 10},185 L ${IMAGE_WIDTH - 5},190 L ${IMAGE_WIDTH},185 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},210 L ${IMAGE_WIDTH - 10},215 L ${IMAGE_WIDTH - 5},220 L ${IMAGE_WIDTH},215 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},240 L ${IMAGE_WIDTH - 10},245 L ${IMAGE_WIDTH - 5},250 L ${IMAGE_WIDTH},245 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},270 L ${IMAGE_WIDTH - 10},275 L ${IMAGE_WIDTH - 5},280 L ${IMAGE_WIDTH},275 Z" fill="${accentColor}" opacity="0.5"/>
-        <path d="M ${IMAGE_WIDTH - 5},300 L ${IMAGE_WIDTH - 10},305 L ${IMAGE_WIDTH - 5},310 L ${IMAGE_WIDTH},305 Z" fill="${accentColor}" opacity="0.5"/>`;
+        <path d="M ${IMAGE_WIDTH - 6},70 L ${IMAGE_WIDTH - 11},75 L ${IMAGE_WIDTH - 6},80 L ${IMAGE_WIDTH - 1},75 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},100 L ${IMAGE_WIDTH - 11},105 L ${IMAGE_WIDTH - 6},110 L ${IMAGE_WIDTH - 1},105 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},130 L ${IMAGE_WIDTH - 11},135 L ${IMAGE_WIDTH - 6},140 L ${IMAGE_WIDTH - 1},135 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},160 L ${IMAGE_WIDTH - 11},165 L ${IMAGE_WIDTH - 6},170 L ${IMAGE_WIDTH - 1},165 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},190 L ${IMAGE_WIDTH - 11},195 L ${IMAGE_WIDTH - 6},200 L ${IMAGE_WIDTH - 1},195 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},220 L ${IMAGE_WIDTH - 11},225 L ${IMAGE_WIDTH - 6},230 L ${IMAGE_WIDTH - 1},225 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},250 L ${IMAGE_WIDTH - 11},255 L ${IMAGE_WIDTH - 6},260 L ${IMAGE_WIDTH - 1},255 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},280 L ${IMAGE_WIDTH - 11},285 L ${IMAGE_WIDTH - 6},290 L ${IMAGE_WIDTH - 1},285 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},310 L ${IMAGE_WIDTH - 11},315 L ${IMAGE_WIDTH - 6},320 L ${IMAGE_WIDTH - 1},315 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},340 L ${IMAGE_WIDTH - 11},345 L ${IMAGE_WIDTH - 6},350 L ${IMAGE_WIDTH - 1},345 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 6},370 L ${IMAGE_WIDTH - 11},375 L ${IMAGE_WIDTH - 6},380 L ${IMAGE_WIDTH - 1},375 Z" fill="#000000"/>
+        
+        <!-- Domain color accent dots in diamonds (right) -->
+        <circle cx="${IMAGE_WIDTH - 6}" cy="75" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="105" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="135" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="165" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="195" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="225" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="255" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="285" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="315" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="345" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 6}" cy="375" r="2" fill="${accentColor}"/>`;
+ 
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
     let col1Y = MARGIN + AVATAR_SIZE + 20;
