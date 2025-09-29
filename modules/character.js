@@ -128,7 +128,13 @@ module.exports = {
                             const response = await fetch(avatarURL);
                             if (response.ok) {
                                 const arrayBuffer = await response.arrayBuffer();
-                                avatarBlob = Buffer.from(arrayBuffer);
+                                avatarBlob = await sharp(Buffer.from(arrayBuffer))
+                                    .composite([{
+                                        input: Buffer.from(`<svg width="64" height="64"><circle cx="32" cy="32" r="32" fill="white"/></svg>`),
+                                        blend: 'dest-in'
+                                    }])
+                                    .png()
+                                    .toBuffer();
                             }
                         } catch (error) {
                             console.error('Error downloading avatar:', error, `userId:${userId}`);
