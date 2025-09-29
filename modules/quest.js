@@ -22,7 +22,22 @@ const skillNames = [
   ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
   ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
 ];
-
+const dbQuery = {
+  delExpired: db.prepare(`DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?`),
+  setActive: db.prepare(`UPDATE inventory SET duration = duration - strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND duration > 31536000`),
+  profBonus: db.prepare(`UPDATE inventory SET duration = duration + strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND professionId != 0 AND professionBonus = (SELECT MAX(professionBonus) FROM inventory i2 WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId AND i2.professionId = inventory.professionId)`),
+  skillBonus: db.prepare(`UPDATE inventory SET duration = duration + strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND skill != 0 AND skillBonus = (SELECT MAX(skillBonus) FROM inventory i2 WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId AND i2.skill = inventory.skill)`),
+  getActiveItems: db.prepare(`SELECT * FROM inventory WHERE userId = ? AND guildId = ? AND duration > 31536000`),
+  getUser: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
+  getQuestAreaById: db.prepare("SELECT questArea FROM quest WHERE id = ?"),
+  getQuestById: db.prepare("SELECT * FROM quest WHERE id = ?"),
+  getRandomRelic: db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1'),
+  addToInventory: db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)'),
+  getRandomBeast: db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1'),
+  addCoins: db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`),
+  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
+  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC")
+};
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
   const days = Math.floor(seconds / 86400); // 86400 = 24*60*60
@@ -63,15 +78,13 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       }
     } else if (stage === 2) {
       // Stage 2: Show quests in area
-      const areaData = db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1").get(selectedArea);
+      const areaData = dbQuery.getDistinctQuestArea.get(selectedArea);
       embed = new EmbedBuilder()
         .setTitle(selectedArea)
         .setDescription(areaData?.areaDesc || "Select a quest:")
         .setColor(embedColor);
 
-      const quests = db
-        .prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC")
-        .all(selectedArea, domain);
+      const quests = dbQuery.getQuestsInArea.all(selectedArea, domain);
 
       if (quests.length > 0) {
         // Create dropdowns (max 25 options each)
@@ -113,7 +126,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 
     } else if (stage === 3) {
       // Stage 3: Show quest details
-      const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(selectedQuestId);
+      const quest = getQuestById.get(selectedQuestId);
       
       if (!quest) {
         embed = new EmbedBuilder()
@@ -208,7 +221,7 @@ module.exports = {
       } else if (interaction.customId.startsWith("questSelect_")) {
         // Quest selected - go to stage 3
         const questId = parseInt(interaction.values[0].replace('quest', ''));
-        const quest = db.prepare("SELECT questArea FROM quest WHERE id = ?").get(questId);
+        const quest = dbQuery.getQuestAreaById.get(questId);
         menu(interaction, true, 3, quest?.questArea, questId);
       }
     } else if (interaction.isButton()) {
@@ -245,48 +258,28 @@ module.exports = {
 
             // Quest completed
             const id = parts[1];
-            const quest = db.prepare("SELECT * FROM quest WHERE id = ?").get(id);
+            const quest = dbQuery.getQuestById.get(id);
             const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
-              db.prepare(`DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?`).run(interaction.user.id, interaction.guildId);
-                        
+              dbQuery.delExpired.run(interaction.user.id, interaction.guildId);
+
               //reset all items durations
-              db.prepare(`UPDATE inventory SET duration = duration - strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND duration > 31536000`).run(interaction.user.id, interaction.guildId);
+              dbQuery.setActive.run(interaction.user.id, interaction.guildId);
 
               // Activate highest profession bonuses
-              db.prepare(`
-              UPDATE inventory 
-              SET duration = duration + strftime('%s', 'now') 
-              WHERE userId = ? AND guildId = ? AND professionId != 0
-                AND professionBonus = (
-                  SELECT MAX(professionBonus) FROM inventory i2 
-                  WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId 
-                  AND i2.professionId = inventory.professionId
-                )
-              `).run(interaction.user.id, interaction.guildId);
+
+              dbQuery.profBonus.run(interaction.user.id, interaction.guildId);
 
               // Activate highest skill bonuses  
-              db.prepare(`
-              UPDATE inventory 
-              SET duration = duration + strftime('%s', 'now') 
-              WHERE userId = ? AND guildId = ? AND skill != 0
-                AND skillBonus = (
-                  SELECT MAX(skillBonus) FROM inventory i2 
-                  WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId 
-                  AND i2.skill = inventory.skill
-                )
-              `).run(interaction.user.id, interaction.guildId);
+              dbQuery.skillBonus.run(interaction.user.id, interaction.guildId);
             })();
             // Calculate active bonuses
-            const activeItems = db.prepare(`
-            SELECT * FROM inventory 
-            WHERE userId = ? AND guildId = ? AND duration > 31536000
-            `).all(interaction.user.id, interaction.guildId);
+            const activeItems = dbQuery.getActiveItems.all(interaction.user.id, interaction.guildId);
             const skillBonuses = [1, 1, 1, 1, 1, 1];
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
-            const user = db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?').get(interaction.user.id, interaction.guildId);
+            const user = dbQuery.getUser.get(interaction.user.id, interaction.guildId);
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
@@ -333,14 +326,13 @@ module.exports = {
               })
             );
             if(quest.beastiary === null) {
-                const relicNoMonster = db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.relic);
+                const relicNoMonster = dbQuery.getRandomRelic.get(quest.relic);
                 if (Math.random() < relicNoMonster.chance) {
                   let bonusResult = '';
                   if(relicNoMonster.bonusXp) {
                     const profBonus = professionNames[parseInt(relicNoMonster.professionId) - 1];
                     if (relicNoMonster.bonusXp < 9) {
-                      db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)')
-                      .run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, relicNoMonster.emojiId);
+                      dbQuery.addToInventory.run(interaction.user.id, interaction.guildId, relicNoMonster.name, relicNoMonster.skillBonus, relicNoMonster.skill, relicNoMonster.duration, relicNoMonster.emojiId);
                       bonusResult = `\nX${relicNoMonster.bonusXp} ${profBonus} Effect lasts ${formatTime(relicNoMonster.duration)}`;
                     } else {
                       bonusResult = `\n+${relicNoMonster.bonusXp} ${profBonus} XP`;
@@ -359,7 +351,7 @@ module.exports = {
                 }
 
             } else {
-                const beast = quest.beastiary ? db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1').get(quest.beastiary) : null;
+                const beast = quest.beastiary ? dbQuery.getRandomBeast.get(quest.beastiary) : null;
                 if(Math.random() < beast.chance) {
                     //peril
                     function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
@@ -431,7 +423,7 @@ module.exports = {
                         //user won
                         battleField.push({ name: "Victory", value: `The **${beast.entity}** has been vanquished!`});
                         const beastCoin = Math.floor(quest.coins * ((beast.difficulty * 0.3) + (0.5 * Math.random())));
-                        db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`).run(beastCoin, interaction.user.id, interaction.guildId);
+                        dbQuery.addCoins.run(beastCoin, interaction.user.id, interaction.guildId);
                         battleField.push({ name: "Monster Coins Earned", value: `🪙 X ${beastCoin}`, inline: true });
                           embeds.push(new EmbedBuilder()
                             .setAuthor({
@@ -442,7 +434,7 @@ module.exports = {
                             .setColor(0x8b0000)
                             .addFields(battleField)
                         );
-                        const relic = quest.relic ? db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1').get(quest.relic) : null;
+                        const relic = quest.relic ? dbQuery.getRandomRelic.get(quest.relic) : null;
                         if(relic && Math.random() < relic.chance) {
                             embeds.push(new EmbedBuilder()
                               .setTitle(relic.name)
