@@ -469,17 +469,21 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     });
 
     // Add avatar on top if available
-    if (avatarBlob) {
-      const processedAvatar = await sharp(avatarBlob)
-        .png()
-        .toBuffer();
-      
-      compositeLayers.push({
-        input: processedAvatar,
-        top: MARGIN,
-        left: MARGIN,
-      });
-    }
+if (avatarBlob) {
+  const processedAvatar = await sharp(avatarBlob)
+    .composite([{
+      input: Buffer.from(`<svg><circle cx="${AVATAR_SIZE/2}" cy="${AVATAR_SIZE/2}" r="${AVATAR_SIZE/2}" /></svg>`),
+      blend: 'dest-in'
+    }])
+    .png()
+    .toBuffer();
+  
+  compositeLayers.push({
+    input: processedAvatar,
+    top: MARGIN,
+    left: MARGIN,
+  });
+}
 
     // Generate final image
     const finalBuffer = await canvas
