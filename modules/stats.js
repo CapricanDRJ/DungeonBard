@@ -128,14 +128,40 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     }
 
     // Build SVG text overlay
-    let svgContent = `
-      <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
-        <style>
-          .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
-          .header { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
-          .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
-          .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
-        </style>`;
+// Build SVG text overlay
+let svgContent = `
+  <svg width="${IMAGE_WIDTH}" height="${IMAGE_HEIGHT}" xmlns="http://www.w3.org/2000/svg">
+    <defs>
+      <filter id="bevel">
+        <feGaussianBlur in="SourceAlpha" stdDeviation="2" result="blur"/>
+        <feOffset in="blur" dx="1" dy="1" result="offsetBlur"/>
+        <feSpecularLighting in="blur" surfaceScale="5" specularConstant="0.5" specularExponent="10" lighting-color="white" result="specular">
+          <fePointLight x="-5000" y="-10000" z="20000"/>
+        </feSpecularLighting>
+        <feComposite in="specular" in2="SourceAlpha" operator="in" result="specularOut"/>
+        <feComposite in="SourceGraphic" in2="specularOut" operator="arithmetic" k1="0" k2="1" k3="1" k4="0"/>
+      </filter>
+    </defs>
+    <style>
+      .title { font-family: Arial, sans-serif; font-size: 14px; font-weight: bold; fill: ${textColor}; }
+      .header { font-family: Arial, sans-serif; font-size: 12px; font-weight: bold; fill: ${textColor}; }
+      .text { font-family: Arial, sans-serif; font-size: ${FONT_SIZE}px; fill: ${textColor}; }
+      .section { font-family: Arial, sans-serif; font-size: 13px; font-weight: bold; fill: ${textColor}; text-decoration: underline; }
+    </style>
+    
+    <!-- Outer decorative border -->
+    <rect x="2" y="2" width="${IMAGE_WIDTH - 4}" height="${IMAGE_HEIGHT - 4}" 
+          fill="none" stroke="${textColor}" stroke-width="3" opacity="0.6" filter="url(#bevel)"/>
+    
+    <!-- Inner border -->
+    <rect x="5" y="5" width="${IMAGE_WIDTH - 10}" height="${IMAGE_HEIGHT - 10}" 
+          fill="none" stroke="${textColor}" stroke-width="1" opacity="0.4"/>
+    
+    <!-- Corner ornaments -->
+    <path d="M 8,8 L 20,8 L 20,10 L 10,10 L 10,20 L 8,20 Z" fill="${textColor}" opacity="0.5"/>
+    <path d="M ${IMAGE_WIDTH - 8},8 L ${IMAGE_WIDTH - 20},8 L ${IMAGE_WIDTH - 20},10 L ${IMAGE_WIDTH - 10},10 L ${IMAGE_WIDTH - 10},20 L ${IMAGE_WIDTH - 8},20 Z" fill="${textColor}" opacity="0.5"/>
+    <path d="M 8,${IMAGE_HEIGHT - 8} L 20,${IMAGE_HEIGHT - 8} L 20,${IMAGE_HEIGHT - 10} L 10,${IMAGE_HEIGHT - 10} L 10,${IMAGE_HEIGHT - 20} L 8,${IMAGE_HEIGHT - 20} Z" fill="${textColor}" opacity="0.5"/>
+    <path d="M ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 8} L ${IMAGE_WIDTH - 20},${IMAGE_HEIGHT - 8} L ${IMAGE_WIDTH - 20},${IMAGE_HEIGHT - 10} L ${IMAGE_WIDTH - 10},${IMAGE_HEIGHT - 10} L ${IMAGE_WIDTH - 10},${IMAGE_HEIGHT - 20} L ${IMAGE_WIDTH - 8},${IMAGE_HEIGHT - 20} Z" fill="${textColor}" opacity="0.5"/>`;
 
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
