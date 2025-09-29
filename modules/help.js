@@ -23,7 +23,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Professions')
-        .setColor(0xEB459E)
+        .setColor(0xFAA61A)
         .setDescription(
             "In DungeonBard, you will gain experience towards professions for attempting quests and facing some of the perils. \n"+
             "* `/stats` [This command will generate a character card that includes information such as your profession ranks, attribute scores, and active equipment and relic bonuses.]\n"+
@@ -35,7 +35,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Attributes')
-        .setColor(0xEB459E)
+        .setColor(0x57F287)
         .setDescription(
             "Some of the quests will also help level your character’s attributes. Certain key quests require specific knowledge or skills to complete, and these level when you complete them. As with professions, levelling becomes slower as you progress through the academic domains. \n"+
             "* *  Initiate and Collegiate [LEARNING (LRN), COMMUNICATION (COM), DISCIPLINE (DIS), ORGANIZATION (ORG), STAMINA (STA), PERSEVERANCE (PRS)]\n"+
@@ -47,7 +47,7 @@ const embeds = [
     ,
     new EmbedBuilder()
         .setTitle('Quests')
-        .setColor(0x57F287)
+        .setColor(0xEB459E)
         .setDescription(
             "Quests may be claimed for engaging in activities related to academics and self-care. Some quests are tied to certain academic domains (and these generate more experience towards professions and attributes, as well as chances for profession-boosting relics), but there are a great many that represent smaller, incremental tasks. \n"+
             "* `/quest` [This command will ask you to select a quest area and then shows a lists of quests available in that area as well as what is needed to claim them.]\n"+
