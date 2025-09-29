@@ -554,7 +554,7 @@ module.exports = {
             const items = dbQuery.getActiveItems.all(userId, guildId);
             // Generate character image
             const imageBuffer = await generateCharacterImage(userData, domainData, items, avatarBlob);
-            const fileName = `${userData.displayName.replace(/[<>:"/\\|?*]/g, '_')}-stats.png`;
+            const fileName = `${userData.displayName.replace(/[<>:"/\\|?*. ]/g, '_')}-stats.png`;
             const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
             const embeds = [new EmbedBuilder()
                 .setImage(`attachment://${fileName}`)
