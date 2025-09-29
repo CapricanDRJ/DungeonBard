@@ -126,7 +126,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 
     } else if (stage === 3) {
       // Stage 3: Show quest details
-      const quest = getQuestById.get(selectedQuestId);
+      const quest = dbQuery.getQuestById.get(selectedQuestId);
       
       if (!quest) {
         embed = new EmbedBuilder()
