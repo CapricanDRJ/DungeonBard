@@ -84,7 +84,7 @@ const uploadBeastiaryEmojis = async (client) => {
             
             // Upload to application emoji list (not guild)
             const emoji = await client.application.emojis.create({
-                image: buffer,
+                attachment: buffer,
                 name: emojiName
             });
             
@@ -104,7 +104,7 @@ const uploadBeastiaryEmojis = async (client) => {
     }
 };
 
-
+uploadBeastiaryEmojis(client).catch(console.error);
 
 });
 
