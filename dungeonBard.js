@@ -42,7 +42,7 @@ const registerCommands = async () => {
     }
 };
 
-client.once('ready', async () => {
+client.once('clientReady', async () => {
     console.log(`Client ready; logged in as ${client.user.tag} (${client.user.id})`);
 
     // Register commands based on the number of guilds (servers)
