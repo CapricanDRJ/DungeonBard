@@ -211,57 +211,58 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         <path d="M 235,${IMAGE_HEIGHT - 6} Q 245,${IMAGE_HEIGHT - 6} 245,${IMAGE_HEIGHT - 11} Q 245,${IMAGE_HEIGHT - 16} 235,${IMAGE_HEIGHT - 16} M 245,${IMAGE_HEIGHT - 6} Q 255,${IMAGE_HEIGHT - 6} 255,${IMAGE_HEIGHT - 11} Q 255,${IMAGE_HEIGHT - 16} 245,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
         <path d="M 265,${IMAGE_HEIGHT - 6} Q 275,${IMAGE_HEIGHT - 6} 275,${IMAGE_HEIGHT - 11} Q 275,${IMAGE_HEIGHT - 16} 265,${IMAGE_HEIGHT - 16} M 275,${IMAGE_HEIGHT - 6} Q 285,${IMAGE_HEIGHT - 6} 285,${IMAGE_HEIGHT - 11} Q 285,${IMAGE_HEIGHT - 16} 275,${IMAGE_HEIGHT - 16}" stroke="#000000" stroke-width="1.5" fill="none"/>
         
-<!-- Decorative diamonds along left side -->
-        <path d="M 10,70 L 15,75 L 10,80 L 5,75 Z" fill="#000000"/>
-        <path d="M 10,100 L 15,105 L 10,110 L 5,105 Z" fill="#000000"/>
-        <path d="M 10,130 L 15,135 L 10,140 L 5,135 Z" fill="#000000"/>
-        <path d="M 10,160 L 15,165 L 10,170 L 5,165 Z" fill="#000000"/>
-        <path d="M 10,190 L 15,195 L 10,200 L 5,195 Z" fill="#000000"/>
-        <path d="M 10,220 L 15,225 L 10,230 L 5,225 Z" fill="#000000"/>
-        <path d="M 10,250 L 15,255 L 10,260 L 5,255 Z" fill="#000000"/>
-        <path d="M 10,280 L 15,285 L 10,290 L 5,285 Z" fill="#000000"/>
-        <path d="M 10,310 L 15,315 L 10,320 L 5,315 Z" fill="#000000"/>
-        <path d="M 10,340 L 15,345 L 10,350 L 5,345 Z" fill="#000000"/>
-        <path d="M 10,370 L 15,375 L 10,380 L 5,375 Z" fill="#000000"/>
+        <!-- Decorative diamonds along left side -->
+        <path d="M 8,70 L 11,75 L 6,80 L 1,75 Z" fill="#000000"/>
+        <path d="M 8,100 L 11,105 L 6,110 L 1,105 Z" fill="#000000"/>
+        <path d="M 8,130 L 11,135 L 6,140 L 1,135 Z" fill="#000000"/>
+        <path d="M 8,160 L 11,165 L 6,170 L 1,165 Z" fill="#000000"/>
+        <path d="M 8,190 L 11,195 L 6,200 L 1,195 Z" fill="#000000"/>
+        <path d="M 8,220 L 11,225 L 6,230 L 1,225 Z" fill="#000000"/>
+        <path d="M 8,250 L 11,255 L 6,260 L 1,255 Z" fill="#000000"/>
+        <path d="M 8,280 L 11,285 L 6,290 L 1,285 Z" fill="#000000"/>
+        <path d="M 8,310 L 11,315 L 6,320 L 1,315 Z" fill="#000000"/>
+        <path d="M 8,340 L 11,345 L 6,350 L 1,345 Z" fill="#000000"/>
+        <path d="M 8,370 L 11,375 L 6,380 L 1,375 Z" fill="#000000"/>
         
         <!-- Domain color accent dots in diamonds (left) -->
-        <circle cx="10" cy="75" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="105" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="135" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="165" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="195" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="225" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="255" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="285" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="315" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="345" r="2" fill="${accentColor}"/>
-        <circle cx="10" cy="375" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="75" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="105" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="135" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="165" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="195" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="225" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="255" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="285" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="315" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="345" r="2" fill="${accentColor}"/>
+        <circle cx="8" cy="375" r="2" fill="${accentColor}"/>
         
         <!-- Decorative diamonds along right side -->
-        <path d="M ${IMAGE_WIDTH - 10},70 L ${IMAGE_WIDTH - 15},75 L ${IMAGE_WIDTH - 10},80 L ${IMAGE_WIDTH - 5},75 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},100 L ${IMAGE_WIDTH - 15},105 L ${IMAGE_WIDTH - 10},110 L ${IMAGE_WIDTH - 5},105 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},130 L ${IMAGE_WIDTH - 15},135 L ${IMAGE_WIDTH - 10},140 L ${IMAGE_WIDTH - 5},135 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},160 L ${IMAGE_WIDTH - 15},165 L ${IMAGE_WIDTH - 10},170 L ${IMAGE_WIDTH - 5},165 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},190 L ${IMAGE_WIDTH - 15},195 L ${IMAGE_WIDTH - 10},200 L ${IMAGE_WIDTH - 5},195 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},220 L ${IMAGE_WIDTH - 15},225 L ${IMAGE_WIDTH - 10},230 L ${IMAGE_WIDTH - 5},225 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},250 L ${IMAGE_WIDTH - 15},255 L ${IMAGE_WIDTH - 10},260 L ${IMAGE_WIDTH - 5},255 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},280 L ${IMAGE_WIDTH - 15},285 L ${IMAGE_WIDTH - 10},290 L ${IMAGE_WIDTH - 5},285 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},310 L ${IMAGE_WIDTH - 15},315 L ${IMAGE_WIDTH - 10},320 L ${IMAGE_WIDTH - 5},315 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},340 L ${IMAGE_WIDTH - 15},345 L ${IMAGE_WIDTH - 10},350 L ${IMAGE_WIDTH - 5},345 Z" fill="#000000"/>
-        <path d="M ${IMAGE_WIDTH - 10},370 L ${IMAGE_WIDTH - 15},375 L ${IMAGE_WIDTH - 10},380 L ${IMAGE_WIDTH - 5},375 Z" fill="#000000"/>
-        
+        <path d="M ${IMAGE_WIDTH - 8},70 L ${IMAGE_WIDTH - 11},75 L ${IMAGE_WIDTH - 6},80 L ${IMAGE_WIDTH - 1},75 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},100 L ${IMAGE_WIDTH - 11},105 L ${IMAGE_WIDTH - 6},110 L ${IMAGE_WIDTH - 1},105 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},130 L ${IMAGE_WIDTH - 11},135 L ${IMAGE_WIDTH - 6},140 L ${IMAGE_WIDTH - 1},135 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},160 L ${IMAGE_WIDTH - 11},165 L ${IMAGE_WIDTH - 6},170 L ${IMAGE_WIDTH - 1},165 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},190 L ${IMAGE_WIDTH - 11},195 L ${IMAGE_WIDTH - 6},200 L ${IMAGE_WIDTH - 1},195 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},220 L ${IMAGE_WIDTH - 11},225 L ${IMAGE_WIDTH - 6},230 L ${IMAGE_WIDTH - 1},225 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},250 L ${IMAGE_WIDTH - 11},255 L ${IMAGE_WIDTH - 6},260 L ${IMAGE_WIDTH - 1},255 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},280 L ${IMAGE_WIDTH - 11},285 L ${IMAGE_WIDTH - 6},290 L ${IMAGE_WIDTH - 1},285 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},310 L ${IMAGE_WIDTH - 11},315 L ${IMAGE_WIDTH - 6},320 L ${IMAGE_WIDTH - 1},315 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},340 L ${IMAGE_WIDTH - 11},345 L ${IMAGE_WIDTH - 6},350 L ${IMAGE_WIDTH - 1},345 Z" fill="#000000"/>
+        <path d="M ${IMAGE_WIDTH - 8},370 L ${IMAGE_WIDTH - 11},375 L ${IMAGE_WIDTH - 6},380 L ${IMAGE_WIDTH - 1},375 Z" fill="#000000"/>
+
         <!-- Domain color accent dots in diamonds (right) -->
-        <circle cx="${IMAGE_WIDTH - 10}" cy="75" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="105" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="135" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="165" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="195" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="225" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="255" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="285" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="315" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="345" r="2" fill="${accentColor}"/>
-        <circle cx="${IMAGE_WIDTH - 10}" cy="375" r="2" fill="${accentColor}"/>`;
+        <circle cx="${IMAGE_WIDTH - 8}" cy="75" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="105" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="135" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="165" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="195" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="225" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="255" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="285" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="315" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="345" r="2" fill="${accentColor}"/>
+        <circle cx="${IMAGE_WIDTH - 8}" cy="375" r="2" fill="${accentColor}"/>`;
+ 
     // Column 1: Avatar and Attributes (left side)
     const col1X = MARGIN;
     let col1Y = MARGIN + AVATAR_SIZE + 20;
