@@ -160,8 +160,8 @@ module.exports = {
 
         try {
             // Get all scoreboard data in a single query
-            const allUsers = dbQuery.getScoreboardData.all(guildId);
-            
+            const allUsers = await dbQuery.getScoreboardData.all(guildId);
+            console.log(allUsers);
             if (!allUsers || allUsers.length === 0) {
                 return interaction.reply({
                     content: 'No characters found in this server.',
