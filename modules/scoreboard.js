@@ -71,8 +71,6 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
         // Add each user row
         let i = 0;
         for (const user of users) {
-            console.log(user.displayName);
-            console.log(rank);
             const y = MARGIN + 35 + (i * ROW_HEIGHT);
             const isHighlighted = (rank === highlightIndex);
             // Highlight background for calling user
@@ -158,8 +156,8 @@ module.exports = {
 
     executeCommand: async (interaction) => {
         const userId = interaction.user.id;
-        //const guildId = interaction.guildId;
-        const guildId = '1339984756695371908';
+        const guildId = interaction.guildId;
+        //const guildId = '1339984756695371908';
 
         try {
             // Get all users with avatars in a single query
