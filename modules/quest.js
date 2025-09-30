@@ -377,6 +377,7 @@ module.exports = {
                       }));
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(beast.difficulty)];
                     const attack = skillMod(user.domainId, user.skill3) + skillBonuses[3-1];
+                    console.log("attack", attack);
                     const defense = skillMod(user.domainId, user.skill4) + skillBonuses[4-1];
                     const hp = skillMod(user.domainId, user.skill5);
 
@@ -391,6 +392,7 @@ module.exports = {
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
                       const userd20attack = Math.floor(Math.random()*20) + 1 + attack;
                       const monsterd20defense = Math.floor(Math.random()*20) + 1 + monsterDefense;
+                      console.log("userd20attack", userd20attack, "monsterd20defense", monsterd20defense);
                         if(userd20attack >= monsterd20defense) {
                             //hit
                             const monsterDamage = (userd20attack - monsterd20defense) / 2;
@@ -408,6 +410,7 @@ module.exports = {
                           userHitpoints = 0;
                           break;
                         };*/
+                        console.log("monsterD20attack", monsterD20attack, "userd20defense", userd20defense);
                         if(monsterD20attack >= userd20defense) {
                             //hit
                             const userDamage = (monsterD20attack - (userd20defense)) / 2;
