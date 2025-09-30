@@ -21,6 +21,14 @@ const skillNames = [
   ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
   ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
 ];
+const skillLevel = {
+    1: [10830,9660,8570,7540,6580,5690,4860,4110,3420,2790,2240,1750,1320,950,650,400,220,90,20,0],
+    2: [21660,19330,17130,15080,13160,11370,9730,8220,6840,5590,4480,3490,2640,1900,1290,810,440,190,40,0],
+    3: [27080,24165,21415,18850,16450,14215,12160,10270,8550,6990,5600,4365,3295,2375,1615,1010,550,235,50,0],
+    4: [32500,29000,25700,22620,19740,17060,14590,12320,10260,8390,6720,5240,3950,2850,1940,1210,660,280,60,0],
+    5: [43440,38670,34270,30160,26320,22750,19460,16440,13680,11190,8960,6990,5270,3810,2590,1620,880,380,90,0],
+    6: [54170,48330,42840,37690,32900,28440,24320,20540,17100,13980,11200,8730,6590,4760,3240,2020,1100,470,110,0],
+}
 const dbQuery = {
   delExpired: db.prepare(`DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?`),
   setActive: db.prepare(`UPDATE inventory SET duration = duration - strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND duration > 31536000`),
@@ -358,7 +366,8 @@ module.exports = {
                 const beast = quest.beastiary ? dbQuery.getRandomBeast.get(quest.beastiary) : null;
                 if(Math.random() < beast.chance) {
                     //peril
-                    function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
+                    //function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
+                    function skillMod(domainId, skill) { return 20 - attLevel[domainId].findIndex(val => val <= skill) }
                     embeds.push(new EmbedBuilder()
                       .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${beast.entity}**!\n*${beast.entityEffect}*`)
                       .setColor(0xa6ce2a)
@@ -367,12 +376,12 @@ module.exports = {
                         iconURL: beast.emojiId ? `https://cdn.discordapp.com/emojis/${beast.emojiId}.webp` : 'https://cdn.discordapp.com/emojis/1421265406081110046.webp'
                       }));
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(beast.difficulty)];
-                    const attack = skillMod(user.skill3) + skillBonuses[3-1];
-                    const defense = skillMod(user.skill4) + skillBonuses[4-1];
-                    const hp = skillMod(user.skill5);
+                    const attack = skillMod(user.domainId, user.skill3) + skillBonuses[3-1];
+                    const defense = skillMod(user.domainId, user.skill4) + skillBonuses[4-1];
+                    const hp = skillMod(user.domainId, user.skill5);
 
-                    const monsterAttack = skillMod(user.skill3) * difficulty;
-                    const monsterDefense = skillMod(user.skill4) * difficulty;
+                    const monsterAttack = skillMod(user.domainId, user.skill3) * difficulty;
+                    const monsterDefense = skillMod(user.domainId, user.skill4) * difficulty;
                     let userHitpoints = hp;
                     let monsterHitpoints = hp * difficulty;
                     let battleLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
