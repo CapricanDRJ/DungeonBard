@@ -27,7 +27,7 @@ const NAME_OFFSET_X = AVATAR_SIZE + 15;
 const XP_OFFSET_X = 200;
 const IMAGE_WIDTH = 350;
 
-async function generateScoreboardImage(users, highlightIndex, rank = 0) {
+async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
         const imageHeight = MARGIN * 2 + (users.length * ROW_HEIGHT);
         
@@ -202,7 +202,7 @@ module.exports = {
             }
 
             // Generate scoreboard image
-            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex, startIndex);
+            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex, startIndex + 1);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
             const embed = new EmbedBuilder()
                 .setTitle('Top Characters by Experience')
