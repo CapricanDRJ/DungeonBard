@@ -24,7 +24,7 @@ const AVATAR_SIZE = 32;
 const ROW_HEIGHT = 60;
 const MARGIN = 20;
 const NAME_OFFSET_X = AVATAR_SIZE + 15;
-const XP_OFFSET_X = 200;
+const XP_OFFSET_X = 250;
 const IMAGE_WIDTH = 350;
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
