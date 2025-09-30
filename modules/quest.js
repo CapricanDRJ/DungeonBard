@@ -410,11 +410,11 @@ module.exports = {
                         //monster turn
                         const monsterD20attack = (i > 5) ? 20 : Math.floor(Math.random() * 20 ) + 1 + monsterAttack;
                         const userd20defense = Math.floor(Math.random() * 20) + 1 + defense;
-                        /*if(i>6) {
+                        if(i>7) {
                           battleLog += `The **${beast.entity}** hits you for ${userHitpoints.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
                           userHitpoints = 0;
                           break;
-                        };*/
+                        };
                         console.log("monsterD20attack", monsterD20attack, "userd20defense", userd20defense);
                         if(monsterD20attack >= userd20defense) {
                             //hit
