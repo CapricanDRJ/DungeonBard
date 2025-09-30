@@ -188,10 +188,11 @@ module.exports = {
                 displayUsers = allUsers.slice(0, 20);
                 highlightIndex = callingUserIndex;
             } else {
-                // User is outside top 20, center them in the middle (position 10)
-                displayUsers = allUsers.slice(0, 10);
-                displayUsers.push(allUsers[callingUserIndex]);
-                highlightIndex = 10;
+                // User is outside top 20, show 10 before and 10 after (21 total with user)
+                const startIndex = Math.max(0, callingUserIndex - 10);
+                const endIndex = Math.min(allUsers.length, callingUserIndex + 11);
+                displayUsers = allUsers.slice(startIndex, endIndex);
+                highlightIndex = callingUserIndex - startIndex;
             }
 
             // Generate scoreboard image
