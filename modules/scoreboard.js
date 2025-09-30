@@ -172,6 +172,7 @@ module.exports = {
 
             // Find calling user's rank
             const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
+            console.log(callingUserIndex);
             
             if (callingUserIndex === -1) {
                 return interaction.reply({
@@ -181,6 +182,7 @@ module.exports = {
             }
 
             const userRank = callingUserIndex + 1;
+            console.log(userRank);
             let displayUsers;
             let highlightIndex;
 
