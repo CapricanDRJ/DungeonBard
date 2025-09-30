@@ -190,14 +190,14 @@ module.exports = {
             let highlightIndex;
             let startIndex = 0;
 
-            // If user is in top 20, show top 20 with user at their position
-            if (userRank <= 20) {
-                displayUsers = allUsers.slice(0, 20);
+            // If user is in top 10, show top 10 with user at their position
+            if (userRank <= 10) {
+                displayUsers = allUsers.slice(0, 10);
                 highlightIndex = callingUserIndex;
             } else {
-                // User is outside top 20, show 10 before and 10 after (21 total with user)
-                startIndex = Math.max(0, callingUserIndex - 10);
-                const endIndex = Math.min(allUsers.length, callingUserIndex + 11);
+                // User is outside top 10, show 5 before and 4 after (20 total with user)
+                startIndex = Math.max(0, callingUserIndex - 5);
+                const endIndex = Math.min(allUsers.length, callingUserIndex + 4);
                 displayUsers = allUsers.slice(startIndex, endIndex);
                 highlightIndex = callingUserIndex - startIndex;
             }
