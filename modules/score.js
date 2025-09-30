@@ -110,6 +110,7 @@ async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
             
             if (user.avatarBlob) {
                 const processedAvatar = await sharp(user.avatarBlob)
+                    .resize(AVATAR_SIZE, AVATAR_SIZE)
                     .png()
                     .toBuffer();
                 
