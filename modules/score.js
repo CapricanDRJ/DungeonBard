@@ -20,7 +20,7 @@ const dbQuery = {
 };
 
 // Image layout constants
-const AVATAR_SIZE = 48;
+const AVATAR_SIZE = 16;
 const ROW_HEIGHT = 60;
 const MARGIN = 20;
 const NAME_OFFSET_X = AVATAR_SIZE + 15;
