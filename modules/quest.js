@@ -367,7 +367,7 @@ module.exports = {
                 if(Math.random() < beast.chance || interaction.user.id === '454459089720967168') {
                     //peril
                     //function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
-                    function skillMod(domainId, skill) { return 20 - skillLevel[domainId].findIndex(val => val >= skill) }
+                    function skillMod(domainId, skill) { return (20 - skillLevel[domainId].findIndex(val => val <= skill)) }
                     embeds.push(new EmbedBuilder()
                       .setDescription(`As you embark on your quest, a sudden peril befalls you!\nYou encounter a **${beast.entity}**!\n*${beast.entityEffect}*`)
                       .setColor(0xa6ce2a)
