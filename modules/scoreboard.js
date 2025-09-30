@@ -48,10 +48,10 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
             <svg width="${IMAGE_WIDTH}" height="${imageHeight}" xmlns="http://www.w3.org/2000/svg">
                 <style>
                     .title { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #2c1810; }
-                    .name { font-family: 'MedievalSharp', serif; font-size: 14px; fill: #2c1810; }
-                    .xp { font-family: 'MedievalSharp', serif; font-size: 14px; fill: #4a3520; }
-                    .rank { font-family: 'MedievalSharp', serif; font-size: 16px; font-weight: bold; fill: #6b4423; }
-                    .highlight { font-family: 'MedievalSharp', serif; font-size: 14px; font-weight: bold; fill: #2c1810; }
+                    .name { font-family: 'MedievalSharp', serif; font-size: 20px; fill: #2c1810; }
+                    .xp { font-family: 'MedievalSharp', serif; font-size: 20px; fill: #4a3520; }
+                    .rank { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #6b4423; }
+                    .highlight { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #2c1810; }
                 </style>
                 
                 <!-- Parchment background -->
@@ -209,6 +209,7 @@ module.exports = {
                 .setTimestamp();
 
             interaction.reply({
+                embeds: [embed],
                 files: [attachment]
             });
         } catch (error) {
