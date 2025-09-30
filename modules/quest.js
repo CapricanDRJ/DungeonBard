@@ -395,8 +395,8 @@ module.exports = {
                     //battle loop
                     let i = 0;
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
-                      const userd20attack = Math.floor(Math.random()*20) + 1 + attack;
-                      const monsterd20defense = Math.floor(Math.random()*20) + 1 + monsterDefense;
+                      const userd20attack = Math.floor(Math.random()*20) + attack;
+                      const monsterd20defense = Math.floor(Math.random()*20) + monsterDefense;
                       console.log("userd20attack", userd20attack, "monsterd20defense", monsterd20defense);
                         if(userd20attack >= monsterd20defense) {
                             //hit
@@ -408,8 +408,8 @@ module.exports = {
                         }
                         if(monsterHitpoints <= 0) break;
                         //monster turn
-                        const monsterD20attack = (i > 5) ? 20 : Math.floor(Math.random() * 20 ) + 1 + monsterAttack;
-                        const userd20defense = Math.floor(Math.random() * 20) + 1 + defense;
+                        const monsterD20attack = (i > 5) ? 20 : Math.floor(Math.random() * 20 ) + monsterAttack;
+                        const userd20defense = Math.floor(Math.random() * 20) + defense;
                         if(i>7) {
                           battleLog += `The **${beast.entity}** hits you for ${userHitpoints.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
                           userHitpoints = 0;
