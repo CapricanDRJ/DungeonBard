@@ -160,7 +160,7 @@ module.exports = {
 
         try {
             // Get all scoreboard data in a single query
-            const allUsers = dbQuery.getScoreboardData.all(guildId, userId, guildId, userId, guildId);
+            const allUsers = dbQuery.getScoreboardData.all(guildId);
             
             if (!allUsers || allUsers.length === 0) {
                 return interaction.reply({
