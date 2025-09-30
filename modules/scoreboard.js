@@ -69,11 +69,12 @@ async function generateScoreboardImage(users, highlightIndex, rank = 0) {
         `;
 
         // Add each user row
+        let i = 0;
         for (const user of users) {
             console.log(user.displayName);
             console.log(rank);
             const y = MARGIN + 35 + (i * ROW_HEIGHT);
-            const isHighlighted = (i === highlightIndex);
+            const isHighlighted = (rank === highlightIndex);
             // Highlight background for calling user
             if (isHighlighted) {
                 svgContent += `<rect x="10" y="${y}" width="${IMAGE_WIDTH - 20}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
@@ -94,6 +95,7 @@ async function generateScoreboardImage(users, highlightIndex, rank = 0) {
                 svgContent += `<line x1="20" y1="${y + 50}" x2="${IMAGE_WIDTH - 20}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
             }
             rank++;
+            i++;
         }
 
         svgContent += '</svg>';
