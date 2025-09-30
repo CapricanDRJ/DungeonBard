@@ -379,10 +379,15 @@ module.exports = {
                     const attack = skillMod(user.domainId, user.skill3) + skillBonuses[3-1];
                     console.log("attack", attack);
                     const defense = skillMod(user.domainId, user.skill4) + skillBonuses[4-1];
+                    console.log("defense", defense);
                     const hp = skillMod(user.domainId, user.skill5);
+                    console.log("hp", hp);
 
                     const monsterAttack = skillMod(user.domainId, user.skill3) * difficulty;
                     const monsterDefense = skillMod(user.domainId, user.skill4) * difficulty;
+                    console.log("monsterAttack", monsterAttack);
+                    console.log("monsterDefense", monsterDefense);
+                    //set hitpoints
                     let userHitpoints = hp;
                     let monsterHitpoints = hp * difficulty;
                     let battleLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
