@@ -109,6 +109,9 @@ async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
             const user = users[i];
             
             if (user.avatarBlob) {
+                    const metadata = await sharp(user.avatarBlob).metadata();
+    console.log(`Avatar size before resize: ${metadata.width}x${metadata.height}`);
+  
                 const processedAvatar = await sharp(user.avatarBlob)
                     .resize(AVATAR_SIZE, AVATAR_SIZE)
                     .png()
