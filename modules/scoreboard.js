@@ -27,7 +27,7 @@ const NAME_OFFSET_X = AVATAR_SIZE + 15;
 const XP_OFFSET_X = 200;
 const IMAGE_WIDTH = 350;
 
-async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
+async function generateScoreboardImage(users, highlightIndex, rank = 0) {
     try {
         const imageHeight = MARGIN * 2 + (users.length * ROW_HEIGHT);
         
@@ -69,21 +69,18 @@ async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
         `;
 
         // Add each user row
-        let i = 0;
         for (const user of users) {
             console.log(user.displayName);
-            console.log(i);
+            console.log(rank);
             const y = MARGIN + 35 + (i * ROW_HEIGHT);
-            const isHighlighted = i === highlightIndex;
-            const actualRank = startRank + i;
-            console.log(actualRank);
+            const isHighlighted = (i === highlightIndex);
             // Highlight background for calling user
             if (isHighlighted) {
                 svgContent += `<rect x="10" y="${y}" width="${IMAGE_WIDTH - 20}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
             }
             
             // Rank number
-            svgContent += `<text x="15" y="${y + 30}" class="rank">#${actualRank}</text>`;
+            svgContent += `<text x="15" y="${y + 30}" class="rank">#${rank}</text>`;
             
             // Name and XP - use highlight class if it's the calling user
             const textClass = isHighlighted ? 'highlight' : 'name';
@@ -96,7 +93,7 @@ async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
             if (i < users.length - 1) {
                 svgContent += `<line x1="20" y1="${y + 50}" x2="${IMAGE_WIDTH - 20}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
             }
-            i++;
+            rank++;
         }
 
         svgContent += '</svg>';
@@ -188,6 +185,7 @@ module.exports = {
             console.log(userRank);
             let displayUsers;
             let highlightIndex;
+            let startIndex = 0;
 
             // If user is in top 20, show top 20 with user at their position
             if (userRank <= 20) {
@@ -195,14 +193,14 @@ module.exports = {
                 highlightIndex = callingUserIndex;
             } else {
                 // User is outside top 20, show 10 before and 10 after (21 total with user)
-                const startIndex = Math.max(0, callingUserIndex - 10);
+                startIndex = Math.max(0, callingUserIndex - 10);
                 const endIndex = Math.min(allUsers.length, callingUserIndex + 11);
                 displayUsers = allUsers.slice(startIndex, endIndex);
                 highlightIndex = callingUserIndex - startIndex;
             }
 
             // Generate scoreboard image
-            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex, userRank);
+            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex, startIndex);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
             const embed = new EmbedBuilder()
                 .setTitle('Top Characters by Experience')
