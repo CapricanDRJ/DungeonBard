@@ -202,7 +202,7 @@ module.exports = {
             }
 
             // Generate scoreboard image
-            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex, startIndex + 1);
+            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex + 1, startIndex + 1);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
             const embed = new EmbedBuilder()
                 .setTitle('Top Characters by Experience')
