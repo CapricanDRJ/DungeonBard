@@ -209,7 +209,6 @@ module.exports = {
                 .setTimestamp();
 
             interaction.reply({
-                embeds: [embed],
                 files: [attachment]
             });
         } catch (error) {
