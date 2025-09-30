@@ -28,6 +28,7 @@ const dbQuery = {
   skillBonus: db.prepare(`UPDATE inventory SET duration = duration + strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND skill != 0 AND skillBonus = (SELECT MAX(skillBonus) FROM inventory i2 WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId AND i2.skill = inventory.skill)`),
   getActiveItems: db.prepare(`SELECT * FROM inventory WHERE userId = ? AND guildId = ? AND duration > 31536000`),
   getUser: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
+  getUserDataRandom: db.prepare('SELECT * FROM users WHERE userId = ? ORDER BY RANDOM() LIMIT 1'),
   getQuestAreaById: db.prepare("SELECT questArea FROM quest WHERE id = ?"),
   getQuestById: db.prepare("SELECT * FROM quest WHERE id = ?"),
   getRandomRelic: db.prepare('SELECT * FROM relic where id = ? ORDER BY RANDOM() LIMIT 1'),
@@ -36,7 +37,8 @@ const dbQuery = {
   addCoins: db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
   getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC"),
-  getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?")
+  getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
+  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC")
 };
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -62,9 +64,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setTitle("Quest Explorer")
         .setDescription("Choose a quest area to explore:")
         .setColor(embedColor);
-      const questAreas = db
-        .prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC")
-        .all(domain);
+      const questAreas = dbQuery.getDistinctQuestArea.all(domain);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("questAreaSelect")
@@ -204,7 +204,8 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 module.exports = {
   commandData: new SlashCommandBuilder()
     .setName("quest")
-    .setDescription("Browse and explore quests by area"),
+    .setDescription("Browse and explore quests by area")
+    .setIntegrationTypes([ 'GuildInstall']),
 
   allowedButtons: ["questback", "questcomplete"],
 

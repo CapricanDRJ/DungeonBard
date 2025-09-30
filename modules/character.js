@@ -33,6 +33,7 @@ module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('character')
         .setDescription('Manage character progression')
+        .setIntegrationTypes([ 'GuildInstall' ])
         .addSubcommand(subcommand =>
             subcommand
                 .setName('enroll')

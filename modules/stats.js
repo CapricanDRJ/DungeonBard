@@ -23,14 +23,15 @@ const skillNames = [
   ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
 ];
 const dbQuery = {
-    getUserAvatarFile:  db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ?'),
-    updateAvatarFileName: db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ?'),
+    getUserAvatarFile:  db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ? LIMIT 1'),
+    updateAvatarFileName: db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ? LIMIT 1'),
     updateAvatarBlob: db.prepare('INSERT OR REPLACE INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)'),
-    getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ?'),
-    getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
+    getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ? LIMIT 1'),
+    getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ? LIMIT 1'),
     getActiveItems: db.prepare(`SELECT inventory.*, itemEmojis.emoji FROM inventory LEFT JOIN itemEmojis ON inventory.emojiId = itemEmojis.emojiId WHERE inventory.userId = ? AND inventory.guildId = ? AND inventory.duration > 31536000`),
     selectEmoji: db.prepare('SELECT emoji FROM itemEmojis WHERE emojiId = ? LIMIT 1'),
-    getCursedItem: db.prepare('SELECT * FROM cursedItems ORDER BY RANDOM() LIMIT 1')
+    getCursedItem: db.prepare('SELECT * FROM cursedItems ORDER BY RANDOM() LIMIT 1'),
+    getUserDataRandom: db.prepare('SELECT * FROM users WHERE userId = ? ORDER BY RANDOM() LIMIT 1')
   };
 const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
       const avatarURL = currentAvatarURL.replace(/\/a_/, '/')
@@ -512,7 +513,8 @@ function formatTimeRemaining(seconds) {
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('stats')
-        .setDescription('Display character statistics image'),
+        .setDescription('Display character statistics image')
+        .setIntegrationTypes([ 'GuildInstall', 'UserInstall' ]),
 
     allowedButtons: [],
 
@@ -528,17 +530,21 @@ module.exports = {
 
     executeCommand: async (interaction) => {
         const userId = interaction.user.id;
-        const guildId = interaction.guildId;
+        let guildId = interaction.guildId;
         try {
             // Get user data from database
-            const userData = dbQuery.getUserData.get(userId, guildId);
+            let userData = dbQuery.getUserData.get(userId, guildId);
             
             if (!userData) {
-                interaction.reply({
+              userData = dbQuery.getUserDataRandom.get(userId);
+              if (userData) {
+                guildId = userData.guildId;
+              } else {
+                return interaction.reply({
                     content: 'No character found. Use `/character enroll` to create one first.',
                     flags: MessageFlags.Ephemeral
                 });
-                return;
+              }
             }
 
             // Get domain data

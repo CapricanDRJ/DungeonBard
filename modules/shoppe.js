@@ -130,7 +130,8 @@ async function menu(interaction, isUpdate, selectedItemId = null) {
 module.exports = {
   commandData: new SlashCommandBuilder()
     .setName("shoppe")
-    .setDescription("Browse and purchase items from the shoppe"),
+    .setDescription("Browse and purchase items from the shoppe")
+    .setIntegrationTypes([ 'GuildInstall' ]),
 
   allowedButtons: ["purchase"],
 

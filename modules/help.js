@@ -72,7 +72,8 @@ const embeds = [
 module.exports = {
     commandData: new SlashCommandBuilder()
         .setName('help')
-        .setDescription('Display help information'),
+        .setDescription('Display help information')
+        .setIntegrationTypes([ 'GuildInstall', 'UserInstall' ]),
 
     allowedButtons: [],
 
