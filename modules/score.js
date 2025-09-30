@@ -58,7 +58,7 @@ async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
                 <rect x="0" y="0" width="${IMAGE_WIDTH}" height="${imageHeight}" fill="#ebe4c3"/>
                 
                 <!-- Border -->
-                <rect x="5" y="5" width="${IMAGE_WIDTH - 10}" height="${IMAGE_HEIGHT - 10}" 
+                <rect x="5" y="5" width="${IMAGE_WIDTH - 10}" height="${imageHeight - 10}" 
                       fill="none" stroke="#000000" stroke-width="2"/>
                 <rect x="8" y="8" width="${IMAGE_WIDTH - 16}" height="${imageHeight - 16}" 
                       fill="none" stroke="#6b4423" stroke-width="1"/>
