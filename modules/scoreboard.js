@@ -164,8 +164,8 @@ module.exports = {
         try {
             // Get all users with avatars in a single query
             //const allUsers = dbQuery.getScoreboardData.all(guildId);
-            const allUsers = [...dbQuery.getScoreboardData.all(guildId), ...dbQuery.getScoreboardData.all(guildId), ...dbQuery.getScoreboardData.all(guildId)];
-            
+            const allUsers = [...dbQuery.getScoreboardData.all(guildId), ...dbQuery.getScoreboardData.all(guildId)];
+
             if (!allUsers || allUsers.length === 0) {
                 return interaction.reply({
                     content: 'No characters found in this server.',
