@@ -71,10 +71,12 @@ async function generateScoreboardImage(users, highlightIndex, startRank = 1) {
         // Add each user row
         for (let i = 0; i < users.length; i++) {
             const user = users[i];
+            console.log(user.displayName);
+            console.log(i);
             const y = MARGIN + 35 + (i * ROW_HEIGHT);
             const isHighlighted = i === highlightIndex;
             const actualRank = startRank + i;
-            
+            console.log(actualRank);
             // Highlight background for calling user
             if (isHighlighted) {
                 svgContent += `<rect x="10" y="${y}" width="${IMAGE_WIDTH - 20}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
