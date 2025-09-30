@@ -158,8 +158,8 @@ module.exports = {
 
     executeCommand: async (interaction) => {
         const userId = interaction.user.id;
-        const guildId = interaction.guildId;
-        //const guildId = '1339984756695371908';
+        //const guildId = interaction.guildId;
+        const guildId = '1339984756695371908';
 
         try {
             // Get all users with avatars in a single query
