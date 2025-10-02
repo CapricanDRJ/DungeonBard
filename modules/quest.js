@@ -74,7 +74,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setCustomId("questDomainSelect")
         .setPlaceholder("Choose your domain")
         .addOptions(
-          db.prepare('SELECT id, title FROM domains ORDER BY id').all().map(d => ({ 
+          db.prepare('SELECT id, title, description FROM domains ORDER BY id').all().map(d => ({ 
             label: d.title,
             description: d.description,
             value: String(d.id)
