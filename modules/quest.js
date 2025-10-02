@@ -80,7 +80,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           }))
         );
       
-      return (isUpdate ? interaction.update : interaction.reply)({
+      return interaction.reply({
         embeds: [questDomainEmbed],
         components: [new ActionRowBuilder().addComponents(questDomainDropdown)],
         flags: MessageFlags.Ephemeral
