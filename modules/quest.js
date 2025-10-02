@@ -47,7 +47,8 @@ const dbQuery = {
   getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC"),
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
-  insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`)
+  insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
+  getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id')
 };
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -74,7 +75,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setCustomId("questDomainSelect")
         .setPlaceholder("Choose your domain")
         .addOptions(
-          db.prepare('SELECT id, title, description FROM domains ORDER BY id').all().map(d => ({ 
+          dbQuery.getAllDomains.all().map(d => ({
             label: d.title,
             description: d.description,
             value: String(d.id)
