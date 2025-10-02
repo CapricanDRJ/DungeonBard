@@ -46,7 +46,8 @@ const dbQuery = {
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
   getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC"),
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
-  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC")
+  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
+  insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`)
 };
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -63,8 +64,28 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     let components = [];
     const domain = dbQuery.getDomain.pluck().get(interaction.user.id, interaction.guildId);
     if(!domain) {
-      return interaction.reply({ content: "Please use /character enroll to register.", ephemeral: true });
-    };
+      // Show domain selection for quest enrollment
+      const questDomainEmbed = new EmbedBuilder()
+        .setTitle("Quest Registration")
+        .setDescription("Select your starting domain to begin questing:")
+        .setColor(0x5865F2);
+      
+      const questDomainDropdown = new StringSelectMenuBuilder()
+        .setCustomId("questDomainSelect")
+        .setPlaceholder("Choose your domain")
+        .addOptions(
+          db.prepare('SELECT id, title FROM domains ORDER BY id').all().map(d => ({ 
+            label: d.title, 
+            value: String(d.id) 
+          }))
+        );
+      
+      return (isUpdate ? interaction.update : interaction.reply)({
+        embeds: [questDomainEmbed],
+        components: [new ActionRowBuilder().addComponents(questDomainDropdown)],
+        flags: MessageFlags.Ephemeral
+      });
+    }
     const embedColor = colors[domain];
     if (stage === 1) {
       // Stage 1: Show quest areas
@@ -230,6 +251,21 @@ module.exports = {
       if (interaction.customId === "questAreaSelect") {
         // Area selected - go to stage 2
         menu(interaction, true, 2, interaction.values[0]);
+    } else if (interaction.customId === "questDomainSelect") {
+        // Quick quest registration
+        const questDomainId = parseInt(interaction.values[0]);
+        const questDisplayName = interaction.member?.nick || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
+        
+        dbQuery.insertQuestUser.run(interaction.user.id, interaction.guildId, questDisplayName, null, questDomainId);
+        
+        setTimeout(() => {
+          const questAvatarURL = interaction.user.displayAvatarURL().replace(/\/a_/, '/').replace(/\.[a-zA-Z]{3,4}$/, '') + '.png?size=64';
+          const questAvatarFile = questAvatarURL.split('/').pop().split('?')[0];
+          db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ?').run(questAvatarFile, interaction.user.id, interaction.guildId);
+        }, 0);
+        
+        // Continue to quest menu
+        menu(interaction, true, 1);
       } else if (interaction.customId.startsWith("questSelect_")) {
         // Quest selected - go to stage 3
         const questId = parseInt(interaction.values[0].replace('quest', ''));
