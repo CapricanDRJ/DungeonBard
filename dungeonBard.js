@@ -2,7 +2,7 @@ const Discord = require("discord.js");
 const Config = require("./config.json");
 const fs = require('fs');
 const path = require('path');
-const test = requires('assets/logger.js');
+const test = require('assets/logger.js');
 
 const client = new Discord.Client({
    intents: [
