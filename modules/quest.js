@@ -13,8 +13,8 @@ const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 const crypto = require('crypto');
-const key = require('Config.json').key;
-console.log("key", key);
+const key = require('config.json').key;
+console.log("String", "DungeonBard" + String(key).length);
 colors.unshift(0x000000);
 const skillNames = [
   ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
