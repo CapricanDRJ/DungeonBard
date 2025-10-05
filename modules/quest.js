@@ -12,10 +12,9 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
+colors.unshift(0x000000);
 const crypto = require('crypto');
 const key = require('../config.json').key;
-console.log("String", "DungeonBard" + String(key).length);
-colors.unshift(0x000000);
 const skillNames = [
   ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
   ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
@@ -51,8 +50,10 @@ const dbQuery = {
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
-  getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id')
+  getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
+  storeQuest: db.prepare(`INSERT INTO quest_logs (guildId, encryptedUserId, domain, quest, sawMonster, beatMonster, relic, unixtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
 };
+const allDomains = dbQuery.getAllDomains.all();
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
   const days = Math.floor(seconds / 86400); // 86400 = 24*60*60
@@ -61,6 +62,13 @@ function formatTime(seconds) {
   if (days > 0) return `${days} day${days !== 1 ? "s" : ""}`;
   if (hours > 0) return `${hours} hour${hours !== 1 ? "s" : ""}`;
   return `${Math.floor(seconds / 60)} minute${seconds >= 120 ? "s" : ""}`;
+}
+function logQuest(log) {
+  setTimeout(() => {
+    const hmac = crypto.createHmac('sha256', key);
+    hmac.update(log.userId.toString());
+    dbQuery.storeQuest.run(log.guildId, hmac.digest('hex'), log.domain, log.quest, log.sawMonster, log.beatMonster, log.relic, Math.floor(Date.now() / 1000));
+  }, 0);
 }
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
@@ -78,7 +86,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setCustomId("questDomainSelect")
         .setPlaceholder("Choose your domain")
         .addOptions(
-          dbQuery.getAllDomains.all().map(d => ({
+          allDomains.map(d => ({
             label: d.title,
             description: d.description,
             value: String(d.id)
@@ -164,7 +172,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     } else if (stage === 3) {
       // Stage 3: Show quest details
       const quest = dbQuery.getQuestById.get(selectedQuestId);
-      
+
       if (!quest) {
         embed = new EmbedBuilder()
           .setTitle("Error")
@@ -312,6 +320,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = dbQuery.getQuestById.get(id);
+            const log = { guildId: interaction.guildId, userId: interaction.user.id, domain: allDomains.find(d => d.id === quest.domainId)?.title, quest: quest.description, sawMonster: null, beatMonster: null, relic: null };
             const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
@@ -327,6 +336,7 @@ module.exports = {
               // Activate highest skill bonuses  
               dbQuery.skillBonus.run(interaction.user.id, interaction.guildId);
             })();
+
             // Calculate active bonuses
             const activeItems = dbQuery.getActiveItems.all(interaction.user.id, interaction.guildId);
             const skillBonuses = [1, 1, 1, 1, 1, 1];
@@ -380,6 +390,7 @@ module.exports = {
             );
             if(quest.beastiary === null) {
                 const relicNoMonster = dbQuery.getRandomRelic.get(quest.relic);
+                log.relic = relicNoMonster.description;
                 if (Math.random() < relicNoMonster.chance) {
                   let bonusResult = '';
                   if(relicNoMonster.bonusXp) {
@@ -407,6 +418,7 @@ module.exports = {
                 const beast = quest.beastiary ? dbQuery.getRandomBeast.get(quest.beastiary) : null;
                 if(Math.random() < beast.chance || interaction.user.id === '454459089720967168') {
                     //peril
+                    log.sawMonster = "yes";
                     //function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
                     function skillMod(domainId, skill) { return (20 - skillLevel[domainId].findIndex(val => val <= skill)) }
                     embeds.push(new EmbedBuilder()
@@ -483,6 +495,7 @@ module.exports = {
                         );
                     } else {
                         //user won
+                        log.beatMonster = "yes";
                         battleField.push({ name: "Victory", value: `The **${beast.entity}** has been vanquished!`});
                         const beastCoin = Math.floor(quest.coins * ((beast.difficulty * 0.3) + (0.5 * Math.random())));
                         dbQuery.addCoins.run(beastCoin, interaction.user.id, interaction.guildId);
@@ -498,6 +511,7 @@ module.exports = {
                         );
                         const relic = quest.relic ? dbQuery.getRandomRelic.get(quest.relic) : null;
                         if(relic && Math.random() < relic.chance) {
+                          log.relic = relic.description;  
                             embeds.push(new EmbedBuilder()
                               .setTitle(relic.name)
                               .setDescription(relic.description)
@@ -516,6 +530,7 @@ module.exports = {
             await interaction.followUp({
               embeds
             });
+            logQuest(log);
           };
           break;
       }
