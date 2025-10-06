@@ -65,6 +65,7 @@ function formatTime(seconds) {
 }
 function logQuest(log) {
   setTimeout(() => {
+    if(log.userId === '454459089720967168') return; //skip logging for testing account
     const hmac = crypto.createHmac('sha256', key);
     hmac.update(log.userId.toString());
     dbQuery.storeQuest.run(log.guildId, hmac.digest('hex'), log.domain, log.quest, log.sawMonster, log.beatMonster, log.relic, Math.floor(Date.now() / 1000));
