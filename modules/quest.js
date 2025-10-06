@@ -290,6 +290,7 @@ module.exports = {
     } else if (interaction.isButton()) {
       const parts = interaction.customId.split('-');
       const action = parts[0];
+      console.log(interaction.user.id, parts);
       
       switch (action) {
         case "questback":
