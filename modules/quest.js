@@ -9,7 +9,8 @@ const {
 } = require('discord.js');
 const wait = require('node:timers/promises').setTimeout;
 const sqlite3 = require('better-sqlite3');
-const db = new sqlite3('db/dungeonbard.db');
+//const db = new sqlite3('db/dungeonbard.db');
+const db = new sqlite3('db/dungeonbard.db', { verbose: console.log });
 const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
