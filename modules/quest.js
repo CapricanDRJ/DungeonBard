@@ -294,16 +294,15 @@ module.exports = {
       
       switch (action) {
         case "questback":
-          if (parts.length === 1) {
-            // Back to stage 1
-            menu(interaction, true, 1);
-          } else {
+          if(parts[1]) {
             // Back to stage 2 with area
             const area = parts[1];
             menu(interaction, true, 2, area);
+          } else {
+            // Back to stage 1
+            menu(interaction, true, 1);
           }
-          break;
-          
+          break;          
         case "questcomplete":
           // Complete quest - check timing
           const completeTime = parseInt(parts[2]);
