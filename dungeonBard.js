@@ -48,14 +48,6 @@ client.once('clientReady', async () => {
     // Register commands based on the number of guilds (servers)
     await registerCommands();
 
-    const rest = new Discord.REST({ version: '10' }).setToken(Config.Token);
-    const guilds = await client.guilds.fetch();
-    for (const [guildId] of guilds) {
-        await rest.put(Discord.Routes.applicationGuildCommands(Config.ClientID, guildId), { body: [] });
-    }
-
-
-
     // Initialize the bot using all loaded modules
     modules.forEach(mod => {
         if (mod.initializeBot) mod.initializeBot(client);
