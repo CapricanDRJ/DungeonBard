@@ -329,13 +329,13 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
 
     // Overall Experience (Column 2)
     svgContent += `
-      <text x="${col2X}" y="${col2Y}" class="section">Overall Experience</text>
+      <text x="${col2X}" y="${col2Y}" class="section">Prestige</text>
       <text x="${col2X}" y="${col2Y + 15}" class="text">${userData.overallExp} XP</text>`;
     
     col2Y += 35;
 
     // Professions Section (Column 2)
-    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Professions</text>`;
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Wisdōm</text>`;
     col2Y += 18;
 
     const artisanRank = calculateRank(userData.domainId, userData.artisanExp, 'artisan');
@@ -350,9 +350,9 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     col2Y += LINE_HEIGHT * 3 + 20;
 
     // Coins Section (Column 2)
-    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Coins</text>`;
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Purse</text>`;
     col2Y += 18;
-    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${userData.coins}</text>`;
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">🪙 X ${userData.coins}</text>`;
     col2Y += 30;
 
     // Equipment Section (Column 1+2)
@@ -396,7 +396,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
    // col2Y += LINE_HEIGHT * 2 + 10;
 
     // Attributes Section (Column 1)
-    svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Attributes</text>`;
+    svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Acuity</text>`;
     col1Y += 18;
     const attrDomain = attributes[userData.domainId];
     // Calculate attribute levels from skills 1-6 using proper database lookups
