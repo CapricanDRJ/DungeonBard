@@ -329,13 +329,13 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
 
     // Overall Experience (Column 2)
     svgContent += `
-      <text x="${col2X}" y="${col2Y}" class="section">Prestige</text>
+      <text x="${col2X}" y="${col2Y}" class="section">Overall Experience</text>
       <text x="${col2X}" y="${col2Y + 15}" class="text">${userData.overallExp} XP</text>`;
     
     col2Y += 35;
 
     // Professions Section (Column 2)
-    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Wisdōm</text>`;
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Professions</text>`;
     col2Y += 18;
 
     const artisanRank = calculateRank(userData.domainId, userData.artisanExp, 'artisan');
@@ -356,7 +356,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     col2Y += 30;
 
     // Equipment Section (Column 1+2)
-    svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Beclad</text>`;
+    svgContent += `<text x="${col1X}" y="${col2Y}" class="section">ActiveEquipment</text>`;
     col2Y += 18;
     for (const item of items) {
       if(item.skillBonus) {
@@ -396,7 +396,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
    // col2Y += LINE_HEIGHT * 2 + 10;
 
     // Attributes Section (Column 1)
-    svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Acuity</text>`;
+    svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Attributes</text>`;
     col1Y += 18;
     const attrDomain = attributes[userData.domainId];
     // Calculate attribute levels from skills 1-6 using proper database lookups
@@ -561,7 +561,7 @@ module.exports = {
             const items = dbQuery.getActiveItems.all(userId, guildId);
             // Generate character image
             const imageBuffer = await generateCharacterImage(userData, domainData, items, avatarBlob);
-            const fileName = `${userData.displayName.replace(/[<>:"/\\|?*. ]/g, '')}-stats.png`;
+            const fileName = `${userData.displayName.replace(/[<>:"/\\|?*. ]/g, '_')}-stats.png`;
             const attachment = new AttachmentBuilder(imageBuffer, { name: fileName });
             const embeds = [new EmbedBuilder()
                 .setImage(`attachment://${fileName}`)
