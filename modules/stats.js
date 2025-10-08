@@ -358,16 +358,6 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     // Equipment Section (Column 1+2)
     svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Equipment</text>`;
     col2Y += 18;
-    if(items.length <= 3) {
-      const cursedItem = dbQuery.getCursedItem.get();
-      const cursedEmoji = dbQuery.selectEmoji.pluck().get(cursedItem.emojiId);
-      const base64Emoji = cursedEmoji.toString('base64');
-      svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
-      svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.name}</text>`;
-      col2Y += LINE_HEIGHT;
-      svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.bonusText}</text>`;
-      col2Y += LINE_HEIGHT;
-    };
     for (const item of items) {
       if(item.skillBonus) {
         // Add emoji image spanning 2 lines
@@ -393,6 +383,16 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
       }
       //col2Y += LINE_HEIGHT;
     }
+    if(items.length <= 3) {
+      const cursedItem = dbQuery.getCursedItem.get();
+      const cursedEmoji = dbQuery.selectEmoji.pluck().get(cursedItem.emojiId);
+      const base64Emoji = cursedEmoji.toString('base64');
+      svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
+      svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.name}</text>`;
+      col2Y += LINE_HEIGHT;
+      svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.bonusText}</text>`;
+      col2Y += LINE_HEIGHT;
+    };
    // col2Y += LINE_HEIGHT * 2 + 10;
 
     // Attributes Section (Column 1)
