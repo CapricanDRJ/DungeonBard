@@ -391,9 +391,9 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
         svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
         col2Y += LINE_HEIGHT;
       }
-      col2Y += LINE_HEIGHT;
+      //col2Y += LINE_HEIGHT;
     }
-    col2Y += LINE_HEIGHT * 2 + 10;
+   // col2Y += LINE_HEIGHT * 2 + 10;
 
     // Attributes Section (Column 1)
     svgContent += `<text x="${col1X}" y="${col1Y}" class="section">Attributes</text>`;
