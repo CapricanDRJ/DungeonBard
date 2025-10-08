@@ -358,7 +358,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     // Equipment Section (Column 1+2)
     svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Equipment</text>`;
     col2Y += 18;
-    if(items.length <= 2) {
+    if(items.length <= 3) {
       const cursedItem = dbQuery.getCursedItem.get();
       const cursedEmoji = dbQuery.selectEmoji.pluck().get(cursedItem.emojiId);
       const base64Emoji = cursedEmoji.toString('base64');
