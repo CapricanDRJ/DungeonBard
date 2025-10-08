@@ -111,6 +111,7 @@ const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2;
 
 async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
   console.log("items:", items);//test
+  console.log(userData);
    try {
     // Create base canvas with parchment background
     const canvas = sharp({
