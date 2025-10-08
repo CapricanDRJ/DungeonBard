@@ -356,7 +356,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     col2Y += 30;
 
     // Equipment Section (Column 1+2)
-    svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Equipment</text>`;
+    svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Active Equipment</text>`;
     col2Y += 18;
     for (const item of items) {
       if(item.skillBonus) {
