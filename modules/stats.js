@@ -13,7 +13,8 @@ const professions = {
     healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
     soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
     artisan: ['Novice', 'Apprentice', 'Artisan', 'Mason', 'Grandmaster', 'Guildmaster']
-}
+};
+const professionNames = ["Artisan", "Soldier", "Healer"];
 const skillNames = [
   ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
   ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
@@ -28,7 +29,7 @@ const dbQuery = {
     updateAvatarBlob: db.prepare('INSERT OR REPLACE INTO avatars (userId, guildId, avatarBlob) VALUES (?, ?, ?)'),
     getAvatarBlob: db.prepare('SELECT avatarBlob FROM avatars WHERE userId = ? AND guildId = ? LIMIT 1'),
     getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ? LIMIT 1'),
-    getActiveItems: db.prepare(`SELECT inventory.*, itemEmojis.emoji FROM inventory LEFT JOIN itemEmojis ON inventory.emojiId = itemEmojis.emojiId WHERE inventory.userId = ? AND inventory.guildId = ? AND inventory.duration > 31536000`),
+    getActiveItems: db.prepare(`SELECT inventory.*, itemEmojis.emoji FROM inventory LEFT JOIN itemEmojis ON inventory.emojiId = itemEmojis.emojiId WHERE inventory.userId = ? AND inventory.guildId = ? AND (inventory.duration > 31536000 OR NOT EXISTS (SELECT 1 FROM inventory i2 WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId AND i2.duration > 31536000))`),
     selectEmoji: db.prepare('SELECT emoji FROM itemEmojis WHERE emojiId = ? LIMIT 1'),
     getCursedItem: db.prepare('SELECT * FROM cursedItems ORDER BY RANDOM() LIMIT 1'),
     getUserDataRandom: db.prepare('SELECT * FROM users WHERE userId = ? ORDER BY RANDOM() LIMIT 1')
@@ -110,8 +111,7 @@ const MARGIN = 46; // Increased for elaborate border
 const COLUMN_WIDTH = (IMAGE_WIDTH - MARGIN * 3) / 2;
 
 async function generateCharacterImage(userData, domainData, items, avatarBlob = null) {
-  console.log("items:", items);//test
-  console.log(userData);
+  console.log("items:", items);
    try {
     // Create base canvas with parchment background
     const canvas = sharp({
@@ -358,7 +358,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     // Equipment Section (Column 1+2)
     svgContent += `<text x="${col1X}" y="${col2Y}" class="section">Equipment</text>`;
     col2Y += 18;
-    if(items.length === 0) {
+    if(items.length <= 2) {
       const cursedItem = dbQuery.getCursedItem.get();
       const cursedEmoji = dbQuery.selectEmoji.pluck().get(cursedItem.emojiId);
       const base64Emoji = cursedEmoji.toString('base64');
@@ -367,32 +367,31 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
       col2Y += LINE_HEIGHT;
       svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${cursedItem.bonusText}</text>`;
       col2Y += LINE_HEIGHT;
-    } else {
-      for (const item of items) {
-        if(item.skillBonus) {
-          // Add emoji image spanning 2 lines
-          if(item.emoji) {
-            const base64Emoji = item.emoji.toString('base64');
-            svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
-          }
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}</text>`;
-          col2Y += LINE_HEIGHT;
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">+${item.skillBonus} ${skillNames[userData.domainId - 1][item.skill - 1]}</text>`;
-          col2Y += LINE_HEIGHT;
+    };
+    for (const item of items) {
+      if(item.skillBonus) {
+        // Add emoji image spanning 2 lines
+        if(item.emoji) {
+          const base64Emoji = item.emoji.toString('base64');
+          svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
         }
-        if(item.professionBonus) {
-          // Add emoji image spanning 2 lines
-          if(item.emoji) {
-            const base64Emoji = item.emoji.toString('base64');
-            svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
-          }
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}</text>`;
-          col2Y += LINE_HEIGHT;
-          svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
-          col2Y += LINE_HEIGHT;
-        }
+        svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}</text>`;
+        col2Y += LINE_HEIGHT;
+        svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">+${item.skillBonus} ${skillNames[userData.domainId - 1][item.skill - 1]}</text>`;
         col2Y += LINE_HEIGHT;
       }
+      if(item.professionBonus) {
+        // Add emoji image spanning 2 lines
+        if(item.emoji) {
+          const base64Emoji = item.emoji.toString('base64');
+          svgContent += `<image x="${col1X}" y="${col2Y - 11}" width="32" height="32" href="data:image/png;base64,${base64Emoji}"/>`;
+        }
+        svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">${item.name}</text>`;
+        col2Y += LINE_HEIGHT;
+        svgContent += `<text x="${col1X + 36}" y="${col2Y}" class="text">X${item.professionBonus} ${professionNames[item.professionId - 1]}</text>`;
+        col2Y += LINE_HEIGHT;
+      }
+      col2Y += LINE_HEIGHT;
     }
     col2Y += LINE_HEIGHT * 2 + 10;
 
