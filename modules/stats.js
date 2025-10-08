@@ -352,7 +352,7 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
     // Coins Section (Column 2)
     svgContent += `<text x="${col2X}" y="${col2Y}" class="section">Purse</text>`;
     col2Y += 18;
-    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">🪙 X ${userData.coins}</text>`;
+    svgContent += `<text x="${col2X}" y="${col2Y}" class="text">${userData.coins} Coins</text>`;
     col2Y += 30;
 
     // Equipment Section (Column 1+2)
