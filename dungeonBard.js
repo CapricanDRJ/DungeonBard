@@ -31,13 +31,6 @@ const registerCommands = async () => {
         // Register commands globally
         await rest.put(Discord.Routes.applicationCommands(Config.ClientID), { body: commands });
         console.log('Successfully registered global application commands.');
-        
-        // TEMPORARY: Clear guild-specific commands from all guilds
-        const guilds = await client.guilds.fetch();
-        for (const [guildId] of guilds) {
-            await rest.put(Discord.Routes.applicationGuildCommands(Config.ClientID, guildId), { body: [] });
-            console.log(`Cleared guild commands for guild: ${guildId}`);
-        }
     }
 };
 
