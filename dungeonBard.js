@@ -16,6 +16,7 @@ const modules = fs.readdirSync(modulesDir)
     .map(file => require(path.join(modulesDir, file)));
 
 // Register slash commands
+// Register slash commands
 const registerCommands = async () => {
     const commands = [];
     modules.forEach(mod => {
@@ -26,18 +27,16 @@ const registerCommands = async () => {
 
     if (commands.length > 0) {
         const rest = new Discord.REST({ version: '10' }).setToken(Config.Token);
-        // Fetch the guilds the bot is in
+        
+        // Register commands globally
+        await rest.put(Discord.Routes.applicationCommands(Config.ClientID), { body: commands });
+        console.log('Successfully registered global application commands.');
+        
+        // TEMPORARY: Clear guild-specific commands from all guilds
         const guilds = await client.guilds.fetch();
-
-        if (guilds.size === 1) {
-            // Register commands to a single guild (server)
-            const guildId = guilds.first().id;
-            await rest.put(Discord.Routes.applicationGuildCommands(Config.ClientID, guildId), { body: commands });
-            console.log(`Successfully registered commands to the guild with ID: ${guildId}.`);
-        } else {
-            // Register commands globally
-            await rest.put(Discord.Routes.applicationCommands(Config.ClientID), { body: commands });
-            console.log('Successfully registered global application commands.');
+        for (const [guildId] of guilds) {
+            await rest.put(Discord.Routes.applicationGuildCommands(Config.ClientID, guildId), { body: [] });
+            console.log(`Cleared guild commands for guild: ${guildId}`);
         }
     }
 };
