@@ -2,7 +2,7 @@ const { SlashCommandBuilder, MessageFlagsBitField, EmbedBuilder, PermissionsBitF
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
-
+const sharp = require('sharp');
 const dbQuery = {
     getUserData: db.prepare('SELECT * FROM users WHERE userId = ? AND guildId = ?'),
     insertUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
