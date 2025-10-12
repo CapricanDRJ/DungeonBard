@@ -1,4 +1,4 @@
-const { SlashCommandBuilder, MessageFlagsBitField, EmbedBuilder } = require('discord.js');
+const { SlashCommandBuilder, MessageFlagsBitField, EmbedBuilder, PermissionsBitField } = require('discord.js');
 const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const MessageFlags = MessageFlagsBitField.Flags;
@@ -13,6 +13,14 @@ const dbQuery = {
     deleteUser: db.prepare('DELETE FROM users WHERE userId = ? AND guildId = ?'),
     resetUser: db.prepare(`UPDATE users SET domainId = ?, artisanExp = 0, soldierExp = 0, healerExp = 0, skill1 = 0, skill2 = 0, skill3 = 0, skill4 = 0, skill5 = 0, skill6 = 0, coins = 0 WHERE userId = ? AND guildId = ?`),
 };
+/*
+<@&1423394659303948390> Initiate
+<@&1423397172577046779> Collegiate
+<@&1423400094346252543> Pedagogue
+<@&1423400217960517845> Master's
+<@&1423400327419396096> Doctoral
+<@&1423400405391511703> Sage 
+*/
 
 // Load domains from database
 const domains = (() => {
@@ -90,6 +98,53 @@ module.exports = {
         console.log("Slash commands for character module have been loaded.");
     },
 
+    updateRoles: async (interaction, domain) => {
+        const GUILD_ID = '1339984756695371908';
+        const roles = [
+            '1423394659303948390',//Initiate
+            '1423397172577046779',//Collegiate
+            '1423400094346252543',//Pedagogue
+            '1423400217960517845',//Master's
+            '1423400327419396096',//Doctoral
+            '1423400405391511703'//Sage
+        ];
+
+        // Check guild ID and manage roles permission
+        if (interaction.guild.id === GUILD_ID &&
+            interaction.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+            const member = interaction.member;
+
+            if (!domain) {
+                // Remove all roles if domain is falsy
+                const rolesToRemove = roles.filter(roleId => member.roles.cache.has(roleId));
+                if (rolesToRemove.length > 0) {
+                await member.roles.remove(rolesToRemove);
+                }
+            } else {
+                // Validate domain is in range
+                const domainIndex = domain - 1;
+                if (domainIndex < 0 || domainIndex >= roles.length) return;
+                
+                // Get the target role
+                const targetRole = roles[domainIndex];
+                
+                // Remove all other roles from the list
+                const otherRoles = roles.filter((roleId, index) => 
+                index !== domainIndex && member.roles.cache.has(roleId)
+                );
+                
+                if (otherRoles.length > 0) {
+                await member.roles.remove(otherRoles);
+                }
+                
+                // Add the target role if they don't have it already
+                if (!member.roles.cache.has(targetRole)) {
+                await member.roles.add(targetRole);
+                }
+            }
+        }
+    },
+
     executeCommand: async (interaction) => {
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
@@ -148,6 +203,7 @@ module.exports = {
                         content: `Character "${displayName}" successfully enrolled as ${domains[domainId].name}!`,
                         flags: MessageFlags.Ephemeral
                     });
+                     module.exports.updateRoles(interaction, domainId);
                     break;
 
                 case 'restart':
@@ -193,6 +249,7 @@ module.exports = {
 
                     setTimeout(() => {
                         dbQuery.resetUser.run(newDomainId, userId, guildId);
+                         module.exports.updateRoles(interaction, newDomainId);
                     }, 0);
 
                     interaction.reply({
@@ -214,6 +271,7 @@ module.exports = {
 
                     setTimeout(() => {
                         dbQuery.deleteUser.run(userId, guildId);
+                         module.exports.updateRoles(interaction, null);
                     }, 0);
 
                     interaction.reply({

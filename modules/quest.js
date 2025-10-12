@@ -15,6 +15,7 @@ const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
 const crypto = require('crypto');
+const character = require('./character');
 const key = require('../config.json').key;
 const skillNames = [
   ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
@@ -274,6 +275,7 @@ module.exports = {
         dbQuery.insertQuestUser.run(interaction.user.id, interaction.guildId, questDisplayName, null, questDomainId);
         
         setTimeout(() => {
+          require('./character').updateRoles(interaction, questDomainId);
           const questAvatarURL = interaction.user.displayAvatarURL().replace(/\/a_/, '/').replace(/\.[a-zA-Z]{3,4}$/, '') + '.png?size=64';
           const questAvatarFile = questAvatarURL.split('/').pop().split('?')[0];
           db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ?').run(questAvatarFile, interaction.user.id, interaction.guildId);
