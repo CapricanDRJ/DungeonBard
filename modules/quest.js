@@ -47,7 +47,7 @@ const dbQuery = {
   addToInventory: db.prepare('INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)'),
   getRandomBeast: db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1'),
   addCoins: db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`),
-  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
+  getOneDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
   getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC"),
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
@@ -126,7 +126,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       }
     } else if (stage === 2) {
       // Stage 2: Show quests in area
-      const areaData = dbQuery.getDistinctQuestArea.get(selectedArea);
+      const areaData = dbQuery.getOneDistinctQuestArea.get(selectedArea);
       embed = new EmbedBuilder()
         .setTitle(selectedArea)
         .setDescription(areaData?.areaDesc || "Select a quest:")
@@ -298,6 +298,8 @@ module.exports = {
         case "questback":
           if(parts[1]) {
             // Back to stage 2 with area
+            //async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
+
             const area = parts[1];
             menu(interaction, true, 2, area);
           } else {
