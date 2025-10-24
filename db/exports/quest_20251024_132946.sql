@@ -1,4 +1,26 @@
-INSERT INTO quest VALUES(replace('CREATE TABLE "quest" (\n    "id" INTEGER PRIMARY KEY AUTOINCREMENT,\n    "domainId" integer NOT NULL DEFAULT 1, \n    "questArea" TEXT NOT NULL, \n    "areaDesc" TEXT NOT NULL, \n    "name" TEXT NOT NULL, \n    "description" TEXT NOT NULL, \n    "profession" TEXT NOT NULL, \n    "professionId" integer NOT NULL,\n    "professionXp" integer NOT NULL DEFAULT 0, \n    "skill1" INTEGER NOT NULL DEFAULT 0,\n    "skill2" INTEGER NOT NULL DEFAULT 0,\n    "skill3" INTEGER NOT NULL DEFAULT 0,\n    "skill4" INTEGER NOT NULL DEFAULT 0,\n    "skill5" INTEGER NOT NULL DEFAULT 0,\n    "skill6" INTEGER NOT NULL DEFAULT 0,\n    "beastiary" TEXT DEFAULT NULL, \n    "relic" TEXT DEFAULT NULL,\n    "coins" integer NOT NULL DEFAULT 0, \n    "waitTime" integer NOT NULL DEFAULT 0\n)','\n',char(10)));
+CREATE TABLE IF NOT EXISTS "quest" (
+    "id" INTEGER PRIMARY KEY AUTOINCREMENT,
+    "domainId" integer NOT NULL DEFAULT 1, 
+    "questArea" TEXT NOT NULL, 
+    "areaDesc" TEXT NOT NULL, 
+    "name" TEXT NOT NULL, 
+    "description" TEXT NOT NULL, 
+    "profession" TEXT NOT NULL, 
+    "professionId" integer NOT NULL,
+    "professionXp" integer NOT NULL DEFAULT 0, 
+    "skill1" INTEGER NOT NULL DEFAULT 0,
+    "skill2" INTEGER NOT NULL DEFAULT 0,
+    "skill3" INTEGER NOT NULL DEFAULT 0,
+    "skill4" INTEGER NOT NULL DEFAULT 0,
+    "skill5" INTEGER NOT NULL DEFAULT 0,
+    "skill6" INTEGER NOT NULL DEFAULT 0,
+    "beastiary" TEXT DEFAULT NULL, 
+    "relic" TEXT DEFAULT NULL,
+    "coins" integer NOT NULL DEFAULT 0, 
+    "waitTime" integer NOT NULL DEFAULT 0
+);
+CREATE INDEX idx_quest_area_domain ON quest(questArea, domainId);
+CREATE INDEX idx_quest_domain ON quest(domainId);
 INSERT INTO quest VALUES(1,1,'Hall of Marvels','Where Knowledge is Sought','Apprentice''s Studies','Complete all assigned homework','Artisan',1,25,30,0,60,30,0,0,'randomPeril',NULL,5,0);
 INSERT INTO quest VALUES(2,1,'Vault of Vellum','Where Knowledge is Applied','Scholar''s Notebook','Take detailed notes in a class','Artisan',1,25,60,0,0,30,0,0,'randomPeril',NULL,5,0);
 INSERT INTO quest VALUES(3,1,'Hall of Marvels','Where Knowledge is Sought','Scrolls of Knowledge','Read a chapter, article, or textbook section','Artisan',1,30,60,0,30,0,0,0,'Initiate3','Initiate3',5,0);

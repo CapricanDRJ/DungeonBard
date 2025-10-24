@@ -1,4 +1,12 @@
-INSERT INTO attributes VALUES(replace('CREATE TABLE "attributes" (\n    "domainId" INTEGER, \n    "skillId" INTEGER, \n    "domain" TEXT, \n    "skillName" TEXT, \n    "skillAbbrv" TEXT, \n    "skillDesc" TEXT, "levels" TEXT,\n    PRIMARY KEY (domainId, skillId)\n)','\n',char(10)));
+CREATE TABLE IF NOT EXISTS "attributes" (
+    "domainId" INTEGER, 
+    "skillId" INTEGER, 
+    "domain" TEXT, 
+    "skillName" TEXT, 
+    "skillAbbrv" TEXT, 
+    "skillDesc" TEXT, "levels" TEXT,
+    PRIMARY KEY (domainId, skillId)
+);
 INSERT INTO attributes VALUES(1,1,'Initiate','LEARNING','LRN','Absorbing and recalling knowledge from lessons readings and practice.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
 INSERT INTO attributes VALUES(1,2,'Initiate','COMMUNICATION','COM','Speaking clearly, participating in discussions, and asking thoughtful questions.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');
 INSERT INTO attributes VALUES(1,3,'Initiate','DISCIPLINE','DIS','Developing time management, note-taking, and study habits.','[0,20,90,220,400,650,950,1320,1750,2240,2790,3420,4110,4860,5690,6580,7540,8570,9660,10830]');

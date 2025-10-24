@@ -1,4 +1,8 @@
-INSERT INTO cursedItems VALUES(replace('CREATE TABLE cursedItems (\n    name TEXT PRIMARY KEY,\n    emojiId TEXT NOT NULL,\n    bonusText TEXT NOT NULL\n)','\n',char(10)));
+CREATE TABLE cursedItems (
+    name TEXT PRIMARY KEY,
+    emojiId TEXT NOT NULL,
+    bonusText TEXT NOT NULL
+);
 INSERT INTO cursedItems VALUES('Smelly Socks','1422312824285302784','+10 Ward off All Guests');
 INSERT INTO cursedItems VALUES('Broken Sundial','1422335681333825627','+0.0001 Time Travel');
 INSERT INTO cursedItems VALUES('Cracked Mirror','1422343232687443999','+7 years Bad Luck');

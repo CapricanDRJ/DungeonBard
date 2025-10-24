@@ -7,7 +7,7 @@
 DB_FILE="${1:-database.db}"
 OUTPUT_DIR="${2:-exports}"
 TIMESTAMP=$(date +"%Y%m%d_%H%M%S")
-
+rm exports/*.sql
 # Check if database file exists
 if [ ! -f "$DB_FILE" ]; then
     echo "Error: Database file '$DB_FILE' not found"
@@ -21,7 +21,7 @@ mkdir -p "$OUTPUT_DIR"
 # Tables to export (game configuration data)
 TABLES_TO_EXPORT=(
     "domains"
-    "attributes"
+    "attributes" 
     "quest"
     "items"
     "relic"
@@ -59,11 +59,12 @@ for table in "${TABLES_TO_EXPORT[@]}"; do
     fi
     
     # Export table structure and data
-    sqlite3 "$DB_FILE" <<EOF > "$output_file"
+    sqlite3 "$DB_FILE" > "$output_file" <<EOF
+-- Schema for table: $table
+.schema $table
+
+-- Data for table: $table
 .mode insert $table
-.output stdout
-SELECT sql FROM sqlite_master WHERE type='table' AND name='$table';
-.output stdout
 SELECT * FROM $table;
 EOF
 

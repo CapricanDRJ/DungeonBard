@@ -1,4 +1,13 @@
-INSERT INTO relic VALUES(replace('CREATE TABLE "relic" (\n    "id" TEXT NOT NULL, \n    "chance" REAL NOT NULL DEFAULT 0.5, \n    "name" TEXT NOT NULL, \n    "description" TEXT NOT NULL,\n    "bonusXp" INTEGER NOT NULL DEFAULT 0,\n    "professionId" INTEGER DEFAULT NULL, \n    "duration" INTEGER NOT NULL DEFAULT 0, \n    "emojiId" TEXT DEFAULT NULL\n)','\n',char(10)));
+CREATE TABLE IF NOT EXISTS "relic" (
+    "id" TEXT NOT NULL, 
+    "chance" REAL NOT NULL DEFAULT 0.5, 
+    "name" TEXT NOT NULL, 
+    "description" TEXT NOT NULL,
+    "bonusXp" INTEGER NOT NULL DEFAULT 0,
+    "professionId" INTEGER DEFAULT NULL, 
+    "duration" INTEGER NOT NULL DEFAULT 0, 
+    "emojiId" TEXT DEFAULT NULL
+);
 INSERT INTO relic VALUES('Initiate1',0.5,'Notebook of Infinite Recall','Boosts memory for exams!',100,2,1,'1421933923151380560');
 INSERT INTO relic VALUES('Initiate2',0.5,'Pen of Confidence','Feel confident to speak up in class!',2,2,604800,'1421936603944849470');
 INSERT INTO relic VALUES('Initiate3',0.5,'Annotated Tome of Study','Homework becomes a breeze!',2,1,604800,'1421932860990034082');

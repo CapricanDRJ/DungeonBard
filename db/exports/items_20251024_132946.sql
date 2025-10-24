@@ -1,4 +1,14 @@
-INSERT INTO items VALUES(replace('CREATE TABLE items (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    name TEXT NOT NULL,\n    skillBonus INTEGER,\n    itemBonus INTEGER,\n    skill INTEGER,\n    professionId INTEGER,\n    cost INTEGER NOT NULL,\n    duration INTEGER NOT NULL,\n    emojiId TEXT NOT NULL\n)','\n',char(10)));
+CREATE TABLE items (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    name TEXT NOT NULL,
+    skillBonus INTEGER,
+    itemBonus INTEGER,
+    skill INTEGER,
+    professionId INTEGER,
+    cost INTEGER NOT NULL,
+    duration INTEGER NOT NULL,
+    emojiId TEXT NOT NULL
+);
 INSERT INTO items VALUES(1,'Quill Slicer',1,NULL,3,NULL,200,604800,'1421598115646931075');
 INSERT INTO items VALUES(2,'Scroll Striker Staff',2,NULL,3,NULL,400,604800,'1421598153278230648');
 INSERT INTO items VALUES(3,'Bow of Epistemology',3,NULL,3,NULL,600,604800,'1421598036085440737');

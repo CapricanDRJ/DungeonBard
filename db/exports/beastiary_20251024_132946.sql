@@ -1,4 +1,13 @@
-INSERT INTO beastiary VALUES(replace('CREATE TABLE "beastiary" (\n    id INTEGER PRIMARY KEY AUTOINCREMENT,\n    type TEXT NOT NULL,\n    chance REAL NOT NULL DEFAULT 0.5,\n    entity TEXT NOT NULL,\n    entityEffect TEXT NOT NULL,\n    difficulty INTEGER DEFAULT 1,\n    emojiId TEXT NOT NULL\n)','\n',char(10)));
+CREATE TABLE IF NOT EXISTS "beastiary" (
+    id INTEGER PRIMARY KEY AUTOINCREMENT,
+    type TEXT NOT NULL,
+    chance REAL NOT NULL DEFAULT 0.5,
+    entity TEXT NOT NULL,
+    entityEffect TEXT NOT NULL,
+    difficulty INTEGER DEFAULT 1,
+    emojiId TEXT NOT NULL
+);
+CREATE INDEX idx_beastiary_type ON beastiary(type);
 INSERT INTO beastiary VALUES(1,'Initiate1',0.5,'Deadline Demon','A project due date approaches too quickly!',1,'1422013921115770880');
 INSERT INTO beastiary VALUES(2,'Initiate2',0.400000000000000022,'Sleep-Stealing Specter','A restless mind delays sleep!',2,'1422013943320281108');
 INSERT INTO beastiary VALUES(3,'Initiate3',0.5,'Wi-Fi Banshee','The internet dies before a submission!',1,'1422013965285720074');
