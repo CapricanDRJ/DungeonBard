@@ -225,7 +225,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     }
 
   } catch (error) {
-    console.error(`[quest_ERROR] ${error.message}`, { userId: interaction.user.id });
+    console.error(`[quest_ERROR] ${error.message}`, { userId: interaction.user.id }, components);
     
     const errorEmbed = new EmbedBuilder()
       .setTitle("Error")
