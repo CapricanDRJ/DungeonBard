@@ -147,6 +147,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           const firstLetter = questSlice[0]?.name.charAt(0).toUpperCase() || '';
           const lastLetter = questSlice[questSlice.length - 1]?.name.charAt(0).toUpperCase() || '';
           const letterRange = firstLetter === lastLetter ? firstLetter : `[${firstLetter}-${lastLetter}]`;
+          console.log(`questSelect_${i}`);
 
           const dropdown = new StringSelectMenuBuilder()
             .setCustomId(`questSelect_${i}`)
@@ -158,7 +159,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
                 value: `quest${quest.id}`
               }))
             );
-
+            console.log(dropdown);
           components.push(new ActionRowBuilder().addComponents(dropdown));
         }
       }
@@ -225,7 +226,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     }
 
   } catch (error) {
-    console.error(`[quest_ERROR] ${error.message}`, { userId: interaction.user.id }, components);
+    console.error(`[quest_ERROR] ${error.message}`, { userId: interaction.user.id });
     
     const errorEmbed = new EmbedBuilder()
       .setTitle("Error")
