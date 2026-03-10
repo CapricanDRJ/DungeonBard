@@ -110,6 +110,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setDescription("Choose a quest area to explore:")
         .setColor(embedColor);
       const questAreas = dbQuery.getDistinctQuestArea.all(domain);
+      console.log(questAreas);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("questAreaSelect")
