@@ -76,24 +76,24 @@ function formatTime(seconds) {
 */
 function logQuest(log) {
   setImmediate(() => {
+    // Skip test account
     if (log.userId === '454459089720967168') return;
 
     const encryptedId = crypto.createHmac('sha256', key)
       .update(log.userId.toString())
       .digest('hex');
 
-    // Just the facts, no timestamps needed
+    // Total of 9 arguments to match the 9 '?' in the SQL above
     dbQuery.storeQuest.run(
-      log.guildId,        // 1
-      encryptedId,        // 2
-      log.domain,         // 3
-      log.quest,          // 4
-      log.questId || 0,   // 5
-      log.sawMonster,     // 6
-      log.beatMonster,    // 7
-      log.relic,          // 8
-      log.userId,         // 9 (WHERE clause)
-      log.guildId         // 10 (WHERE clause)
+      log.guildId,        // ? #1 (SELECT)
+      encryptedId,        // ? #2 (SELECT)
+      log.domainId,       // ? #3 (SELECT)
+      log.questId,        // ? #4 (SELECT)
+      log.sawMonster,     // ? #5 (SELECT)
+      log.beatMonster,    // ? #6 (SELECT)
+      log.relic,          // ? #7 (SELECT)
+      log.userId,         // ? #8 (WHERE u.userId)
+      log.guildId         // ? #9 (WHERE u.guildId)
     );
   });
 }
