@@ -110,7 +110,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setDescription("Choose a quest area to explore:")
         .setColor(embedColor);
       const questAreas = dbQuery.getDistinctQuestArea.all(domain);
-      console.log(questAreas);
+      console.log(questAreas);v
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("questAreaSelect")
@@ -351,6 +351,7 @@ module.exports = {
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
             const user = dbQuery.getUser.get(interaction.user.id, interaction.guildId);
+            console.log("user",user);
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
