@@ -53,8 +53,7 @@ const dbQuery = {
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
   getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
-  storeQuest: db.prepare(`INSERT INTO quest_logs (guildId, encryptedUserId, domain, quest, sawMonster, beatMonster, relic, unixtime) VALUES (?, ?, ?, ?, ?, ?, ?, ?)`)
-};
+  storeQuest: db.prepare(`INSERT INTO questTracker (guildId, encryptedUserId, domainId, questId, artisanExp, soldierExp, healerExp, overallExp, skill1, skill2, skill3, skill4, skill5, skill6, sawMonster, beatMonster, relic) SELECT ?, ?, ?, ?, u.artisanExp, u.soldierExp, u.healerExp, u.overallExp, u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6, ?, ?, ? FROM users u WHERE u.userId = ? AND u.guildId = ?`)};
 const allDomains = dbQuery.getAllDomains.all();
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -65,14 +64,40 @@ function formatTime(seconds) {
   if (hours > 0) return `${hours} hour${hours !== 1 ? "s" : ""}`;
   return `${Math.floor(seconds / 60)} minute${seconds >= 120 ? "s" : ""}`;
 }
-function logQuest(log) {
-  setTimeout(() => {
+/*function logQuest(log) {
+  setImmediate(() => {
     if(log.userId === '454459089720967168') return; //skip logging for testing account
     const hmac = crypto.createHmac('sha256', key);
     hmac.update(log.userId.toString());
-    dbQuery.storeQuest.run(log.guildId, hmac.digest('hex'), log.domain, log.quest, log.sawMonster, log.beatMonster, log.relic, Math.floor(Date.now() / 1000));
-  }, 0);
+
+    dbQuery.storeQuest.run(log.guildId, hmac.digest('hex'), log.domain, log.quest, log.sawMonster, log.beatMonster, log.relic);
+  })
+};
+*/
+function logQuest(log) {
+  setImmediate(() => {
+    if (log.userId === '454459089720967168') return;
+
+    const encryptedId = crypto.createHmac('sha256', key)
+      .update(log.userId.toString())
+      .digest('hex');
+
+    // Just the facts, no timestamps needed
+    dbQuery.storeQuest.run(
+      log.guildId,        // 1
+      encryptedId,        // 2
+      log.domain,         // 3
+      log.quest,          // 4
+      log.questId || 0,   // 5
+      log.sawMonster,     // 6
+      log.beatMonster,    // 7
+      log.relic,          // 8
+      log.userId,         // 9 (WHERE clause)
+      log.guildId         // 10 (WHERE clause)
+    );
+  });
 }
+
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
   try {
     let embed;
@@ -328,7 +353,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = dbQuery.getQuestById.get(id);
-            const log = { guildId: interaction.guildId, userId: interaction.user.id, domain: allDomains.find(d => d.id === quest.domainId)?.title, quest: quest.description, sawMonster: null, beatMonster: null, relic: null };
+            const log = { guildId: interaction.guildId, userId: interaction.user.id, domainId: quest.domainId, questId: id, sawMonster: 0, beatMonster: null, relic: null };
             const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
@@ -351,7 +376,6 @@ module.exports = {
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
             const user = dbQuery.getUser.get(interaction.user.id, interaction.guildId);
-            console.log("user",user);
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
@@ -427,7 +451,7 @@ module.exports = {
                 const beast = quest.beastiary ? dbQuery.getRandomBeast.get(quest.beastiary) : null;
                 if(Math.random() < beast.chance || interaction.user.id === '454459089720967168') {
                     //peril
-                    log.sawMonster = "yes";
+                    log.sawMonster = 1;
                     //function skillMod(skill){ return Math.floor(Math.min(20, Math.max(1, skill))); }
                     function skillMod(domainId, skill) { return (20 - skillLevel[domainId].findIndex(val => val <= skill)) }
                     embeds.push(new EmbedBuilder()
@@ -502,9 +526,10 @@ module.exports = {
                             .setColor(0x8b0000)
                             .addFields(battleField)
                         );
+                        log.beatMonster = 0;
                     } else {
                         //user won
-                        log.beatMonster = "yes";
+                        log.beatMonster = 1;
                         battleField.push({ name: "Victory", value: `The **${beast.entity}** has been vanquished!`});
                         const beastCoin = Math.floor(quest.coins * ((beast.difficulty * 0.3) + (0.5 * Math.random())));
                         dbQuery.addCoins.run(beastCoin, interaction.user.id, interaction.guildId);
