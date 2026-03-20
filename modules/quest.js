@@ -556,8 +556,8 @@ module.exports = {
                     };
                 }
             }
-            await wait(1000);
-            await interaction.followUp({
+            //await wait(1000);
+            interaction.followUp({
               embeds
             });
             logQuest(log);
