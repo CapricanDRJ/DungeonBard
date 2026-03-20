@@ -571,7 +571,7 @@ module.exports = {
                 embeds,
                 files: [attachment]
             });
-            console.log(interaction.user);
+            console.log(interaction.GuildMember);
             setImmediate(() => { avatarUpdate(userId, guildId, interaction.user.displayAvatarURL()) });
         } catch (error) {
             console.error('Error executing stats command:', error, `userId:${userId}`);
