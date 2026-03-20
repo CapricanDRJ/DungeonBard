@@ -420,9 +420,10 @@ module.exports = {
               })
             );
             if(quest.beastiary === null) {
-                const relicNoMonster = dbQuery.getRandomRelic.get(quest.relic);
-                log.relic = relicNoMonster.description;
+              let relicNoMonster;
                 if (Math.random() < relicNoMonster.chance) {
+                  relicNoMonster = dbQuery.getRandomRelic.get(quest.relic);
+                  log.relic = `${quest.relic}: ${relicNoMonster.description}`;
                   let bonusResult = '';
                   if(relicNoMonster.bonusXp) {
                     const profBonus = professionNames[parseInt(relicNoMonster.professionId) - 1];
@@ -541,9 +542,9 @@ module.exports = {
                             .setColor(0x8b0000)
                             .addFields(battleField)
                         );
-                        const relic = quest.relic ? dbQuery.getRandomRelic.get(quest.relic) : null;
-                        if(relic && Math.random() < relic.chance) {
-                          log.relic = relic.description;  
+                        if(quest.relic && Math.random() < relic.chance) {
+                          const relic = dbQuery.getRandomRelic.get(quest.relic);
+                          log.relic = `${quest.relic}: ${relic.description}`;  
                             embeds.push(new EmbedBuilder()
                               .setTitle(relic.name)
                               .setDescription(relic.description)
