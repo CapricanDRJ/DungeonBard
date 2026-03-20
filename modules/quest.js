@@ -409,8 +409,8 @@ module.exports = {
               .setColor(colors[quest.domainId])
               .addFields(
                 { name: quest.name, value: quest.description, inline: true },
-                { name: `${['Artisan', 'Soldier', 'Healer'][parseInt(quest.professionId) - 1]} XP Earned`, value: `${quest.professionXp}`, inline: true },
-                { name: "Quest Coins Earned", value: `🪙 X ${quest.coins}`, inline: true }
+                { name: `${['Artisan', 'Soldier', 'Healer'][parseInt(quest.professionId) - 1]} XP Earned`, value: `${quest.professionXp * multiple}`, inline: true },
+                { name: "Quest Coins Earned", value: `🪙 X ${quest.coins * multiple}`, inline: true }
               )
               .setAuthor({
                 name: user.displayName,
