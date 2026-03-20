@@ -417,9 +417,8 @@ module.exports = {
               })
             );
             if(quest.beastiary === null) {
-              let relicNoMonster;
+                const relicNoMonster = dbQuery.getRandomRelic.get(quest.relic);
                 if (Math.random() < relicNoMonster.chance) {
-                  relicNoMonster = dbQuery.getRandomRelic.get(quest.relic);
                   log.relic = `${quest.relic}: ${relicNoMonster.description}`;
                   let bonusResult = '';
                   if(relicNoMonster.bonusXp) {
@@ -532,8 +531,8 @@ module.exports = {
                             .setColor(0x8b0000)
                             .addFields(battleField)
                         );
+                        const relic = dbQuery.getRandomRelic.get(quest.relic);
                         if(quest.relic && Math.random() < relic.chance) {
-                          const relic = dbQuery.getRandomRelic.get(quest.relic);
                           log.relic = `${quest.relic}: ${relic.description}`;  
                             embeds.push(new EmbedBuilder()
                               .setTitle(relic.name)
