@@ -98,7 +98,7 @@ function logQuest(log) {
   });
 }
 
-async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null) {
+async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null, count = 1) {
   try {
     let embed;
     let components = [];
@@ -173,7 +173,6 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           const firstLetter = questSlice[0]?.name.charAt(0).toUpperCase() || '';
           const lastLetter = questSlice[questSlice.length - 1]?.name.charAt(0).toUpperCase() || '';
           const letterRange = firstLetter === lastLetter ? firstLetter : `[${firstLetter}-${lastLetter}]`;
-          console.log(`questSelect_${i}`);
 
           const dropdown = new StringSelectMenuBuilder()
             .setCustomId(`questSelect_${i}`)
@@ -223,17 +222,20 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       }
 
       // Back and Complete buttons
-      const currentTime = Math.floor(Date.now() / 1000);
-      //const completeTime = currentTime + (quest.waitTime || 0);
-      const completeTime = 0;
+      //const maxCount = currentTime + (quest.waitTime || 0);
+      const multiples = (quest.maxCount > count) ? 1 : count;
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`questback-${selectedArea}`)
           .setLabel("Back")
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
-          .setCustomId(`questcomplete-${selectedQuestId}-${completeTime}`)
+          .setCustomId(`questcomplete-${selectedQuestId}-${multiples}`)
           .setLabel("Claim Quest")
+          .setStyle(ButtonStyle.Success),
+        new ButtonBuilder()
+          .setCustomId(`maxCount-${selectedQuestId}-${multiples}`)
+          .setLabel("x"+multiples)
           .setStyle(ButtonStyle.Success)
       );
       components.push(buttonRow);
@@ -279,7 +281,7 @@ module.exports = {
     .setDescription("Browse and explore quests by area")
     .setIntegrationTypes([ 'GuildInstall']),
 
-  allowedButtons: ["questback", "questcomplete"],
+  allowedButtons: ["questback", "questcomplete", "maxCount"],
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "quest") {
@@ -301,12 +303,12 @@ module.exports = {
         
         dbQuery.insertQuestUser.run(interaction.user.id, interaction.guildId, questDisplayName, null, questDomainId);
         
-        setTimeout(() => {
+        setImmediate(() => {
           require('./character').updateRoles(interaction, questDomainId);
           const questAvatarURL = interaction.user.displayAvatarURL().replace(/\/a_/, '/').replace(/\.[a-zA-Z]{3,4}$/, '') + '.png?size=64';
           const questAvatarFile = questAvatarURL.split('/').pop().split('?')[0];
           db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ?').run(questAvatarFile, interaction.user.id, interaction.guildId);
-        }, 0);
+        });
         
         // Continue to quest menu
         menu(interaction, true, 1);
@@ -333,27 +335,21 @@ module.exports = {
             // Back to stage 1
             menu(interaction, true, 1);
           }
-          break;          
+          break;
+        case "maxCount":
+          const mcQuestId = parseInt(parts[1]);
+          const mcCount = parseInt(parts[2]);
+          const mcQuest = dbQuery.getQuestAreaById.get(mcQuestId);
+          menu(interaction, true, 3, mcQuest?.questArea, mcQuestId, mcCount+1);
+          break;
         case "questcomplete":
           // Complete quest - check timing
-          const completeTime = parseInt(parts[2]);
-          const unixTime = Math.floor(Date.now() / 1000);
+          const multiple = parseInt(parts[2]);
           const embeds = [];
-          if (unixTime < completeTime) {
-            // Not ready yet
-            const remainingSeconds = completeTime - unixTime;
-            const remainingMinutes = Math.ceil(remainingSeconds / 60);
-            
-            await interaction.reply({
-              content: `You need to wait ${remainingMinutes} more minute${remainingMinutes !== 1 ? 's' : ''} before completing this quest.`,
-              flags: MessageFlags.Ephemeral
-            });
-          } else {
-
             // Quest completed
             const id = parts[1];
             const quest = dbQuery.getQuestById.get(id);
-            const log = { guildId: interaction.guildId, userId: interaction.user.id, domainId: quest.domainId, questId: id, sawMonster: 0, beatMonster: null, relic: null };
+            const log = { guildId: interaction.guildId, userId: interaction.user.id, domainId: quest.domainId, questId: id, sawMonster: 0, beatMonster: null, relic: null, x: multiple };
             const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
@@ -383,7 +379,7 @@ module.exports = {
               itemString += item.professionBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${professionNames[parseInt(item.professionId) - 1]} X${item.professionBonus} *Expires* <t:${item.duration}:R>` : '';
             }
             db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
-            .run(quest.skill1, quest.skill2, quest.skill3 , quest.skill4, quest.skill5, quest.skill6, quest.coins, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1], interaction.user.id, interaction.guildId);
+            .run(quest.skill1 * multiple, quest.skill2 * multiple, quest.skill3 * multiple, quest.skill4 * multiple, quest.skill5 * multiple, quest.skill6 * multiple, quest.coins * multiple, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1] * multiple, interaction.user.id, interaction.guildId);
                     const endStats = new EmbedBuilder()
                         .setTitle(`${user.displayName}`)
                         .setThumbnail(interaction.user.displayAvatarURL())
@@ -565,7 +561,6 @@ module.exports = {
               embeds
             });
             logQuest(log);
-          };
           break;
       }
     }
