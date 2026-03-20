@@ -236,7 +236,8 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         new ButtonBuilder()
           .setCustomId(`maxCount-${selectedQuestId}-${multiples}`)
           .setLabel("x"+multiples)
-          .setStyle(ButtonStyle.Success)
+          .setDisabled(quest.maxCount === 1)
+          .setStyle(ButtonStyle.Secondary)
       );
       components.push(buttonRow);
     }
