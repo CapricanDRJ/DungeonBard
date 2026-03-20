@@ -53,7 +53,7 @@ const dbQuery = {
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
   getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
-  storeQuest: db.prepare(`INSERT INTO questTracker (guildId, encryptedUserId, domainId, questId, artisanExp, soldierExp, healerExp, overallExp, skill1, skill2, skill3, skill4, skill5, skill6, sawMonster, beatMonster, relic) SELECT ?, ?, ?, ?, u.artisanExp, u.soldierExp, u.healerExp, u.overallExp, u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6, ?, ?, ? FROM users u WHERE u.userId = ? AND u.guildId = ?`)};
+  storeQuest: db.prepare(`INSERT INTO questTracker (guildId, encryptedUserId, domainId, questId, artisanExp, soldierExp, healerExp, overallExp, skill1, skill2, skill3, skill4, skill5, skill6, sawMonster, beatMonster, relic, quantity) SELECT ?, ?, ?, ?, u.artisanExp, u.soldierExp, u.healerExp, u.overallExp, u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6, ?, ?, ?, ? FROM users u WHERE u.userId = ? AND u.guildId = ?`)};
 const allDomains = dbQuery.getAllDomains.all();
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -92,8 +92,9 @@ function logQuest(log) {
       log.sawMonster,     // ? #5 (SELECT)
       log.beatMonster,    // ? #6 (SELECT)
       log.relic,          // ? #7 (SELECT)
-      log.userId,         // ? #8 (WHERE u.userId)
-      log.guildId         // ? #9 (WHERE u.guildId)
+      log.quantity,       // ? #8 (SELECT)
+      log.userId,         // ? #9 (WHERE u.userId)
+      log.guildId         // ? #10 (WHERE u.guildId)
     );
   });
 }
@@ -350,7 +351,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = dbQuery.getQuestById.get(id);
-            const log = { guildId: interaction.guildId, userId: interaction.user.id, domainId: quest.domainId, questId: id, sawMonster: 0, beatMonster: null, relic: null, x: multiple };
+            const log = { guildId: interaction.guildId, userId: interaction.user.id, domainId: quest.domainId, questId: id, sawMonster: 0, beatMonster: null, relic: null, quantity: multiple };
             const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
