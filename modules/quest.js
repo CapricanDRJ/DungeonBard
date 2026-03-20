@@ -223,7 +223,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
 
       // Back and Complete buttons
       //const maxCount = currentTime + (quest.waitTime || 0);
-      const multiples = (quest.maxCount > count) ? 1 : count;
+      const multiples = (quest.maxCount < count) ? 1 : count;
       const buttonRow = new ActionRowBuilder().addComponents(
         new ButtonBuilder()
           .setCustomId(`questback-${selectedArea}`)
