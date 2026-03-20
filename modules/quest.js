@@ -136,7 +136,6 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
         .setDescription("Choose a quest area to explore:")
         .setColor(embedColor);
       const questAreas = dbQuery.getDistinctQuestArea.all(domain);
-      console.log(questAreas);
       if (questAreas.length > 0) {
         const dropdown = new StringSelectMenuBuilder()
           .setCustomId("questAreaSelect")
@@ -185,7 +184,6 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
                 value: `quest${quest.id}`
               }))
             );
-            console.log(dropdown);
           components.push(new ActionRowBuilder().addComponents(dropdown));
         }
       }
@@ -323,7 +321,6 @@ module.exports = {
     } else if (interaction.isButton()) {
       const parts = interaction.customId.split('-');
       const action = parts[0];
-      console.log(interaction.user.id, parts);
       
       switch (action) {
         case "questback":
@@ -462,16 +459,11 @@ module.exports = {
                       }));
                     const difficulty = [0.01,0.75,0.9, 1.05][parseInt(beast.difficulty)];
                     const attack = skillMod(user.domainId, user.skill3) + skillBonuses[3-1];
-                    console.log("attack", attack);
                     const defense = skillMod(user.domainId, user.skill4) + skillBonuses[4-1];
-                    console.log("defense", defense);
                     const hp = skillMod(user.domainId, user.skill5);
-                    console.log("hp", hp);
 
                     const monsterAttack = skillMod(user.domainId, user.skill3) * difficulty;
                     const monsterDefense = skillMod(user.domainId, user.skill4) * difficulty;
-                    console.log("monsterAttack", monsterAttack);
-                    console.log("monsterDefense", monsterDefense);
                     //set hitpoints
                     let userHitpoints = hp;
                     let monsterHitpoints = hp * difficulty;
@@ -482,7 +474,6 @@ module.exports = {
                     while(monsterHitpoints > 0 && userHitpoints > 0) {
                       const userd20attack = Math.floor(Math.random()*20) + attack;
                       const monsterd20defense = Math.floor(Math.random()*20) + monsterDefense;
-                      console.log("userd20attack", userd20attack, "monsterd20defense", monsterd20defense);
                         if(userd20attack >= monsterd20defense) {
                             //hit
                             const monsterDamage = (userd20attack - monsterd20defense) / 2;
@@ -500,7 +491,6 @@ module.exports = {
                           userHitpoints = 0;
                           break;
                         };
-                        console.log("monsterD20attack", monsterD20attack, "userd20defense", userd20defense);
                         if(monsterD20attack >= userd20defense) {
                             //hit
                             const userDamage = (monsterD20attack - (userd20defense)) / 2;
