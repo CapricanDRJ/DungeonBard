@@ -571,11 +571,13 @@ module.exports = {
                 embeds,
                 files: [attachment]
             });
-            console.log(interaction.member);
-            console.log(interaction.member.displayAvatarURL());
-            console.log(interaction.user.displayAvatarURL());
-            setImmediate(() => { avatarUpdate(userId, guildId, interaction.user.displayAvatarURL()) });
-        } catch (error) {
+            setImmediate(() => { 
+                // Use interaction.member if in a guild, otherwise fall back to interaction.user
+                const avatar = interaction.member?.displayAvatarURL() || interaction.user.displayAvatarURL();
+                
+                avatarUpdate(userId, guildId, avatar); 
+            });
+          } catch (error) {
             console.error('Error executing stats command:', error, `userId:${userId}`);
             interaction.reply({
                 content: 'An error occurred while generating your stats image.',
