@@ -316,7 +316,7 @@ module.exports = {
         menu(interaction, true, 1);
       } else if (interaction.customId.startsWith("questSelect_")) {
         // Quest selected - go to stage 3
-        const questId = parseInt(interaction.values[0].replace('quest', ''));
+        const questId = interaction.values[0].replace('quest', '');
         const quest = dbQuery.getQuestAreaById.get(questId);
         menu(interaction, true, 3, quest?.questArea, questId);
       }
@@ -339,7 +339,7 @@ module.exports = {
           }
           break;
         case "maxCount":
-          const mcQuestId = parseInt(parts[1]);
+          const mcQuestId = parts[1];
           const mcCount = parseInt(parts[2]);
           const mcQuest = dbQuery.getQuestAreaById.get(mcQuestId);
           menu(interaction, true, 3, mcQuest?.questArea, mcQuestId, mcCount+1);
