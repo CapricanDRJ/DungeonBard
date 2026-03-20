@@ -231,11 +231,11 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           .setStyle(ButtonStyle.Danger),
         new ButtonBuilder()
           .setCustomId(`questcomplete-${selectedQuestId}-${multiples}`)
-          .setLabel("Claim Quest")
+          .setLabel("Claim Quest x"+multiples)
           .setStyle(ButtonStyle.Success),
         new ButtonBuilder()
           .setCustomId(`maxCount-${selectedQuestId}-${multiples}`)
-          .setLabel("x"+multiples)
+          .setLabel("x")
           .setDisabled(quest.maxCount === 1)
           .setStyle(ButtonStyle.Secondary)
       );
