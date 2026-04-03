@@ -112,17 +112,17 @@ function logQuest(log) {
     );
   });
 }
-function checkLevelUp(userBefore) {
+function checkLevelUp(interaction, userBefore) {
 // 1. Get the guild from cache
-    const guild = client.guilds.cache.get(userBefore.guildId);
+const guild = interaction.guild;
     if (!guild) return;
 
-    // 2. Grab the official System Channel designated by Discord
     const channel = guild.systemChannel;
-    console.log(channel);
+    if (!channel) return;
 
-    // 3. Validation: Check if it exists and if the bot can send messages
-    if (!channel) {
+    // 2. Check Permissions (View and Send)
+    const perms = channel.permissionsFor(guild.members.me);
+    if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
         return;
     }
 
@@ -448,7 +448,7 @@ module.exports = {
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
             const user = dbQuery.getUser.get(interaction.user.id, interaction.guildId);
-            setImmediate(() => {checkLevelUp(user)});
+            setImmediate(() => {checkLevelUp(interaction, user)});
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
