@@ -117,32 +117,23 @@ function checkLevelUp(interaction, userBefore) {
 // 1. Get the guild from cache
 const guild = interaction.guild;
     if (!guild) return;
-console.log(1);
-const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
-if (!channel) return;
-console.log(2);
+    const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
+    if (!channel) return;
     // 2. Check Permissions (View and Send)
     const perms = channel.permissionsFor(guild.members.me);
     if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
         return;
     }
-console.log(3);
     const botPermissions = channel.permissionsFor(guild.members.me);
     if (!botPermissions || !botPermissions.has(PermissionFlagsBits.SendMessages)) {
         return;
     }
-console.log(4);
 
     // --- Proceed with your level check logic ---
     const userAfter = dbQuery.getUser.get(userBefore.userId, userBefore.guildId);
     if (!userAfter) return;
     const userPing = `<@${userAfter.userId}>`;
-    if (interaction.user.id === '454459089720967168') {
-            channel.send({ 
-                content: `${userPing} test.` 
-           }).catch(err => console.error(`Failed to send test: ${err}`));
-           return;
-      }
+
     const tier = userAfter.tier || 1;
     const domainIdx = userAfter.domainId - 1;
 
