@@ -5,7 +5,8 @@ const {
   ButtonStyle,
   StringSelectMenuBuilder,
   EmbedBuilder,
-  MessageFlagsBitField
+  MessageFlagsBitField,
+  PermissionFlagsBits
 } = require('discord.js');
 const wait = require('node:timers/promises').setTimeout;
 const sqlite3 = require('better-sqlite3');
