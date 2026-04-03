@@ -119,6 +119,7 @@ function checkLevelUp(userBefore) {
 
     // 2. Grab the official System Channel designated by Discord
     const channel = guild.systemChannel;
+    console.log(channel);
 
     // 3. Validation: Check if it exists and if the bot can send messages
     if (!channel) {
