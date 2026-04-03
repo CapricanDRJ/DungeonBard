@@ -118,8 +118,8 @@ function checkLevelUp(interaction, userBefore) {
 const guild = interaction.guild;
     if (!guild) return;
 console.log(1);
-    const channel = guild.systemChannel;
-    if (!channel) return;
+const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
+if (!channel) return;
 console.log(2);
     // 2. Check Permissions (View and Send)
     const perms = channel.permissionsFor(guild.members.me);
