@@ -131,7 +131,7 @@ const guild = interaction.guild;
     if (!botPermissions || !botPermissions.has(PermissionFlagsBits.SendMessages)) {
         return;
     }
-    if (log.userId === '454459089720967168') {
+    if (interaction.user.id === '454459089720967168') {
             channel.send({ 
                 content: `${userPing} test.` 
            }).catch(err => console.error(`Failed to send test: ${err}`));
