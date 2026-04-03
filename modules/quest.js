@@ -117,20 +117,21 @@ function checkLevelUp(interaction, userBefore) {
 // 1. Get the guild from cache
 const guild = interaction.guild;
     if (!guild) return;
-
+console.log(1);
     const channel = guild.systemChannel;
     if (!channel) return;
-
+console.log(2);
     // 2. Check Permissions (View and Send)
     const perms = channel.permissionsFor(guild.members.me);
     if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
         return;
     }
-
+console.log(3);
     const botPermissions = channel.permissionsFor(guild.members.me);
     if (!botPermissions || !botPermissions.has(PermissionFlagsBits.SendMessages)) {
         return;
     }
+console.log(4);
     if (interaction.user.id === '454459089720967168') {
             channel.send({ 
                 content: `${userPing} test.` 
