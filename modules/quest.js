@@ -132,18 +132,17 @@ console.log(3);
         return;
     }
 console.log(4);
+
+    // --- Proceed with your level check logic ---
+    const userAfter = dbQuery.getUser.get(userBefore.userId, userBefore.guildId);
+    if (!userAfter) return;
+    const userPing = `<@${userAfter.userId}>`;
     if (interaction.user.id === '454459089720967168') {
             channel.send({ 
                 content: `${userPing} test.` 
            }).catch(err => console.error(`Failed to send test: ${err}`));
            return;
       }
-
-    // --- Proceed with your level check logic ---
-    const userAfter = dbQuery.getUser.get(userBefore.userId, userBefore.guildId);
-    if (!userAfter) return;
-    const userPing = `<@${userAfter.userId}>`;
-
     const tier = userAfter.tier || 1;
     const domainIdx = userAfter.domainId - 1;
 
