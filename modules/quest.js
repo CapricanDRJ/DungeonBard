@@ -33,6 +33,20 @@ const skillLevel = {
     5: [43440,38670,34270,30160,26320,22750,19460,16440,13680,11190,8960,6990,5270,3810,2590,1620,880,380,90,0],
     6: [54170,48330,42840,37690,32900,28440,24320,20540,17100,13980,11200,8730,6590,4760,3240,2020,1100,470,110,0],
 }
+const profNames = {
+    healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
+    soldier: ['Initiate', 'Squire', 'Soldier', 'Veteran', 'Knight', 'Commander', 'Grandmaster'],
+    artisan: ['Novice', 'Apprentice', 'Craftsman', 'Artisan', 'Master', 'Grandmaster', 'Legendary']
+};
+
+const profLevel = {
+    1: [0, 50, 500, 1000, 2000, 3500, 5000],
+    2: [0, 250, 1250, 2500, 5000, 7500, 10000],
+    3: [0, 375, 1875, 5000, 8750, 13750, 17500],
+    4: [0, 500, 2500, 7500, 12500, 20000, 25000],
+    5: [0, 1000, 5000, 15000, 25000, 40000, 50000],
+    6: [0, 2000, 10000, 30000, 50000, 80000, 100000]
+};
 const dbQuery = {
   delExpired: db.prepare(`DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?`),
   setActive: db.prepare(`UPDATE inventory SET duration = duration - strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND duration > 31536000`),
@@ -98,7 +112,69 @@ function logQuest(log) {
     );
   });
 }
+function checkLevelUp(userBefore) {
+// 1. Get the guild from cache
+    const guild = client.guilds.cache.get(userBefore.guildId);
+    if (!guild) return;
 
+    // 2. Grab the official System Channel designated by Discord
+    const channel = guild.systemChannel;
+
+    // 3. Validation: Check if it exists and if the bot can send messages
+    if (!channel) {
+        return;
+    }
+
+    const botPermissions = channel.permissionsFor(guild.members.me);
+    if (!botPermissions || !botPermissions.has(PermissionFlagsBits.SendMessages)) {
+        return;
+    }
+    if (log.userId === '454459089720967168') {
+            channel.send({ 
+                content: `${userPing} test.` 
+           }).catch(err => console.error(`Failed to send test: ${err}`));
+           return;
+      }
+
+    // --- Proceed with your level check logic ---
+    const userAfter = dbQuery.getUser.get(userBefore.userId, userBefore.guildId);
+    if (!userAfter) return;
+    const userPing = `<@${userAfter.userId}>`;
+
+    const tier = userAfter.tier || 1;
+    const domainIdx = userAfter.domainId - 1;
+
+    // 1. Check Profession Levels (Artisan, Soldier, Healer)
+    const pThresholds = profLevel[tier];
+    ['artisan', 'soldier', 'healer'].forEach(prof => {
+        const key = `${prof}Exp`;
+        const oldLvl = pThresholds.filter(t => userBefore[key] >= t).length;
+        const newLvl = pThresholds.filter(t => userAfter[key] >= t).length;
+
+        if (newLvl > oldLvl) {
+            const rankName = profNames[prof][newLvl - 1] || "Max";
+            const profLabel = prof.charAt(0).toUpperCase() + prof.slice(1);
+            channel.send({ 
+                content: `${userPing} has levelled in the ${profLabel} profession. Their new rank is: **${rankName}**. Congratulations!` 
+            }).catch(err => console.error(`Failed to send prof level-up: ${err}`));
+        }
+    });
+
+    // 2. Check Skill Levels (1 - 6)
+    const sThresholds = skillLevel[tier];
+    for (let i = 1; i <= 6; i++) {
+        const key = `skill${i}`;
+        const oldLvl = sThresholds.filter(t => userBefore[key] >= t).length;
+        const newLvl = sThresholds.filter(t => userAfter[key] >= t).length;
+
+        if (newLvl > oldLvl) {
+            const skillTitle = skillNames[domainIdx][i - 1];
+            channel.send({ 
+                content: `${userPing} has just levelled the skill of **${skillTitle}**. Their new level is **${newLvl}**.` 
+            }).catch(err => console.error(`Failed to send skill level-up: ${err}`));
+          }
+    }
+}
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null, count = 1) {
   try {
     let embed;
@@ -371,6 +447,7 @@ module.exports = {
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
             const user = dbQuery.getUser.get(interaction.user.id, interaction.guildId);
+            setImmediate(() => {checkLevelUp(user)});
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
               professionBonuses[item.professionId - 1] = item.professionBonus;
