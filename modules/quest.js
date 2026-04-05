@@ -42,7 +42,7 @@ const dbQuery = {
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
   getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
   storeQuest: db.prepare(`
-      INSERT INTO questTracker2 (
+      INSERT INTO questTracker (
         guildId, userId, encryptedUserId, domainId, questId, 
         artisanExp, soldierExp, healerExp, overallExp, 
         artisanExpGained, soldierExpGained, healerExpGained, expGained, 
