@@ -81,8 +81,6 @@ function formatTime(seconds) {
 */
 function logQuest(log) {
   setImmediate(() => {
-    // Skip test account
-    if (log.userId === '454459089720967168') return;
 
     const encryptedId = crypto.createHmac('sha256', key)
       .update(log.userId.toString())
