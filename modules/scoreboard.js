@@ -189,10 +189,10 @@ module.exports = {
 
             if (!userGen) {
                 // FALSE: Show strictly the Top 10
-                displayUsers = allUsers.slice(0, 10);
+                displayUsers = allUsers.slice(0, 12);
                 
                 // Highlight the user only if they actually exist and are in the top 10
-                if (callingUserIndex !== -1 && callingUserIndex < 10) {
+                if (callingUserIndex !== -1 && callingUserIndex < 12) {
                     highlightIndex = callingUserIndex;
                 } else {
                     highlightIndex = -1; // Don't highlight anyone
@@ -201,8 +201,8 @@ module.exports = {
                 // TRUE: Dynamic windowing based on user's rank
                 const userRank = callingUserIndex + 1;
                 
-                if (userRank <= 10) {
-                    displayUsers = allUsers.slice(0, 10);
+                if (userRank <= 12) {
+                    displayUsers = allUsers.slice(0, 12);
                     highlightIndex = callingUserIndex;
                 } else {
                     // User is outside top 10, show 5 before and 4 after (10 total with user)
