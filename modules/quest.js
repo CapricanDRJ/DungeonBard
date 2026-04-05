@@ -41,7 +41,25 @@ const dbQuery = {
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
   getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
-  storeQuest: db.prepare(`INSERT INTO questTracker (guildId, encryptedUserId, domainId, questId, artisanExp, soldierExp, healerExp, overallExp, skill1, skill2, skill3, skill4, skill5, skill6, sawMonster, beatMonster, relic, quantity) SELECT ?, ?, ?, ?, u.artisanExp, u.soldierExp, u.healerExp, u.overallExp, u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6, ?, ?, ?, ? FROM users u WHERE u.userId = ? AND u.guildId = ?`)};
+  storeQuest: db.prepare(`INSERT INTO questTracker (guildId, encryptedUserId, domainId, questId, artisanExp, soldierExp, healerExp, overallExp, skill1, skill2, skill3, skill4, skill5, skill6, sawMonster, beatMonster, relic, quantity) SELECT ?, ?, ?, ?, u.artisanExp, u.soldierExp, u.healerExp, u.overallExp, u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6, ?, ?, ?, ? FROM users u WHERE u.userId = ? AND u.guildId = ?`),
+  storeQuest2: db.prepare(`
+      INSERT INTO questTracker2 (
+        guildId, userId, encryptedUserId, domainId, questId, 
+        artisanExp, soldierExp, healerExp, overallExp, 
+        artisanExpGained, soldierExpGained, healerExpGained, expGained, 
+        skill1, skill2, skill3, skill4, skill5, skill6, 
+        sawMonster, beatMonster, relic, quantity
+      ) 
+      SELECT 
+        ?, ?, ?, ?, ?, 
+        u.artisanExp, u.soldierExp, u.healerExp, u.overallExp, 
+        (u.artisanExp - ?), (u.soldierExp - ?), (u.healerExp - ?), (u.overallExp - ?), 
+        u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6, 
+        ?, ?, ?, ? 
+      FROM users u 
+      WHERE u.userId = ? AND u.guildId = ?
+    `)
+};
 const allDomains = dbQuery.getAllDomains.all();
 const professionNames = ["Artisan", "Soldier", "Healer"];
 function formatTime(seconds) {
@@ -83,6 +101,39 @@ function logQuest(log) {
       log.quantity,       // ? #8 (SELECT)
       log.userId,         // ? #9 (WHERE u.userId)
       log.guildId         // ? #10 (WHERE u.guildId)
+    );
+  });
+}
+function logQuest2(log) {
+  setImmediate(() => {
+    // Skip test account
+    if (log.userId === '454459089720967168') return;
+
+    const encryptedId = crypto.createHmac('sha256', key)
+      .update(log.userId.toString())
+      .digest('hex');
+
+    // Total of 15 arguments to match the 15 '?' in the SQL above
+    dbQuery.storeQuest2.run(
+      log.guildId,        // ? #1: guildId
+      log.userId,         // ? #2: userId
+      encryptedId,        // ? #3: encryptedUserId
+      log.domainId,       // ? #4: domainId
+      log.questId,        // ? #5: questId
+      
+      // The "Old" XP amounts passed to subtract from the "New" ones
+      log.artisanExp,     // ? #6: (u.artisanExp - ?)
+      log.soldierExp,     // ? #7: (u.soldierExp - ?)
+      log.healerExp,      // ? #8: (u.healerExp - ?)
+      log.overallExp,     // ? #9: (u.overallExp - ?)
+      
+      log.sawMonster,     // ? #10: sawMonster
+      log.beatMonster,    // ? #11: beatMonster
+      log.relic,          // ? #12: relic
+      log.quantity,       // ? #13: quantity
+      
+      log.userId,         // ? #14: WHERE u.userId = ?
+      log.guildId         // ? #15: WHERE u.guildId = ?
     );
   });
 }
@@ -387,7 +438,7 @@ module.exports = {
             // Quest completed
             const id = parts[1];
             const quest = dbQuery.getQuestById.get(id);
-            const log = { guildId: interaction.guildId, userId: interaction.user.id, domainId: quest.domainId, questId: id, sawMonster: 0, beatMonster: null, relic: null, quantity: multiple };
+
             const profession = professionNames[parseInt(quest.professionId) - 1] + "Exp";
             db.transaction(() => {
               //expire items past their duration
@@ -410,6 +461,20 @@ module.exports = {
             const professionBonuses = [1, 1, 1]; // artisan, soldier, healer
             let itemString = '';
             const user = dbQuery.getUser.get(interaction.user.id, interaction.guildId);
+            const log = { 
+              guildId: interaction.guildId,
+              userId: interaction.user.id,
+              domainId: quest.domainId,
+              questId: id,
+              sawMonster: 0,
+              beatMonster: null,
+              relic: null,
+              quantity: multiple,
+              artisanExp: user.artisanExp,
+              soldierExp: user.soldierExp,
+              healerExp: user.healerExp,
+              overallExp: user.overallExp
+            };
             setImmediate(() => {checkLevelUp(interaction, user)});
             for (const item of activeItems) {
               skillBonuses[item.skill - 1] = item.skillBonus;
@@ -593,6 +658,7 @@ module.exports = {
               embeds
             });
             logQuest(log);
+            logQuest2(log);
           break;
       }
     }
