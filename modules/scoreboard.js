@@ -31,7 +31,7 @@ const BORDER_RIGHT = 60;   // Prevents content from drawing over the right borde
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
-const userGen = true;
+const userGen = false;
 const fontBase = 24;
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
