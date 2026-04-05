@@ -32,10 +32,10 @@ const IMAGE_WIDTH = 350;
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
-        const metadata = await baseBackground.metadata();
+        const metadata = await scoreImageBuffer.metadata();
         const bgWidth = metadata.width;
         const bgHeight = metadata.height;
-        const canvas = baseBackground.clone();
+        const canvas = scoreImageBuffer.clone();
         const maxCapacity = Math.floor((bgHeight - (MARGIN * 2)) / ROW_HEIGHT);
         const maxAllowed = Math.max(0, maxCapacity - 1); // Leave 1 extra user spot
 
