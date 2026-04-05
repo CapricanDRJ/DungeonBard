@@ -26,8 +26,8 @@ const dbQuery = {
 // Image layout boundaries (Adjust these to perfectly fit your background!)
 const AVATAR_SIZE = 32;
 const ROW_HEIGHT = 60;
-const BORDER_LEFT = 85;    // Pushes content past the left Celtic knot border
-const BORDER_RIGHT = 85;   // Prevents content from drawing over the right border
+const BORDER_LEFT = 60;    // Pushes content past the left Celtic knot border
+const BORDER_RIGHT = 60;   // Prevents content from drawing over the right border
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 85;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
