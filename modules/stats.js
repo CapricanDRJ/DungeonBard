@@ -3,26 +3,8 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const sharp = require('sharp');
 const MessageFlags = MessageFlagsBitField.Flags;
-const professions = {
-    1: [0, 50, 500, 1000, 2000, 3500, 5000],
-    2: [0, 250, 1250, 2500, 5000, 7500, 10000],
-    3: [0, 375, 1875, 5000, 8750, 13750, 17500],
-    4: [0, 500, 2500, 7500, 12500, 20000, 25000],
-    5: [0, 1000, 5000, 15000, 25000, 40000, 50000],
-    6: [0, 2000, 10000, 30000, 50000, 80000, 100000],
-    healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
-    soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
-    artisan: ['Novice', 'Apprentice', 'Artisan', 'Mason', 'Grandmaster', 'Guildmaster']
-};
-const professionNames = ["Artisan", "Soldier", "Healer"];
-const skillNames = [
-  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
-  ["Learning","Communication","Discipline","Organization","Stamina","Perseverance"],
-  ["Pedagogy","Classroom Command","Lesson Crafting","Organization","Stamina","Adaptability"],
-  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
-  ["Scholarship","Rhetoric","Endurance","Organization","Stamina","Resilience"],
-  ["Scholarship","Rhetoric","Endurance","Administration","Stamina","Influence"]
-];
+const { skillNames, skillLevel, profNames, profLevel } = require('../assets/levels');
+
 const dbQuery = {
     getUserAvatarFile:  db.prepare('SELECT avatarFile FROM users WHERE userId = ? AND guildId = ? LIMIT 1'),
     updateAvatarFileName: db.prepare('UPDATE users SET avatarFile = ? WHERE userId = ? AND guildId = ? LIMIT 1'),
@@ -495,12 +477,10 @@ async function generateCharacterImage(userData, domainData, items, avatarBlob = 
   }
 }
 
-// Helper functions - implement these based on your game logic
 function calculateRank(domain, experience, profession) {
-    const level = professions[domain].findLastIndex(level => experience >= level) || 0;
-return professions[profession][level];
+    const level = profLevel[domain].findLastIndex(level => experience >= level) || 0;
+    return profNames[profession][level];
 }
-
 function formatTimeRemaining(seconds) {
   const days = Math.floor(seconds / 86400);
   const hours = Math.floor((seconds % 86400) / 3600);
