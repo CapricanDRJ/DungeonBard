@@ -31,6 +31,8 @@ const BORDER_RIGHT = 85;   // Prevents content from drawing over the right borde
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 85;  // Stops the list before hitting the bottom border
 const TITLE_Y = 65;        // Centers the "Scoreboard" text vertically in the ribbon
+const userGen = true; 
+
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
         const metadata = await scoreImageBuffer.metadata();
@@ -168,32 +170,45 @@ module.exports = {
                     flags: MessageFlags.Ephemeral
                 });
             }
-
-            // Find calling user's rank
+// Find calling user's rank
             const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
             
-            if (callingUserIndex === -1) {
+            // If userGen is true, enforce that the user must have a character
+            if (userGen && callingUserIndex === -1) {
                 return interaction.reply({
                     content: 'No character found. Use `/character enroll` to create one first.',
                     flags: MessageFlags.Ephemeral
                 });
             }
 
-            const userRank = callingUserIndex + 1;
             let displayUsers;
             let highlightIndex;
             let startIndex = 0;
 
-            // If user is in top 10, show top 10 with user at their position
-            if (userRank <= 10) {
+            if (!userGen) {
+                // FALSE: Show strictly the Top 10
                 displayUsers = allUsers.slice(0, 10);
-                highlightIndex = callingUserIndex;
+                
+                // Highlight the user only if they actually exist and are in the top 10
+                if (callingUserIndex !== -1 && callingUserIndex < 10) {
+                    highlightIndex = callingUserIndex;
+                } else {
+                    highlightIndex = -1; // Don't highlight anyone
+                }
             } else {
-                // User is outside top 10, show 5 before and 4 after (20 total with user)
-                startIndex = Math.max(0, callingUserIndex - 5);
-                const endIndex = Math.min(allUsers.length, callingUserIndex + 4);
-                displayUsers = allUsers.slice(startIndex, endIndex);
-                highlightIndex = callingUserIndex - startIndex;
+                // TRUE: Dynamic windowing based on user's rank
+                const userRank = callingUserIndex + 1;
+                
+                if (userRank <= 10) {
+                    displayUsers = allUsers.slice(0, 10);
+                    highlightIndex = callingUserIndex;
+                } else {
+                    // User is outside top 10, show 5 before and 4 after (10 total with user)
+                    startIndex = Math.max(0, callingUserIndex - 5);
+                    const endIndex = Math.min(allUsers.length, callingUserIndex + 4);
+                    displayUsers = allUsers.slice(startIndex, endIndex);
+                    highlightIndex = callingUserIndex - startIndex;
+                }
             }
 
             // Generate scoreboard image
