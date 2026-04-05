@@ -23,65 +23,73 @@ const dbQuery = {
 };
 
 // Image layout constants
+// Image layout boundaries (Adjust these to perfectly fit your background!)
 const AVATAR_SIZE = 32;
 const ROW_HEIGHT = 60;
-const textMarginY = 60;
-const MARGIN = 20;
-const NAME_OFFSET_X = AVATAR_SIZE + 15;
-const XP_OFFSET_X = 250;
-const IMAGE_WIDTH = 629;
-
+const BORDER_LEFT = 85;    // Pushes content past the left Celtic knot border
+const BORDER_RIGHT = 85;   // Prevents content from drawing over the right border
+const HEADER_OFFSET = 140; // Starts the player list below the top banner
+const BOTTOM_MARGIN = 85;  // Stops the list before hitting the bottom border
+const TITLE_Y = 65;        // Centers the "Scoreboard" text vertically in the ribbon
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
         const metadata = await scoreImageBuffer.metadata();
         const bgWidth = metadata.width;
         const bgHeight = metadata.height;
         const canvas = scoreImageBuffer.clone();
-        const maxCapacity = Math.floor((bgHeight - (MARGIN * 2)) / ROW_HEIGHT);
-        const maxAllowed = Math.max(0, maxCapacity - 1); // Leave 1 extra user spot
+        
+        // Calculate how many rows fit strictly inside the playable area
+        const availableHeight = bgHeight - HEADER_OFFSET - BOTTOM_MARGIN;
+        const maxCapacity = Math.floor(availableHeight / ROW_HEIGHT);
+        const maxAllowed = Math.max(0, maxCapacity); 
 
-        // Trim the list of users so it never draws past the limit
+        // Trim the list of users so it never draws past the bottom border
         if (users.length > maxAllowed) {
             users = users.slice(0, maxAllowed);
         }
+        
         const compositeLayers = [];
         
         let svgContent = `
             <svg width="${bgWidth}" height="${bgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <style>
-                    .title { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #2c1810; }
-                    .name { font-family: 'MedievalSharp', serif; font-size: 18px; fill: #2c1810; }
+                    /* You can change fill colors here to better match the dark brown ink of your borders */
+                    .title { font-family: 'MedievalSharp', serif; font-size: 28px; font-weight: bold; fill: #312520; }
+                    .name { font-family: 'MedievalSharp', serif; font-size: 18px; fill: #312520; }
                     .xp { font-family: 'MedievalSharp', serif; font-size: 20px; fill: #4a3520; }
                     .rank { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #6b4423; }
-                    .highlight { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #2c1810; }
+                    .highlight { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #1a0f0a; }
                 </style>
                 
-                <text x="${bgWidth / 2}" y="30" text-anchor="middle" class="title">Scoreboard</text>
-                <line x1="20" y1="40" x2="${bgWidth - 20}" y2="40" stroke="#6b4423" stroke-width="1"/>
+                <text x="${bgWidth / 2}" y="${TITLE_Y}" text-anchor="middle" class="title">Scoreboard</text>
         `;
+        
         // Add each user row
         let i = 0;
+        const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
+
         for (const user of users) {
-            const y = MARGIN + textMarginY + (i * ROW_HEIGHT);
+            const y = HEADER_OFFSET + (i * ROW_HEIGHT);
             const isHighlighted = (rank === highlightIndex);
+            
             // Highlight background for calling user
             if (isHighlighted) {
-                svgContent += `<rect x="10" y="${y}" width="${bgWidth - 20}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
+                svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
             }
             
             // Rank number
-            svgContent += `<text x="15" y="${y + 30}" class="rank">#${rank}</text>`;
+            svgContent += `<text x="${BORDER_LEFT + 10}" y="${y + 32}" class="rank">#${rank}</text>`;
             
-            // Name and XP - use highlight class if it's the calling user
+            // Name (Offset to leave room for the avatar)
             const textClass = isHighlighted ? 'highlight' : 'name';
-            svgContent += `
-                <text x="${NAME_OFFSET_X + 40}" y="${y + 28}" class="${textClass}">${user.displayName}</text>
-                <text x="${XP_OFFSET_X}" y="${y + 28}" class="xp">${user.overallExp.toLocaleString()} XP</text>
-            `;
+            svgContent += `<text x="${BORDER_LEFT + 55 + AVATAR_SIZE}" y="${y + 30}" class="${textClass}">${user.displayName}</text>`;
+            
+            // XP (Right-Aligned against the right border!)
+            svgContent += `<text x="${bgWidth - BORDER_RIGHT - 15}" y="${y + 30}" text-anchor="end" class="xp">${user.overallExp.toLocaleString()} XP</text>`;
             
             // Separator line (except for last entry)
             if (i < users.length - 1) {
-                svgContent += `<line x1="20" y1="${y + 50}" x2="${bgWidth - 20}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
+                svgContent += `<line x1="${BORDER_LEFT}" y1="${y + 50}" x2="${bgWidth - BORDER_RIGHT}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
             }
             rank++;
             i++;
@@ -105,12 +113,12 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
                     .png()
                     .toBuffer();
                 
-                const y = MARGIN + 35 + (i * ROW_HEIGHT);
+                const y = HEADER_OFFSET + (i * ROW_HEIGHT);
                 
                 compositeLayers.push({
                     input: processedAvatar,
-                    top: y,
-                    left: NAME_OFFSET_X
+                    top: Math.floor(y + 8), // Pushed down slightly to center align with the text
+                    left: Math.floor(BORDER_LEFT + 45) // Placed right after the # Rank
                 });
             }
         }
