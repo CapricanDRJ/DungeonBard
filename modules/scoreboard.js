@@ -45,6 +45,7 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
         const availableHeight = bgHeight - HEADER_OFFSET - BOTTOM_MARGIN;
         const maxCapacity = Math.floor(availableHeight / ROW_HEIGHT);
         const maxAllowed = Math.max(0, maxCapacity); 
+        console.log(maxAllowed, users.length);
 
         // Trim the list of users so it never draws past the bottom border
         if (users.length > maxAllowed) {
