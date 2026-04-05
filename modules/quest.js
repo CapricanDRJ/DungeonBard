@@ -16,7 +16,7 @@ const MessageFlags = MessageFlagsBitField.Flags;
 const colors = db.prepare("SELECT id, background FROM domains ORDER BY id").all().map(r => r.background);
 colors.unshift(0x000000);
 const crypto = require('crypto');
-const character = require('./character');
+//const character = require('./character');
 const key = require('../config.json').key;
 
 const { skillNames, skillLevel, profNames, profLevel } = require('../assets/levels');
