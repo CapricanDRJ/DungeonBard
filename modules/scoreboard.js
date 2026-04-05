@@ -82,7 +82,7 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
             }
             
             // Rank number
-            svgContent += `<text x="${BORDER_LEFT + 10}" y="${y + 32}" class="rank">#${rank}</text>`;
+            svgContent += `<text x="${BORDER_LEFT + 10}" y="${y + 32}" class="rank">${rank}.</text>`;
             
             // Name (Offset to leave room for the avatar)
             const textClass = isHighlighted ? 'highlight' : 'name';
