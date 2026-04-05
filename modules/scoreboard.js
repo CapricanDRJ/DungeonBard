@@ -30,7 +30,7 @@ const BORDER_LEFT = 85;    // Pushes content past the left Celtic knot border
 const BORDER_RIGHT = 85;   // Prevents content from drawing over the right border
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 85;  // Stops the list before hitting the bottom border
-const TITLE_Y = 65;        // Centers the "Scoreboard" text vertically in the ribbon
+const TITLE_Y = 70;        // Centers the "Scoreboard" text vertically in the ribbon
 const userGen = true; 
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
