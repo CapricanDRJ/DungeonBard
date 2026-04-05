@@ -25,7 +25,8 @@ const dbQuery = {
 // Image layout constants
 const AVATAR_SIZE = 32;
 const ROW_HEIGHT = 60;
-const MARGIN = 40;
+const textMarginY = 60;
+const MARGIN = 20;
 const NAME_OFFSET_X = AVATAR_SIZE + 15;
 const XP_OFFSET_X = 250;
 const IMAGE_WIDTH = 629;
@@ -61,7 +62,7 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
         // Add each user row
         let i = 0;
         for (const user of users) {
-            const y = MARGIN + 35 + (i * ROW_HEIGHT);
+            const y = MARGIN + textMarginY + (i * ROW_HEIGHT);
             const isHighlighted = (rank === highlightIndex);
             // Highlight background for calling user
             if (isHighlighted) {
