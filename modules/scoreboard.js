@@ -25,7 +25,7 @@ const dbQuery = {
 // Image layout constants
 // Image layout boundaries (Adjust these to perfectly fit your background!)
 const AVATAR_SIZE = 32;
-const ROW_HEIGHT = 60;
+const ROW_HEIGHT = 55;
 const BORDER_LEFT = 60;    // Pushes content past the left Celtic knot border
 const BORDER_RIGHT = 60;   // Prevents content from drawing over the right border
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
