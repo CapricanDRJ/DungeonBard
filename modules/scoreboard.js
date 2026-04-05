@@ -3,6 +3,9 @@ const sqlite3 = require('better-sqlite3');
 const db = new sqlite3('db/dungeonbard.db');
 const sharp = require('sharp');
 const MessageFlags = MessageFlagsBitField.Flags;
+const fs = require('fs');
+const bgBuffer = fs.readFileSync('../assets/scoreboard.png');
+const scoreImageBuffer = sharp(bgBuffer);
 
 const dbQuery = {
     getScoreboardData: db.prepare(`
@@ -29,23 +32,21 @@ const IMAGE_WIDTH = 350;
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
-        const imageHeight = MARGIN * 2 + (users.length * ROW_HEIGHT);
-        
-        // Create base canvas
-        const canvas = sharp({
-            create: {
-                width: IMAGE_WIDTH,
-                height: imageHeight,
-                channels: 4,
-                background: { r: 235, g: 220, b: 195, alpha: 1 }
-            }
-        });
+        const metadata = await baseBackground.metadata();
+        const bgWidth = metadata.width;
+        const bgHeight = metadata.height;
+        const canvas = baseBackground.clone();
+        const maxCapacity = Math.floor((bgHeight - (MARGIN * 2)) / ROW_HEIGHT);
+        const maxAllowed = Math.max(0, maxCapacity - 1); // Leave 1 extra user spot
 
+        // Trim the list of users so it never draws past the limit
+        if (users.length > maxAllowed) {
+            users = users.slice(0, maxAllowed);
+        }
         const compositeLayers = [];
         
-        // Build SVG with borders and text
         let svgContent = `
-            <svg width="${IMAGE_WIDTH}" height="${imageHeight}" xmlns="http://www.w3.org/2000/svg">
+            <svg width="${bgWidth}" height="${bgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <style>
                     .title { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #2c1810; }
                     .name { font-family: 'MedievalSharp', serif; font-size: 18px; fill: #2c1810; }
@@ -54,20 +55,9 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
                     .highlight { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #2c1810; }
                 </style>
                 
-                <!-- Parchment background -->
-                <rect x="0" y="0" width="${IMAGE_WIDTH}" height="${imageHeight}" fill="#ebe4c3"/>
-                
-                <!-- Border -->
-                <rect x="5" y="5" width="${IMAGE_WIDTH - 10}" height="${imageHeight - 10}" 
-                      fill="none" stroke="#000000" stroke-width="2"/>
-                <rect x="8" y="8" width="${IMAGE_WIDTH - 16}" height="${imageHeight - 16}" 
-                      fill="none" stroke="#6b4423" stroke-width="1"/>
-                
-                <!-- Title -->
-                <text x="${IMAGE_WIDTH / 2}" y="30" text-anchor="middle" class="title">Scoreboard</text>
-                <line x1="20" y1="40" x2="${IMAGE_WIDTH - 20}" y2="40" stroke="#6b4423" stroke-width="1"/>
+                <text x="${bgWidth / 2}" y="30" text-anchor="middle" class="title">Scoreboard</text>
+                <line x1="20" y1="40" x2="${bgWidth - 20}" y2="40" stroke="#6b4423" stroke-width="1"/>
         `;
-
         // Add each user row
         let i = 0;
         for (const user of users) {
@@ -75,7 +65,7 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
             const isHighlighted = (rank === highlightIndex);
             // Highlight background for calling user
             if (isHighlighted) {
-                svgContent += `<rect x="10" y="${y}" width="${IMAGE_WIDTH - 20}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
+                svgContent += `<rect x="10" y="${y}" width="${bgWidth - 20}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
             }
             
             // Rank number
@@ -90,7 +80,7 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
             
             // Separator line (except for last entry)
             if (i < users.length - 1) {
-                svgContent += `<line x1="20" y1="${y + 50}" x2="${IMAGE_WIDTH - 20}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
+                svgContent += `<line x1="20" y1="${y + 50}" x2="${bgWidth - 20}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
             }
             rank++;
             i++;
