@@ -107,11 +107,8 @@ const guild = interaction.guild;
     if (!userAfter) return;
     const userPing = `<@${userAfter.userId}>`;
 
-    const tier = userAfter.tier || 1;
-    const domainIdx = userAfter.domainId - 1;
-
     // 1. Check Profession Levels (Artisan, Soldier, Healer)
-    const pThresholds = profLevel[tier];
+    const pThresholds = profLevel[userAfter.domainId];
     ['artisan', 'soldier', 'healer'].forEach(prof => {
         const key = `${prof}Exp`;
         const oldLvl = pThresholds.filter(t => userBefore[key] >= t).length;
@@ -127,14 +124,14 @@ const guild = interaction.guild;
     });
 
     // 2. Check Skill Levels (1 - 6)
-    const sThresholds = skillLevel[tier];
+    const sThresholds = skillLevel[userAfter.domainId - 1];
     for (let i = 1; i <= 6; i++) {
         const key = `skill${i}`;
         const oldLvl = sThresholds.filter(t => userBefore[key] >= t).length;
         const newLvl = sThresholds.filter(t => userAfter[key] >= t).length;
 
         if (newLvl > oldLvl) {
-            const skillTitle = skillNames[domainIdx][i - 1];
+            const skillTitle = skillNames[userAfter.domainId - 1][i - 1];
             channel.send({ 
                 content: `${userPing} has just levelled the skill of **${skillTitle}**. Their new level is **${newLvl}**.` 
             }).catch(err => console.error(`Failed to send skill level-up: ${err}`));
