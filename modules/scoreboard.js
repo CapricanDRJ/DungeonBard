@@ -30,8 +30,9 @@ const BORDER_LEFT = 85;    // Pushes content past the left Celtic knot border
 const BORDER_RIGHT = 85;   // Prevents content from drawing over the right border
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 85;  // Stops the list before hitting the bottom border
-const TITLE_Y = 70;        // Centers the "Scoreboard" text vertically in the ribbon
-const userGen = true; 
+const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
+const userGen = true;
+const fontBase = 24;
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
@@ -56,11 +57,11 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
             <svg width="${bgWidth}" height="${bgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <style>
                     /* You can change fill colors here to better match the dark brown ink of your borders */
-                    .title { font-family: 'MedievalSharp', serif; font-size: 28px; font-weight: bold; fill: #312520; }
-                    .name { font-family: 'MedievalSharp', serif; font-size: 18px; fill: #312520; }
-                    .xp { font-family: 'MedievalSharp', serif; font-size: 20px; fill: #4a3520; }
-                    .rank { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #6b4423; }
-                    .highlight { font-family: 'MedievalSharp', serif; font-size: 20px; font-weight: bold; fill: #1a0f0a; }
+                    .title { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 10}px; font-weight: bold; fill: #312520; }
+                    .name { font-family: 'MedievalSharp', serif; font-size: ${fontBase}px; fill: #312520; }
+                    .xp { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; fill: #4a3520; }
+                    .rank { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; font-weight: bold; fill: #6b4423; }
+                    .highlight { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; font-weight: bold; fill: #1a0f0a; }
                 </style>
                 
                 <text x="${bgWidth / 2}" y="${TITLE_Y}" text-anchor="middle" class="title">Scoreboard</text>
