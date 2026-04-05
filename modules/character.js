@@ -99,19 +99,23 @@ module.exports = {
     },
 
     updateRoles: async (interaction, domain) => {
-        const GUILD_ID = '1339984756695371908';
-        const roles = [
-            '1423394659303948390',//Initiate
-            '1423397172577046779',//Collegiate
-            '1423400094346252543',//Pedagogue
-            '1423400217960517845',//Master's
-            '1423400327419396096',//Doctoral
-            '1423400405391511703'//Sage
-        ];
+        const roleNames = ["Initiate", "Collegiate", "Pedagogue", "Master's", "Doctoral", "Sage"];
+        const roles = [];
+
+        for (const name of roleNames) {
+            // Search the guild's role cache by name
+            const foundRole = interaction.guild.roles.cache.find(r => r.name === name);
+
+            if (!foundRole) {
+                console.error(`Critical Error: Role "${name}" not found in ${interaction.guild.name} ${interaction.guild.id}.`);
+                return;
+            }
+            // Push the ID into your array to maintain the order
+            roles.push(foundRole.id);
+        }
 
         // Check guild ID and manage roles permission
-        if (interaction.guild.id === GUILD_ID &&
-            interaction.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
+        if (interaction.guild.members.me.permissions.has(PermissionsBitField.Flags.ManageRoles)) {
             const member = interaction.member;
 
             if (!domain) {
