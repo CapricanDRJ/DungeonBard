@@ -4,7 +4,7 @@ const db = new sqlite3('db/dungeonbard.db');
 const sharp = require('sharp');
 const MessageFlags = MessageFlagsBitField.Flags;
 const fs = require('fs');
-const bgBuffer = fs.readFileSync('../assets/scoreboard.png');
+const bgBuffer = fs.readFileSync('./assets/scoreboard.png');
 const scoreImageBuffer = sharp(bgBuffer);
 
 const dbQuery = {
