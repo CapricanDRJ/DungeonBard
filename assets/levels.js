@@ -16,8 +16,8 @@ const skillLevel = {
 }
 const profNames = {
     healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
-    soldier: ['Initiate', 'Squire', 'Soldier', 'Veteran', 'Knight', 'Commander', 'Grandmaster'],
-    artisan: ['Novice', 'Apprentice', 'Craftsman', 'Artisan', 'Master', 'Grandmaster', 'Legendary']
+    soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
+    artisan: ['Novice', 'Apprentice', 'Artisan', 'Adept', 'Mason', 'Grandmaster', 'Guild Leader']
 };
 
 const profLevel = {
