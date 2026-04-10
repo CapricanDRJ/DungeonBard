@@ -101,7 +101,7 @@ if(!messagePayload) return;
 }
 
 async function scoreboard(target, guildId, userId = false) {
-        const userGen = userId === false ? true : false;
+        const userGen = userId === false ? false : true;
         console.log('user gen is ' + userGen);
         let displayUsers;
         let highlightIndex;
