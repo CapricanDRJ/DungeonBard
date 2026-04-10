@@ -259,7 +259,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                 <style>
                     /* You can change fill colors here to better match the dark brown ink of your borders */
                     .title { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 7}px; font-weight: bold; fill: #312520; }
-                    .subtitle { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 5}px; font-weight: bold; fill: #312520; }
+                    .h2 { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 5}px; font-weight: bold; fill: #312520; }
                     .name { font-family: 'MedievalSharp', serif; font-size: ${fontBase}px; fill: #312520; }
                     .xp { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; fill: #4a3520; }
                     .rank { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; font-weight: bold; fill: #6b4423; }
@@ -280,7 +280,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             const isHighlighted = (rank === highlightIndex);
             if(rank === userLength+1) {
                 rank = 1;//test
-                svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="title">FOLIOS OF RENOWN</text>`;
+                svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="h2">FOLIOS OF RENOWN</text>`;
             };
 
               //  
