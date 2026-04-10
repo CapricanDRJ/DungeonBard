@@ -260,7 +260,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             const isHighlighted = (rank === highlightIndex);
             if(rank === userLength+1) {
                 rank = 1;
-                svgContent += `<text x="${bgWidth / 2}" y="${y + ROW_HEIGHT}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
+                svgContent += `<text x="${bgWidth / 2}" y="${y + ROW_HEIGHT - gainOffset}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
             };
 
               //  
