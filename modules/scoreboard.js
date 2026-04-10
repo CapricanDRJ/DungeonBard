@@ -255,11 +255,6 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
 
         for (const user of users) {
-            if(i === userLength) i++;
-            if (rank === userLength) {
-                rank = 1;
-                svgContent += `<text x="${bgWidth / 2}" y="${HEADER_OFFSET + (i * ROW_HEIGHT) + 30}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
-            };
             const y = HEADER_OFFSET + (i * ROW_HEIGHT);
             const isHighlighted = (rank === highlightIndex);
             
@@ -284,6 +279,11 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             }
             rank++;
             i++;
+            if(i === userLength) i++;
+            if (rank === userLength) {
+                rank = 1;
+                svgContent += `<text x="${bgWidth / 2}" y="${y + ROW_HEIGHT + 30}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
+            };
         }
 
         svgContent += '</svg>';
