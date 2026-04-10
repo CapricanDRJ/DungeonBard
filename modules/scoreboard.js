@@ -78,7 +78,8 @@ const messagePayload = {
     embeds: [
         {
             title: "📜 Ledger of Triumphs",
-            description: "Minimal test."
+            description: "Minimal test update.",
+            timestamp: new Date().toISOString() // This adds the 'Today at...' text at the bottom
         }
     ]
 };
