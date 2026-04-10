@@ -20,7 +20,7 @@ const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
       const avatarURL = currentAvatarURL.replace(/\/a_/, '/')
     .replace(/\.[a-zA-Z]{3,4}$/, '')
     + '.png?size=64';
-
+console.log(avatarURL);
     const avatarFileName = avatarURL.split('/').pop().split('?')[0];
     const user = dbQuery.getUserAvatarFile.get(userId, guildId);
 
