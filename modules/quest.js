@@ -148,7 +148,7 @@ const guild = interaction.guild;
     });
 
     // 2. Check Skill Levels (1 - 6)
-    const sThresholds = skillLevel[userAfter.domainId - 1];
+    const sThresholds = skillLevel[userAfter.domainId];
     for (let i = 1; i <= 6; i++) {
         const key = `skill${i}`;
         const oldLvl = sThresholds.filter(t => userBefore[key] >= t).length;
