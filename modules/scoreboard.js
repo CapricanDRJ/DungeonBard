@@ -9,7 +9,7 @@ const hrBuffer = fs.readFileSync('./assets/header_ribbon.png');
 const scoreImageBuffer = sharp(bgBuffer);
 const sbmetadata = scoreImageBuffer.metadata();
 const h1ImageBuffer = sharp(hrBuffer);
-const h1metadata = headerImageBuffer.metadata();
+const h1metadata = h1ImageBuffer.metadata();
 
 const dbQuery = {
     getScoreboardData: db.prepare(`
