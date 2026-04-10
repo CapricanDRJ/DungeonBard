@@ -83,27 +83,21 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             !msg.interaction &&
             msg.createdTimestamp > fortyEightHoursAgo && 
             msg.embeds.length > 0;
+
         try {
-            if(scoreboardMsg[guild.id]) {
-                console.log(`[${guild.name}] Found cached message ${scoreboardMsg[guild.id].id}. Verifying...`);
-                console.log(channel.lastMessageId, scoreboardMsg[guild.id].id);
-                if(channel.lastMessageId !== scoreboardMsg[guild.id]?.id) {
-                    scoreboardMsg[guild.id].delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
-                    scoreboardMsg[guild.id] = null;
-                }
-            } else {
+            if(!scoreboardMsg[guild.id]) {
                 const fetchedMessages = await channel.messages.fetch({ limit: 50 });
                 const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
                 for (const [id, msg] of scoreboardMessages) {
                     if (id !== channel.lastMessageId) {
                         await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
-                        scoreboardMsg[guild.id] = null;
                     } else {
                         scoreboardMsg[guild.id] = msg;
                     }
                 }
                 console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${scoreboardMsg[guild.id] ? scoreboardMsg[guild.id].id : 'none'}.`);
             }
+
             // 5. Final Determination & Testing
             const displayTop5 = dbQuery.getScoreboardTop5.all(guild.id); // Get top users by overall XP
             const gainUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
@@ -119,25 +113,20 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
                 .setColor(0x6b4423)
                 .setTimestamp();
             const messagePayload = { embeds: [embed], files: [attachment] };
-            //const messagePayload = await scoreboard(client, guild.id);
             if(!messagePayload) continue;
+
             try {
-                if (scoreboardMsg[guild.id]) {
-                    console.log(`[${guild.name}] Action: EDITING message ${scoreboardMsg[guild.id]?.id} at ${Date.now()}`);
-                    // Proper object notation for editing
-                    if(scoreboardMsg[guild.id]?.id === channel.lastMessageId) {
-                        await scoreboardMsg[guild.id].edit(messagePayload);
-                    } else {
-                        console.warn(`[${guild.name}] Cached message ${scoreboardMsg[guild.id]?.id} is not the last message. Sending new message instead.`);
-                        const newMessage = await channel.send(messagePayload);
-                        scoreboardMsg[guild.id] = newMessage;
-                    }
-                } else {
-                    console.log(`[${guild.name}] Action: SENDING NEW message at ${Date.now()}`);
-                    // Proper object notation for sending
-                    const newMessage = await channel.send(messagePayload).then;
+                if(scoreboardMsg[guild.id] && (channel.lastMessageId !== scoreboardMsg[guild.id]?.id)) {
+                    scoreboardMsg[guild.id].delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
+                    const newMessage = await channel.send(messagePayload);
                     scoreboardMsg[guild.id] = newMessage;
+                    console.log(`[${guild.name}] Cached message was outdated. Deleted old and sent new message ${newMessage.id}.`);
+                } else {
+                    console.log(`[${guild.name}] Cached message is up-to-date. Editing message ${scoreboardMsg[guild.id].id}.`);
+                    await scoreboardMsg[guild.id].edit(messagePayload);
                 }
+            //const messagePayload = await scoreboard(client, guild.id);
+
             } catch (err) {
                 console.error(`[${guild.name}] Failed to update scoreboard:`, err);
             }
