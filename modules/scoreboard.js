@@ -288,13 +288,14 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             if(rank === userLength+1) {
                 rank = 1;
                 plus = '+';
-                const bannerX = Math.floor((bgWidth - ribbonWidth) / 2);
+                const bannerX = Math.floor((bgWidth - h1Width) / 2);
                 const bannerY = y;
                 compositeLayers.push({
                     input: await h1Canvas.png().toBuffer(),
                     top: bannerY,
                     left: bannerX
                 });
+                
                 
                 svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="h2">Folios of Renown</text>`;
 
