@@ -363,7 +363,7 @@ module.exports = {
         // Quick quest registration
         const questDomainId = parseInt(interaction.values[0]);
         const questDisplayName = interaction.member?.nick || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
-        
+        console.log(questDisplayName);
         dbQuery.insertQuestUser.run(interaction.user.id, interaction.guildId, questDisplayName, null, questDomainId);
         
         setImmediate(() => {
