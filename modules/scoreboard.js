@@ -48,8 +48,7 @@ console.log(6);
         const perms = channel.permissionsFor(guild.members.me);
         if (!perms || !perms.has([
             PermissionFlagsBits.ViewChannel, 
-            PermissionFlagsBits.ReadMessageHistory,
-            PermissionFlagsBits.ManageMessages
+            PermissionFlagsBits.ReadMessageHistory
         ])) continue;
 console.log(1);
         const isValidScoreboard = (msg) => 
