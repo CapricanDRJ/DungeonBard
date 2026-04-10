@@ -553,10 +553,10 @@ module.exports = {
             });
             setImmediate(() => { 
                 // Use interaction.member if in a guild, otherwise fall back to interaction.user
-                if(interaction.member) console.log('member here')
-                const avatar = interaction.member?.displayAvatarURL() || interaction.user.displayAvatarURL();
-                
-                avatarUpdate(userId, guildId, avatar); 
+                const avatar = (interaction.member && typeof interaction.member.displayAvatarURL === 'function')
+                  ? interaction.member.displayAvatarURL() // Use server-specific avatar if the class is full
+                  : interaction.user.displayAvatarURL();    // Fallback to global user avatar (guaranteed to work)
+                if(avatar) avatarUpdate(userId, guildId, avatar); 
             });
           } catch (error) {
             console.error('Error executing stats command:', error, `userId:${userId}`);
