@@ -554,8 +554,7 @@ module.exports = {
             console.log('context', interaction.context);
             if(interaction.context === 0) setImmediate(() => { 
                 // Use interaction.member if in a guild, otherwise fall back to interaction.user
-                console.log(interaction.type);
-                console.log(interaction);
+                console.log('-----',interaction.context, interaction.type, '-----' );
                 return;
                 const avatar = interaction.member.displayAvatarURL() // Use server-specific avatar if the class is full
                 if(avatar) avatarUpdate(userId, guildId, avatar); 
