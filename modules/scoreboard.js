@@ -281,7 +281,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             svgContent += `<text x="${bgWidth - BORDER_RIGHT - 15}" y="${y + 30}" text-anchor="end" class="xp">${user.overallExp.toLocaleString()} XP</text>`;
             
             // Separator line (except for last entry)
-            if (i < users.length - 1 && i !== userLength) {
+            if (i < users.length - 1 && i !== userLength - 1) {
                 svgContent += `<line x1="${BORDER_LEFT}" y1="${y + 50}" x2="${bgWidth - BORDER_RIGHT}" y2="${y + 50}" stroke="#d4c4a8" stroke-width="1"/>`;
             }
             rank++;
