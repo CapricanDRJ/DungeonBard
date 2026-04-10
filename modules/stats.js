@@ -551,13 +551,8 @@ module.exports = {
                 embeds,
                 files: [attachment]
             });
-            console.log('context', interaction.context);
             if(interaction.authorizingIntegrationOwners?.["0"]) setImmediate(() => { 
-                // Use interaction.member if in a guild, otherwise fall back to interaction.user
-                console.log('on a guild');
-                console.log('-----',interaction.context, interaction.type, interaction.authorizingIntegrationOwners, '-----' );
-                return;
-                const avatar = interaction.member.displayAvatarURL() // Use server-specific avatar if the class is full
+                const avatar = interaction.member.displayAvatarURL() //only works if bot is on the guild.
                 if(avatar) avatarUpdate(userId, guildId, avatar); 
             });
           } catch (error) {
