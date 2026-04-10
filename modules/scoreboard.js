@@ -72,7 +72,8 @@ console.log(3);
             // 5. Final Determination & Testing
 const messagePayload = scoreboard(client, guild.id);
 if(!messagePayload) return;
-            try {
+console.log('messagepayload', messagePayload);
+try {
                 if (latestMessage) {
                     console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
                     // Proper object notation for editing
