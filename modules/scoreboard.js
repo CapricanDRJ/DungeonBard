@@ -90,6 +90,7 @@ async function autoPostScoreboard(client) {
             if(channel.lastMessageId !== lastMessage?.id) {
                 lastMessage.delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
                 scoreboardMsg.delete(guild.id);
+                lastMessage = null;
             }
         } else {
             const fetchedMessages = await channel.messages.fetch({ limit: 50 });
@@ -138,7 +139,7 @@ async function autoPostScoreboard(client) {
         }
 
         // Delay between guilds to stay under rate limits
-        await new Promise(resolve => setTimeout(resolve, 500));
+        await new Promise(resolve => setTimeout(resolve, 10 * 1000));
     }
 
     // --- SELF-SCHEDULING ---
