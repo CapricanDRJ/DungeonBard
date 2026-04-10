@@ -255,7 +255,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                     .highlight { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; font-weight: bold; fill: #1a0f0a; }
                 </style>
                 
-                <text x="${bgWidth / 2}" y="${TITLE_Y}" text-anchor="middle" class="title">Scoreboard</text>
+                <text x="${bgWidth / 2}" y="${TITLE_Y}" text-anchor="middle" class="title">Annals of Erudition</text>
         `;
         
         // Add each user row
