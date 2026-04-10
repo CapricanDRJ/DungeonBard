@@ -68,11 +68,9 @@ console.log(channel.lastMessageId);
                 }
             }
             console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
-console.log(3);
             // 5. Final Determination & Testing
 const messagePayload = await scoreboard(client, guild.id);
 if(!messagePayload) return;
-console.log('messagepayload', messagePayload);
 try {
                 if (latestMessage) {
                     console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
@@ -107,7 +105,6 @@ async function scoreboard(target, guildId, userId = false) {
         let displayUsers;
         let highlightIndex;
         let startIndex = 0;
-        console.log("target",target);
         //const guildId = '1339984756695371908';
 
         try {
