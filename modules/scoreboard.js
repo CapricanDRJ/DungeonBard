@@ -62,7 +62,7 @@ const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
 const fontBase = 26;
 
-const scoreboardMsg = new Map(); // Map to track the latest scoreboard message for each guild
+const scoreboardMsg = {}; // Map to track the latest scoreboard message for each guild
 
 
 async function autoPostScoreboard(client) {
@@ -83,30 +83,27 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             !msg.interaction &&
             msg.createdTimestamp > fortyEightHoursAgo && 
             msg.embeds.length > 0;
-            let lastMessage = await scoreboardMsg.get(guild.id);
         try {
-            if(lastMessage) {
-                console.log(`[${guild.name}] Found cached message ${lastMessage.id}. Verifying...`);
-                console.log(channel.lastMessageId, lastMessage.id);
-                console.log(lastMessage);
-            if(channel.lastMessageId !== lastMessage?.id) {
-                lastMessage.delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
-                scoreboardMsg.delete(guild.id);
-                lastMessage = null;
-            }
-        } else {
-            const fetchedMessages = await channel.messages.fetch({ limit: 50 });
-            const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
-            for (const [id, msg] of scoreboardMessages) {
-                if (id !== channel.lastMessageId) {
-                    await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
-                } else {
-                    lastMessage = msg;
-                    scoreboardMsg.set(guild.id, lastMessage);
+            if(scoreboardMsg[guild.id]) {
+                console.log(`[${guild.name}] Found cached message ${scoreboardMsg[guild.id].id}. Verifying...`);
+                console.log(channel.lastMessageId, scoreboardMsg[guild.id].id);
+                if(channel.lastMessageId !== scoreboardMsg[guild.id]?.id) {
+                    scoreboardMsg[guild.id].delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
+                    scoreboardMsg[guild.id] = null;
                 }
+            } else {
+                const fetchedMessages = await channel.messages.fetch({ limit: 50 });
+                const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
+                for (const [id, msg] of scoreboardMessages) {
+                    if (id !== channel.lastMessageId) {
+                        await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
+                        scoreboardMsg[guild.id] = null;
+                    } else {
+                        scoreboardMsg[guild.id] = msg;
+                    }
+                }
+                console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${scoreboardMsg[guild.id] ? scoreboardMsg[guild.id].id : 'none'}.`);
             }
-            console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${lastMessage ? lastMessage.id : 'none'}.`);
-        }
             // 5. Final Determination & Testing
             const displayTop5 = dbQuery.getScoreboardTop5.all(guild.id); // Get top users by overall XP
             const gainUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
@@ -125,15 +122,21 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             //const messagePayload = await scoreboard(client, guild.id);
             if(!messagePayload) continue;
             try {
-                if (lastMessage) {
-                    console.log(`[${guild.name}] Action: EDITING message ${lastMessage.id} at ${Date.now()}`);
+                if (scoreboardMsg[guild.id]) {
+                    console.log(`[${guild.name}] Action: EDITING message ${scoreboardMsg[guild.id]?.id} at ${Date.now()}`);
                     // Proper object notation for editing
-                    await lastMessage.edit(messagePayload);
+                    if(scoreboardMsg[guild.id]?.id === channel.lastMessageId) {
+                        await scoreboardMsg[guild.id].edit(messagePayload);
+                    } else {
+                        console.warn(`[${guild.name}] Cached message ${scoreboardMsg[guild.id]?.id} is not the last message. Sending new message instead.`);
+                        const newMessage = await channel.send(messagePayload);
+                        scoreboardMsg[guild.id] = newMessage;
+                    }
                 } else {
                     console.log(`[${guild.name}] Action: SENDING NEW message at ${Date.now()}`);
                     // Proper object notation for sending
-                    lastMessage = await channel.send(messagePayload).then;
-                    scoreboardMsg.set(guild.id, lastMessage);
+                    const newMessage = await channel.send(messagePayload).then;
+                    scoreboardMsg[guild.id] = newMessage;
                 }
             } catch (err) {
                 console.error(`[${guild.name}] Failed to update scoreboard:`, err);
