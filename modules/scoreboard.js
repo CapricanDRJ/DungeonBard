@@ -20,6 +20,19 @@ const dbQuery = {
         WHERE u.guildId = ?
         ORDER BY u.overallExp DESC
     `),
+    getScoreboardTop5: db.prepare(`
+        SELECT 
+            u.userId, 
+            u.guildId, 
+            u.displayName, 
+            u.overallExp,
+            a.avatarBlob
+        FROM users u
+        LEFT JOIN avatars a ON u.userId = a.userId AND u.guildId = a.guildId
+        WHERE u.guildId = ?
+        ORDER BY u.overallExp DESC
+        LIMIT 5
+    `),
     getGainboardData: db.prepare(`
         SELECT 
             u.userId, 
@@ -34,7 +47,7 @@ const dbQuery = {
         AND q.unixtime > (STRFTIME('%s', 'now') - ?)
         GROUP BY q.userId
         ORDER BY overallExp DESC
-        LIMIT 12
+        LIMIT 5
     `)
 };
 
@@ -85,12 +98,13 @@ console.log(channel.lastMessageId);
             }
             console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
             // 5. Final Determination & Testing
-            const displayUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
-                        const imageBuffer = await generateScoreboardImage(displayUsers);
-            const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
+            const displayTop5 = dbQuery.getScoreboardTop5.all(guild.id); // Get top users by overall XP
+            const gainUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
+            const imageBuffer = await generateScoreboardImage(displayTop5, gainUsers);
+            const attachment = new AttachmentBuilder(imageBuffer, { name: 'top5.png' });
             const embed = new EmbedBuilder()
-                .setTitle('Exp Gained in Last 48 Hours')
-                .setImage('attachment://scoreboard.png')
+                .setTitle('Ye Olde Scoreboard')
+                .setImage('attachment://top5.png')
                 .setColor(0x6b4423)
                 .setTimestamp();
             const messagePayload = { embeds: [embed], files: [attachment] };
@@ -171,7 +185,7 @@ async function scoreboard(target, guildId, userId = false) {
             }
 
             // Generate scoreboard image
-            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex + 1, startIndex + 1);
+            const imageBuffer = await generateScoreboardImage(displayUsers, false, highlightIndex + 1, startIndex + 1);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
             const embed = new EmbedBuilder()
                 .setTitle('Top Characters by Experience')
@@ -196,7 +210,7 @@ async function scoreboard(target, guildId, userId = false) {
             });
         }
     }
-async function generateScoreboardImage(users, highlightIndex, rank = 1) {
+async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 1) {
     try {
         const metadata = await scoreImageBuffer.metadata();
         const bgWidth = metadata.width;
@@ -206,11 +220,18 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
         // Calculate how many rows fit strictly inside the playable area
         const availableHeight = bgHeight - HEADER_OFFSET - BOTTOM_MARGIN;
         const maxCapacity = Math.floor(availableHeight / ROW_HEIGHT);
-        const maxAllowed = Math.max(0, maxCapacity); 
-
+        const maxAllowed = gainUsers ? Math.max(0, maxCapacity/2) : Math.max(0, maxCapacity);
         // Trim the list of users so it never draws past the bottom border
         if (users.length > maxAllowed) {
             users = users.slice(0, maxAllowed);
+        }
+        const userLength = users.length;
+
+        if (gainUsers) {
+            if (gainUsers.length > maxAllowed) {
+                gainUsers = gainUsers.slice(0, maxAllowed);
+            }
+            users = users.concat(gainUsers);
         }
         
         const compositeLayers = [];
@@ -241,7 +262,10 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
             if (isHighlighted) {
                 svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
             }
-            
+            if (rank > userLength) {
+                rank = 1;
+                svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#c0a060" opacity="0.3" rx="5"/>`;
+            }
             // Rank number
             svgContent += `<text x="${BORDER_LEFT + 10}" y="${y + 32}" class="rank">${rank}.</text>`;
             
