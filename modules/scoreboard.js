@@ -302,8 +302,8 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                     .resize(AVATAR_SIZE, AVATAR_SIZE)
                     .png()
                     .toBuffer();
-                
-                const y = HEADER_OFFSET + (i * ROW_HEIGHT);
+                const gainOffset = users.length > userLength ? (userLength * ROW_HEIGHT) : 0;
+                const y = HEADER_OFFSET + (i * ROW_HEIGHT) + gainOffset;
                 
                 compositeLayers.push({
                     input: processedAvatar,
