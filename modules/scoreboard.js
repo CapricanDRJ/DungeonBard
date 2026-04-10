@@ -143,13 +143,7 @@ async function scoreboard(target, guildId, userId = false) {
             } else {
                 // FALSE: Show strictly the Top 10
                 displayUsers = allUsers.slice(0, 12);
-                
-                // Highlight the user only if they actually exist and are in the top 10
-                if (callingUserIndex !== -1 && callingUserIndex < 12) {
-                    highlightIndex = callingUserIndex;
-                } else {
-                    highlightIndex = -1; // Don't highlight anyone
-                }
+                highlightIndex = -1; // Don't highlight anyone
             }
 
             // Generate scoreboard image
