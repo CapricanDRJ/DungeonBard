@@ -23,7 +23,7 @@ const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
 console.log(avatarURL);
     const avatarFileName = avatarURL.split('/').pop().split('?')[0];
     const user = dbQuery.getUserAvatarFile.get(userId, guildId);
-
+console.log(avatarFileName);
     if (!user || user.avatarFile !== avatarFileName) {
         try {
             const response = await fetch(avatarURL);
