@@ -19,6 +19,22 @@ const dbQuery = {
         LEFT JOIN avatars a ON u.userId = a.userId AND u.guildId = a.guildId
         WHERE u.guildId = ?
         ORDER BY u.overallExp DESC
+    `),
+    getGainboardData: db.prepare(`
+        SELECT 
+            u.userId, 
+            u.guildId, 
+            u.displayName, 
+            SUM(q.expGained) AS overallExp, -- Alias sum to match your old column name
+            a.avatarBlob
+        FROM questTracker q
+        INNER JOIN users u ON q.userId = u.userId AND q.guildId = u.guildId
+        LEFT JOIN avatars a ON u.userId = a.userId AND u.guildId = a.guildId
+        WHERE q.guildId = ? 
+        AND q.unixtime > (STRFTIME('%s', 'now') - ?)
+        GROUP BY q.userId
+        ORDER BY overallExp DESC
+        LIMIT 12
     `)
 };
 
@@ -69,7 +85,17 @@ console.log(channel.lastMessageId);
             }
             console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
             // 5. Final Determination & Testing
-const messagePayload = await scoreboard(client, guild.id);
+            const displayUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
+                        const imageBuffer = await generateScoreboardImage(displayUsers);
+            const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
+            const embed = new EmbedBuilder()
+                .setTitle('Exp Gained in Last 48 Hours')
+                .setImage('attachment://scoreboard.png')
+                .setColor(0x6b4423)
+                .setTimestamp();
+            const messagePayload = { embeds: [embed], files: [attachment] };
+
+//const messagePayload = await scoreboard(client, guild.id);
 if(!messagePayload) return;
 try {
                 if (latestMessage) {
