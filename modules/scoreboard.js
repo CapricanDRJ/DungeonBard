@@ -263,6 +263,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         
         // Add each user row
         let i = 0;
+        let plus = '';
 
         const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
         let skipLine = false;
@@ -271,7 +272,8 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             const y = HEADER_OFFSET + (i * ROW_HEIGHT) + gainOffset;
             const isHighlighted = (rank === highlightIndex);
             if(rank === userLength+1) {
-                rank = 1;//test
+                rank = 1;
+                plus = '+';
                 svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="h2">Folios of Renown</text>`;
             };
 
@@ -290,7 +292,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             svgContent += `<text x="${BORDER_LEFT + 55 + AVATAR_SIZE}" y="${y + 30}" class="${textClass}">${user.displayName}</text>`;
             
             // XP (Right-Aligned against the right border!)
-            svgContent += `<text x="${bgWidth - BORDER_RIGHT - 15}" y="${y + 30}" text-anchor="end" class="xp">${user.overallExp.toLocaleString()} XP</text>`;
+            svgContent += `<text x="${bgWidth - BORDER_RIGHT - 15}" y="${y + 30}" text-anchor="end" class="xp">${plus}${user.overallExp.toLocaleString()} XP</text>`;
             
             // Separator line (except for last entry)
             if (i < users.length - 1 && i !== userLength - 1) {
