@@ -52,8 +52,8 @@ async function autoPostScoreboard(client, searchText = "") {
             msg.type === 0 &&                        // Standalone "Default" message
             !msg.interaction &&                      // Not a slash command reply
             msg.createdTimestamp > fortyEightHoursAgo && 
-            msg.embeds.length > 0 &&                 // Has an embed
-            msg.content.includes(searchText);        // Matches search string
+            msg.embeds.length > 0;// &&                 // Has an embed
+            //msg.content.includes(searchText);        // Matches search string
 
         // --- STEP 1: Check Cache (Zero API Cost) ---
         let targetMessage = channel.messages.cache.find(isValidScoreboard);
