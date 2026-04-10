@@ -7,9 +7,7 @@ const fs = require('fs');
 const bgBuffer = fs.readFileSync('./assets/scoreboard.png');
 const hrBuffer = fs.readFileSync('./assets/header_ribbon.png');
 const scoreImageBuffer = sharp(bgBuffer);
-const sbmetadata = scoreImageBuffer.metadata();
 const h1ImageBuffer = sharp(hrBuffer);
-const h1metadata = h1ImageBuffer.metadata();
 
 const dbQuery = {
     getScoreboardData: db.prepare(`
@@ -235,6 +233,8 @@ async function scoreboard(target, guildId, userId = false) {
     }
 async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 1) {
     try {
+        const sbmetadata = scoreImageBuffer.metadata();
+        const h1metadata = h1ImageBuffer.metadata();
         const bgWidth = sbmetadata.width;
         const bgHeight = sbmetadata.height;
         const h1Width = h1metadata.width;
