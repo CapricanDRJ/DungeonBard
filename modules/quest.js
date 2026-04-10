@@ -353,7 +353,7 @@ module.exports = {
   },
 
   handleInteraction: async (client, interaction) => {
-    const questDisplayName = interaction.member?.nick || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
+    const questDisplayName = interaction.member?.nickname || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
 
     console.log(questDisplayName);
 console.log(interaction);
