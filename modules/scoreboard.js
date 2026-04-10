@@ -289,7 +289,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                 rank = 1;
                 plus = '+';
                 const bannerLeft = Math.floor((bgWidth - h1Width) / 2);
-                const bannerTop = y - 3 - gainOffset;
+                const bannerTop = y - Math.floor((h1Height - ROW_HEIGHT) / 2) - 10; // Center the ribbon on the row, with a slight upward nudge
                 compositeLayers.push({
                     input: hrBuffer,
                     top: bannerTop,
