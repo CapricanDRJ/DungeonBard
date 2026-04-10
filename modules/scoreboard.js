@@ -255,12 +255,15 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
 
         for (const user of users) {
-                        const gainOffset = i >= userLength ? ROW_HEIGHT : 0;
-            const y = HEADER_OFFSET + (i * ROW_HEIGHT)+gainOffset;
+            const gainOffset = i >= userLength ? ROW_HEIGHT : 0;
+            const y = HEADER_OFFSET + (i * ROW_HEIGHT) + gainOffset;
             const isHighlighted = (rank === highlightIndex);
-            if(rank === userLength+1) rank = 1;
+            if(rank === userLength+1) {
+                rank = 1;
+                svgContent += `<text x="${bgWidth / 2}" y="${y - gainOffset}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
+            };
 
-              //  svgContent += `<text x="${bgWidth / 2}" y="${y + ROW_HEIGHT}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
+              //  
         
             // Highlight background for calling user
             if (isHighlighted) {
