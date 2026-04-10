@@ -68,7 +68,7 @@ const scoreboardMsg = new Map(); // Map to track the latest scoreboard message f
 async function autoPostScoreboard(client) {
     const guilds = Array.from(client.guilds.cache.values());
     const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
-
+console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
     for (const guild of guilds) {
         const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
         if (!channel || !channel.isTextBased()) continue;
@@ -77,6 +77,7 @@ async function autoPostScoreboard(client) {
             PermissionFlagsBits.ViewChannel, 
             PermissionFlagsBits.ReadMessageHistory
         ])) continue;
+console.log(1);
         const isValidScoreboard = (msg) => 
             msg.author.id === client.user.id &&
             msg.type === 0 &&
@@ -84,15 +85,17 @@ async function autoPostScoreboard(client) {
             msg.createdTimestamp > fortyEightHoursAgo && 
             msg.embeds.length > 0;
             let lastMessage = scoreboardMsg.get(guild.id);
-
+console.log(2);
         try {
             if(lastMessage) {
             if(channel.lastMessageId !== lastMessage?.id) {
                 lastMessage.delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
                 scoreboardMsg.delete(guild.id);
                 lastMessage = null;
+console.log(3);
             }
         } else {
+            console.log(4);
             const fetchedMessages = await channel.messages.fetch({ limit: 50 });
             const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
             for (const [id, msg] of scoreboardMessages) {
@@ -105,9 +108,15 @@ async function autoPostScoreboard(client) {
             }
             console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${lastMessage ? lastMessage.id : 'none'}.`);
         }
+        console.log(5);
             // 5. Final Determination & Testing
             const displayTop5 = dbQuery.getScoreboardTop5.all(guild.id); // Get top users by overall XP
             const gainUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
+            if(displayTop5.length === 0) {
+                console.log(`[${guild.name}] No users with XP found. Skipping scoreboard generation.`);
+                continue;
+            }
+console.log(6);
             const imageBuffer = await generateScoreboardImage(displayTop5, gainUsers);
             const attachment = new AttachmentBuilder(imageBuffer, { name: 'top5.png' });
             const embed = new EmbedBuilder()
@@ -116,14 +125,14 @@ async function autoPostScoreboard(client) {
                 .setColor(0x6b4423)
                 .setTimestamp();
             const messagePayload = { embeds: [embed], files: [attachment] };
-
+console.log(7);
             //const messagePayload = await scoreboard(client, guild.id);
-            if(!messagePayload) return;
+            if(!messagePayload) continue;
             try {
                 if (lastMessage) {
                     console.log(`[${guild.name}] Action: EDITING message ${lastMessage.id}`);
                     // Proper object notation for editing
-                    return lastMessage.edit(messagePayload);
+                    await lastMessage.edit(messagePayload);
                 } else {
                     console.log(`[${guild.name}] Action: SENDING NEW message`);
                     // Proper object notation for sending
