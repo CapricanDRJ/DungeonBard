@@ -72,6 +72,7 @@ async function autoPostScoreboard(client, searchText = "") {
 
         if (targetMessage) {
             console.log(`Match found in ${guild.name}: ${targetMessage.id}`);
+            console.log(targetMessage);
         }
 
         // --- STEP 3: Optional Delay ---
