@@ -74,9 +74,14 @@ console.log(2);
             console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
 console.log(3);
             // 5. Final Determination & Testing
-            const messagePayload = {
-                content: `📜 Ledger of Triumphs - Updated at ${new Date().toLocaleTimeString()}`
-            };
+const messagePayload = {
+    embeds: [
+        {
+            title: "📜 Ledger of Triumphs",
+            description: "Minimal test."
+        }
+    ]
+};
 
             try {
                 if (latestMessage) {
