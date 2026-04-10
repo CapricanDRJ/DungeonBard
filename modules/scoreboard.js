@@ -121,6 +121,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
                     if(scoreboardMsg[guild.id]?.id === channel.lastMessageId) {
                         console.log(`[${guild.name}] Cached message is up-to-date. Editing message ${scoreboardMsg[guild.id]?.id}.`);
                         await scoreboardMsg[guild.id].edit(messagePayload);
+                        console.log(`[${guild.name}] Cached message is up-to-date. Editing message ${scoreboardMsg[guild.id]?.id}.`);
                     } else {
                         scoreboardMsg[guild.id].delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
                         scoreboardMsg[guild.id] =  await channel.send(messagePayload);
