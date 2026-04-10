@@ -36,6 +36,7 @@ const fontBase = 24;
 
 
 async function autoPostScoreboard(client) {
+    console.log("client",client);
     const guilds = Array.from(client.guilds.cache.values());
     const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
 
@@ -117,6 +118,7 @@ async function scoreboard(interaction) {
         const userId = interaction.user.id;
         const guildId = interaction.guildId;
 
+        console.log("interaction",interaction);
         //const guildId = '1339984756695371908';
 
         try {
