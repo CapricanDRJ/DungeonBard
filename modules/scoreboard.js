@@ -36,21 +36,17 @@ const fontBase = 24;
 
 
 async function autoPostScoreboard(client) {
-    console.log("client",client);
     const guilds = Array.from(client.guilds.cache.values());
     const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
 
     for (const guild of guilds) {
         const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
-        console.log(5);
         if (!channel || !channel.isTextBased()) continue;
-console.log(6);
         const perms = channel.permissionsFor(guild.members.me);
         if (!perms || !perms.has([
             PermissionFlagsBits.ViewChannel, 
             PermissionFlagsBits.ReadMessageHistory
         ])) continue;
-console.log(1);
         const isValidScoreboard = (msg) => 
             msg.author.id === client.user.id &&
             msg.type === 0 &&
@@ -61,7 +57,6 @@ console.log(1);
         try {
             const fetchedMessages = await channel.messages.fetch({ limit: 50 });
             const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
-console.log(2);
             let latestMessage = null;
 
             for (const [id, msg] of scoreboardMessages) {
@@ -74,17 +69,7 @@ console.log(2);
             console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
 console.log(3);
             // 5. Final Determination & Testing
-const messagePayload = {
-    embeds: [
-        {
-            title: "📜 Ledger of Triumphs",
-            description: "The scrolls have been updated with the latest server achievements.",
-            color: 0x2b2d31, // A dark, sleek "Discord-matched" grey
-            timestamp: new Date().toISOString()
-        }
-    ]
-};
-
+const messagePayload = scoreboard(client, guild.id);
             try {
                 if (latestMessage) {
                     console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
@@ -113,53 +98,35 @@ const messagePayload = {
     setTimeout(() => autoPostScoreboard(client), 10 * 60 * 1000);
 }
 
-async function scoreboard(interaction) {
-    const userGen = true;
-        const userId = interaction.user.id;
-        const guildId = interaction.guildId;
-
-        console.log("interaction",interaction);
+async function scoreboard(target, guildId, userId = false) {
+        const userGen = userId === false ? true : false;
+        let displayUsers;
+        let highlightIndex;
+        let startIndex = 0;
+        console.log("target",target);
         //const guildId = '1339984756695371908';
 
         try {
             // Get all users with avatars in a single query
             const allUsers = dbQuery.getScoreboardData.all(guildId);
-
-            if (!allUsers || allUsers.length === 0) {
-                return interaction.reply({
-                    content: 'No characters found in this server.',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-
-            const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
-            
-            // If userGen is true, enforce that the user must have a character
-            if (userGen && callingUserIndex === -1) {
-                return interaction.reply({
-                    content: 'No character found. Use `/character enroll` to create one first.',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-
-            let displayUsers;
-            let highlightIndex;
-            let startIndex = 0;
-
-            if (!userGen) {
-                // FALSE: Show strictly the Top 10
-                displayUsers = allUsers.slice(0, 12);
-                
-                // Highlight the user only if they actually exist and are in the top 10
-                if (callingUserIndex !== -1 && callingUserIndex < 12) {
-                    highlightIndex = callingUserIndex;
-                } else {
-                    highlightIndex = -1; // Don't highlight anyone
+            if(userGen) {
+                if (!allUsers || allUsers.length === 0) {
+                    return target.reply({
+                        content: 'No characters found in this server.',
+                        flags: MessageFlags.Ephemeral
+                    });
                 }
-            } else {
-                // TRUE: Dynamic windowing based on user's rank
-                const userRank = callingUserIndex + 1;
+
+                const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
                 
+                if (callingUserIndex === -1) {
+                    return target.reply({
+                        content: 'No character found. Use `/character enroll` to create one first.',
+                        flags: MessageFlags.Ephemeral
+                    });
+                }
+                const userRank = callingUserIndex + 1;
+                    
                 if (userRank <= 12) {
                     displayUsers = allUsers.slice(0, 12);
                     highlightIndex = callingUserIndex;
@@ -169,6 +136,16 @@ async function scoreboard(interaction) {
                     const endIndex = Math.min(allUsers.length, callingUserIndex + 4);
                     displayUsers = allUsers.slice(startIndex, endIndex);
                     highlightIndex = callingUserIndex - startIndex;
+                }
+            } else {
+                // FALSE: Show strictly the Top 10
+                displayUsers = allUsers.slice(0, 12);
+                
+                // Highlight the user only if they actually exist and are in the top 10
+                if (callingUserIndex !== -1 && callingUserIndex < 12) {
+                    highlightIndex = callingUserIndex;
+                } else {
+                    highlightIndex = -1; // Don't highlight anyone
                 }
             }
 
@@ -181,13 +158,18 @@ async function scoreboard(interaction) {
                 .setColor(0x6b4423)
                 .setTimestamp();
 
-            interaction.reply({
-                embeds: [embed],
-                files: [attachment]
-            });
+            if(!userGen) {
+                return { embeds: [embed], files: [attachment] };
+            } else {
+                return target.reply({
+                    embeds: [embed],
+                    files: [attachment]
+                })
+            }
+
         } catch (error) {
             console.error('Error executing scoreboard command:', error, `userId:${userId}`, `guildId:${guildId}`);
-            interaction.reply({
+            if(userGen) return target.reply({
                 content: 'An error occurred while generating the scoreboard.',
                 flags: MessageFlags.Ephemeral
             });
@@ -317,6 +299,8 @@ module.exports = {
     },
 
     executeCommand: async (interaction) => {
-        scoreboard(interaction);
+        const userId = interaction.user.id;
+        const guildId = interaction.guildId;
+        scoreboard(interaction, guildId, userId);
     }
 };
