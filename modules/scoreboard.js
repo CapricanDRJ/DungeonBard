@@ -78,8 +78,9 @@ const messagePayload = {
     embeds: [
         {
             title: "📜 Ledger of Triumphs",
-            description: "Minimal test update.",
-            timestamp: new Date().toISOString() // This adds the 'Today at...' text at the bottom
+            description: "The scrolls have been updated with the latest server achievements.",
+            color: 0x2b2d31, // A dark, sleek "Discord-matched" grey
+            timestamp: new Date().toISOString()
         }
     ]
 };
