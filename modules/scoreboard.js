@@ -34,6 +34,53 @@ const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ri
 const userGen = true;
 const fontBase = 24;
 
+async function autoPostScoreboard(client, searchText = "") {
+    const guilds = Array.from(client.guilds.cache.values());
+    const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
+
+    // Using a for...of loop ensures we process one guild at a time
+    for (const guild of guilds) {
+        const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
+        if (!channel || !channel.isTextBased()) continue;
+
+        const perms = channel.permissionsFor(guild.members.me);
+        if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory])) continue;
+
+        // --- STEP 1: Check Cache ---
+        let targetMessage = channel.messages.cache.find(msg => 
+            msg.author.id === client.user.id &&
+            msg.createdTimestamp > fortyEightHoursAgo &&
+            msg.embeds.length > 0 &&
+            msg.content.includes(searchText)
+        );
+
+        // --- STEP 2: Fetch only if NOT in cache ---
+        if (!targetMessage) {
+            try {
+                // We only fetch if we didn't find it in the cache
+                const fetchedMessages = await channel.messages.fetch({ limit: 50 });
+                targetMessage = fetchedMessages.find(msg => 
+                    msg.author.id === client.user.id &&
+                    msg.createdTimestamp > fortyEightHoursAgo &&
+                    msg.embeds.length > 0 &&
+                    msg.content.includes(searchText)
+                );
+            } catch (err) {
+                console.error(`Failed to fetch for ${guild.name}:`, err);
+            }
+        }
+
+        if (targetMessage) {
+            console.log(`Match found in ${guild.name}: ${targetMessage.id}`);
+        }
+
+        // --- STEP 3: Optional Delay ---
+        // If you have hundreds of guilds, wait 200ms between each to be extra safe
+        // await new Promise(resolve => setTimeout(resolve, 200));
+    }
+}
+
+
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
         const metadata = await scoreImageBuffer.metadata();
@@ -45,7 +92,6 @@ async function generateScoreboardImage(users, highlightIndex, rank = 1) {
         const availableHeight = bgHeight - HEADER_OFFSET - BOTTOM_MARGIN;
         const maxCapacity = Math.floor(availableHeight / ROW_HEIGHT);
         const maxAllowed = Math.max(0, maxCapacity); 
-        console.log(maxAllowed, users.length);
 
         // Trim the list of users so it never draws past the bottom border
         if (users.length > maxAllowed) {
@@ -155,6 +201,7 @@ module.exports = {
 
     main: (client) => {
         console.log("Slash commands for scoreboard module have been loaded.");
+        setTimeout(() => autoPostScoreboard(client), 10000);
     },
 
     executeCommand: async (interaction) => {
@@ -172,7 +219,7 @@ module.exports = {
                     flags: MessageFlags.Ephemeral
                 });
             }
-// Find calling user's rank
+
             const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
             
             // If userGen is true, enforce that the user must have a character
