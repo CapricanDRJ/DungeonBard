@@ -116,26 +116,28 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             if(!messagePayload) continue;
 
             try {
-                if(scoreboardMsg[guild.id]) {
-                console.log(typeof scoreboardMsg[guild.id]?.id, scoreboardMsg[guild.id]?.id, typeof channel.lastMessageId, channel.lastMessageId);
-                    if(scoreboardMsg[guild.id]?.id === channel.lastMessageId) {
-                        console.log(`[${guild.name}] Cached message is up-to-date. Editing message ${scoreboardMsg[guild.id]?.id}.`);
-                        await scoreboardMsg[guild.id].edit(messagePayload);
-                        console.log(`[${guild.name}] Cached message is up-to-date. Editing message ${scoreboardMsg[guild.id]?.id}.`);
-                    } else {
-                        await scoreboardMsg[guild.id].delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
-                        scoreboardMsg[guild.id] =  await channel.send(messagePayload);
-                        console.log(`[${guild.name}] Cached message was outdated. Deleted old and sent new message ${scoreboardMsg[guild.id]?.id}.`);
-
+                // 1. Is it the absolute newest message in the channel?
+                if (scoreboardMsg[guild.id] && scoreboardMsg[guild.id].id === channel.lastMessageId) {
+                    console.log(`[${guild.name}] Scoreboard is up-to-date. Editing...`);
+                    await scoreboardMsg[guild.id].edit(messagePayload);
+                } 
+                // 2. It is NOT the newest message (or we don't have one cached)
+                else {
+                    if (scoreboardMsg[guild.id]) {
+                        console.log(`[${guild.name}] Scoreboard outdated. Deleting old...`);
+                        // We AWAIT the delete, and catch errors silently so it doesn't break the script
+                        await scoreboardMsg[guild.id].delete().catch(() => {}); 
                     }
-                } else {
+                    
+                    console.log(`[${guild.name}] Sending new scoreboard to the bottom...`);
                     scoreboardMsg[guild.id] = await channel.send(messagePayload);
-                    console.log(`[${guild.name}] No cached message. Sent new message ${scoreboardMsg[guild.id]?.id}.`);
                 }
-            //const messagePayload = await scoreboard(client, guild.id);
-
             } catch (err) {
-                console.error(`[${guild.name}] Failed to update scoreboard:`, err);
+                // 3. THE SAFETY NET
+                // If scoreboardMsg[guild.id].edit() above fails (e.g., someone manually deleted it),
+                // it throws an error. We catch it here, force a new message, and fix the cache.
+                console.warn(`[${guild.name}] Cache was invalid/deleted. Sending fresh fallback message.`);
+                scoreboardMsg[guild.id] = await channel.send(messagePayload).catch(e => console.error("Critical send failure:", e));
             }
 
         } catch (err) {
