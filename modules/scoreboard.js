@@ -50,7 +50,7 @@ async function autoPostScoreboard(client) {
             PermissionFlagsBits.ReadMessageHistory,
             PermissionFlagsBits.ManageMessages
         ])) continue;
-
+console.log(1);
         const isValidScoreboard = (msg) => 
             msg.author.id === client.user.id &&
             msg.type === 0 &&
@@ -61,7 +61,7 @@ async function autoPostScoreboard(client) {
         try {
             const fetchedMessages = await channel.messages.fetch({ limit: 50 });
             const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
-
+console.log(2);
             let latestMessage = null;
 
             for (const [id, msg] of scoreboardMessages) {
@@ -71,25 +71,26 @@ async function autoPostScoreboard(client) {
                     latestMessage = msg;
                 }
             }
+            console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
+console.log(3);
+            // 5. Final Determination & Testing
+            const messagePayload = {
+                content: `📜 Ledger of Triumphs - Updated at ${new Date().toLocaleTimeString()}`
+            };
 
-// 5. Final Determination & Testing
-        const messagePayload = {
-            content: `📜 Ledger of Triumphs - Updated at ${new Date().toLocaleTimeString()}`
-        };
-
-        try {
-            if (latestMessage) {
-                console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
-                // Proper object notation for editing
-                await latestMessage.edit(messagePayload);
-            } else {
-                console.log(`[${guild.name}] Action: SENDING NEW message`);
-                // Proper object notation for sending
-                await channel.send(messagePayload);
+            try {
+                if (latestMessage) {
+                    console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
+                    // Proper object notation for editing
+                    await latestMessage.edit(messagePayload);
+                } else {
+                    console.log(`[${guild.name}] Action: SENDING NEW message`);
+                    // Proper object notation for sending
+                    await channel.send(messagePayload);
+                }
+            } catch (err) {
+                console.error(`[${guild.name}] Failed to update scoreboard:`, err);
             }
-        } catch (err) {
-            console.error(`[${guild.name}] Failed to update scoreboard:`, err);
-        }
 
         } catch (err) {
             console.error(`Error in ${guild.name}:`, err);
