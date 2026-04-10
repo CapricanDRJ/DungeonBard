@@ -255,6 +255,8 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
 
         for (const user of users) {
+            if(i === userLength) i++;
+            if (rank === userLength) rank = 1;
             const y = HEADER_OFFSET + (i * ROW_HEIGHT);
             const isHighlighted = (rank === highlightIndex);
             
@@ -262,11 +264,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             if (isHighlighted) {
                 svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
             }
-            if(i === userLength) i++;
-            if (rank > userLength) {
-                rank = 1;
-                //svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#c0a060" opacity="0.3" rx="5"/>`;
-            }
+
             // Rank number
             svgContent += `<text x="${BORDER_LEFT + 10}" y="${y + 32}" class="rank">${rank}.</text>`;
             
@@ -303,6 +301,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                     .png()
                     .toBuffer();
                 const gainOffset = i >= userLength ? ROW_HEIGHT : 0;
+                
                 const y = HEADER_OFFSET + (i * ROW_HEIGHT) + gainOffset;
                 
                 compositeLayers.push({
