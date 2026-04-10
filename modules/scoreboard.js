@@ -86,6 +86,7 @@ console.log(1);
             msg.embeds.length > 0;
             let lastMessage = scoreboardMsg.get(guild.id);
 console.log(2);
+console.log(lastMessage);
         try {
             if(lastMessage) {
             if(channel.lastMessageId !== lastMessage?.id) {
