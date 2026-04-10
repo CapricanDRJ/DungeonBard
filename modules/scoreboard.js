@@ -62,6 +62,7 @@ const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
 const fontBase = 24;
 
+const scoreboardMsg = new Map(); // Map to track the latest scoreboard message for each guild
 
 
 async function autoPostScoreboard(client) {
@@ -82,21 +83,27 @@ async function autoPostScoreboard(client) {
             !msg.interaction &&
             msg.createdTimestamp > fortyEightHoursAgo && 
             msg.embeds.length > 0;
+            let lastMessage = scoreboardMsg.get(guild.id);
 
         try {
+            if(lastMessage) {
+            if(channel.lastMessageId !== lastMessage?.id) {
+                lastMessage.delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
+                scoreboardMsg.delete(guild.id);
+            }
+        } else {
             const fetchedMessages = await channel.messages.fetch({ limit: 50 });
             const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
-            let latestMessage = null;
-console.log(channel.lastMessageId);
             for (const [id, msg] of scoreboardMessages) {
-                console.log(id);
                 if (id !== channel.lastMessageId) {
                     await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
                 } else {
-                    latestMessage = msg;
+                    lastMessage = msg;
+                    scoreboardMsg.set(guild.id, lastMessage);
                 }
             }
-            console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${latestMessage ? latestMessage.id : 'none'}.`);
+            console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${lastMessage ? lastMessage.id : 'none'}.`);
+        }
             // 5. Final Determination & Testing
             const displayTop5 = dbQuery.getScoreboardTop5.all(guild.id); // Get top users by overall XP
             const gainUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
@@ -109,17 +116,18 @@ console.log(channel.lastMessageId);
                 .setTimestamp();
             const messagePayload = { embeds: [embed], files: [attachment] };
 
-//const messagePayload = await scoreboard(client, guild.id);
-if(!messagePayload) return;
-try {
-                if (latestMessage) {
-                    console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
+            //const messagePayload = await scoreboard(client, guild.id);
+            if(!messagePayload) return;
+            try {
+                if (lastMessage) {
+                    console.log(`[${guild.name}] Action: EDITING message ${lastMessage.id}`);
                     // Proper object notation for editing
-                    await latestMessage.edit(messagePayload);
+                    return lastMessage.edit(messagePayload);
                 } else {
                     console.log(`[${guild.name}] Action: SENDING NEW message`);
                     // Proper object notation for sending
-                    await channel.send(messagePayload);
+                    lastMessage = await channel.send(messagePayload).then;
+                    scoreboardMsg.set(guild.id, lastMessage);
                 }
             } catch (err) {
                 console.error(`[${guild.name}] Failed to update scoreboard:`, err);
@@ -141,7 +149,6 @@ try {
 
 async function scoreboard(target, guildId, userId = false) {
         const userGen = userId === false ? false : true;
-        console.log('user gen is ' + userGen);
         let displayUsers;
         let highlightIndex;
         let startIndex = 0;
@@ -252,7 +259,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         
         // Add each user row
         let i = 0;
-        
+
         const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
         let skipLine = false;
         for (const user of users) {
@@ -261,7 +268,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             const isHighlighted = (rank === highlightIndex);
             if(rank === userLength+1) {
                 rank = 1;//test
-                svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="title">TOP MOVERS</text>`;
+                svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="title">FOLIOS OF RENOWN</text>`;
             };
 
               //  
