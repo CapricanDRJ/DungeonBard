@@ -58,8 +58,9 @@ async function autoPostScoreboard(client) {
             const fetchedMessages = await channel.messages.fetch({ limit: 50 });
             const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
             let latestMessage = null;
-
+console.log(channel.lastMessageId);
             for (const [id, msg] of scoreboardMessages) {
+                console.log(id);
                 if (id !== channel.lastMessageId) {
                     await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
                 } else {
@@ -70,6 +71,7 @@ async function autoPostScoreboard(client) {
 console.log(3);
             // 5. Final Determination & Testing
 const messagePayload = scoreboard(client, guild.id);
+if(!messagePayload) return;
             try {
                 if (latestMessage) {
                     console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
