@@ -14,10 +14,16 @@ const skillLevel = {
     5: [43440,38670,34270,30160,26320,22750,19460,16440,13680,11190,8960,6990,5270,3810,2590,1620,880,380,90,0],
     6: [54170,48330,42840,37690,32900,28440,24320,20540,17100,13980,11200,8730,6590,4760,3240,2020,1100,470,110,0],
 }
+//1 = artisan
+//2 = soldier
+//3 = healer
 const profNames = {
-    healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
+    artisan: ['Novice', 'Apprentice', 'Artisan', 'Adept', 'Mason', 'Grandmaster', 'Guild Leader'],
     soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
-    artisan: ['Novice', 'Apprentice', 'Artisan', 'Adept', 'Mason', 'Grandmaster', 'Guild Leader']
+    healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
+    1: 'artisan',
+    2: 'soldier',
+    3: 'healer'
 };
 
 const profLevel = {
