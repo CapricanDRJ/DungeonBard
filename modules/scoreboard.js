@@ -83,6 +83,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             !msg.interaction &&
             msg.createdTimestamp > fortyEightHoursAgo && 
             msg.embeds.length > 0;
+        let lastMsgId = null;
 
         try {
             if(!scoreboardMsg[guild.id]) {
@@ -91,13 +92,18 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
                 for (const [id, msg] of scoreboardMessages) {
                     if (id === channel.lastMessageId) {
                         scoreboardMsg[guild.id] = msg;
+                        lastMsgId = msg.id;
                     } else {
                         await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
                     }
                 }
                 console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${scoreboardMsg[guild.id] ? scoreboardMsg[guild.id].id : 'none'}.`);
+            } else {
+                // If we DID skip the history search, we need a fresh single fetch 
+                // to see if someone talked in the last 10 minutes
+                const latest = await channel.messages.fetch({ limit: 1 });
+                lastMsgId = latest.first()?.id;
             }
-
             // 5. Final Determination & Testing
             const displayTop5 = dbQuery.getScoreboardTop5.all(guild.id); // Get top users by overall XP
             const gainUsers = dbQuery.getGainboardData.all(guild.id, 48 * 60 * 60); // Get users with XP gained in last 48 hours
@@ -116,9 +122,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             if(!messagePayload) continue;
 
             try {
-                // 1. Is it the absolute newest message in the channel?
-                console.log(typeof scoreboardMsg[guild.id]?.id, scoreboardMsg[guild.id]?.id, typeof channel.lastMessageId, channel.lastMessageId);
-                if (scoreboardMsg[guild.id] && scoreboardMsg[guild.id].id === channel.lastMessageId) {
+                if (scoreboardMsg[guild.id] && scoreboardMsg[guild.id].id === lastMsgId) {
                     console.log(`[${guild.name}] Scoreboard is up-to-date. Editing...`);
                     await scoreboardMsg[guild.id].edit(messagePayload);
                 } 
