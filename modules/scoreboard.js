@@ -60,7 +60,7 @@ const BORDER_RIGHT = 60;   // Prevents content from drawing over the right borde
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
-const fontBase = 24;
+const fontBase = 26;
 
 const scoreboardMsg = new Map(); // Map to track the latest scoreboard message for each guild
 
@@ -258,8 +258,8 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             <svg width="${bgWidth}" height="${bgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <style>
                     /* You can change fill colors here to better match the dark brown ink of your borders */
-                    .title { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 7}px; font-weight: bold; fill: #312520; }
-                    .h2 { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 5}px; font-weight: bold; fill: #312520; }
+                    .title { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 6}px; font-weight: bold; fill: #312520; }
+                    .h2 { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 4}px; font-weight: bold; fill: #312520; }
                     .name { font-family: 'MedievalSharp', serif; font-size: ${fontBase}px; fill: #312520; }
                     .xp { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; fill: #4a3520; }
                     .rank { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; font-weight: bold; fill: #6b4423; }
