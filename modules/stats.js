@@ -22,7 +22,7 @@ const avatarUpdate = async (userId, guildId, currentAvatarURL) => {
     + '.png?size=64';
     const avatarFileName = avatarURL.split('/').pop().split('?')[0];
     const user = dbQuery.getUserAvatarFile.get(userId, guildId);
-if (avatarFileName.length < 10) return;
+    if (avatarFileName.length < 10) return;//discord default icon
     if (!user || user.avatarFile !== avatarFileName) {
         try {
             const response = await fetch(avatarURL);
