@@ -83,7 +83,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             !msg.interaction &&
             msg.createdTimestamp > fortyEightHoursAgo && 
             msg.embeds.length > 0;
-            let lastMessage = scoreboardMsg.get(guild.id);
+            let lastMessage = await scoreboardMsg.get(guild.id);
         try {
             if(lastMessage) {
                 console.log(`[${guild.name}] Found cached message ${lastMessage.id}. Verifying...`);
