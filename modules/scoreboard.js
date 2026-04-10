@@ -248,7 +248,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             <svg width="${bgWidth}" height="${bgHeight}" xmlns="http://www.w3.org/2000/svg">
                 <style>
                     /* You can change fill colors here to better match the dark brown ink of your borders */
-                    .title { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 10}px; font-weight: bold; fill: #312520; }
+                    .title { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 8}px; font-weight: bold; fill: #312520; }
                     .name { font-family: 'MedievalSharp', serif; font-size: ${fontBase}px; fill: #312520; }
                     .xp { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; fill: #4a3520; }
                     .rank { font-family: 'MedievalSharp', serif; font-size: ${fontBase + 2}px; font-weight: bold; fill: #6b4423; }
