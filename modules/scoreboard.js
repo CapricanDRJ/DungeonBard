@@ -89,10 +89,10 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
                 const fetchedMessages = await channel.messages.fetch({ limit: 50 });
                 const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
                 for (const [id, msg] of scoreboardMessages) {
-                    if (id !== channel.lastMessageId) {
-                        await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
-                    } else {
+                    if (id === channel.lastMessageId) {
                         scoreboardMsg[guild.id] = msg;
+                    } else {
+                        await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
                     }
                 }
                 console.log(`[${guild.name}] Found ${scoreboardMessages.size} recent scoreboard messages. Keeping ${scoreboardMsg[guild.id] ? scoreboardMsg[guild.id].id : 'none'}.`);
