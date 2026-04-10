@@ -237,9 +237,11 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         const h1metadata = h1ImageBuffer.metadata();
         const bgWidth = sbmetadata.width;
         const bgHeight = sbmetadata.height;
+        console.log(`Scoreboard background dimensions: ${bgWidth}x${bgHeight}`);
         const h1Width = h1metadata.width;
         const h1Height = h1metadata.height;
         const h1Canvas = h1ImageBuffer.clone();
+        console.log(`Header ribbon dimensions: ${h1Width}x${h1Height}`);
         const canvas = scoreImageBuffer.clone();
         
         // Calculate how many rows fit strictly inside the playable area
