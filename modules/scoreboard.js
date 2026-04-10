@@ -31,7 +31,6 @@ const BORDER_RIGHT = 60;   // Prevents content from drawing over the right borde
 const HEADER_OFFSET = 140; // Starts the player list below the top banner
 const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
-const userGen = true;
 const fontBase = 24;
 
 
@@ -113,6 +112,85 @@ const messagePayload = {
     setTimeout(() => autoPostScoreboard(client), 10 * 60 * 1000);
 }
 
+async function scoreboard(interaction) {
+    const userGen = true;
+        const userId = interaction.user.id;
+        const guildId = interaction.guildId;
+
+        //const guildId = '1339984756695371908';
+
+        try {
+            // Get all users with avatars in a single query
+            const allUsers = dbQuery.getScoreboardData.all(guildId);
+
+            if (!allUsers || allUsers.length === 0) {
+                return interaction.reply({
+                    content: 'No characters found in this server.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+
+            const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
+            
+            // If userGen is true, enforce that the user must have a character
+            if (userGen && callingUserIndex === -1) {
+                return interaction.reply({
+                    content: 'No character found. Use `/character enroll` to create one first.',
+                    flags: MessageFlags.Ephemeral
+                });
+            }
+
+            let displayUsers;
+            let highlightIndex;
+            let startIndex = 0;
+
+            if (!userGen) {
+                // FALSE: Show strictly the Top 10
+                displayUsers = allUsers.slice(0, 12);
+                
+                // Highlight the user only if they actually exist and are in the top 10
+                if (callingUserIndex !== -1 && callingUserIndex < 12) {
+                    highlightIndex = callingUserIndex;
+                } else {
+                    highlightIndex = -1; // Don't highlight anyone
+                }
+            } else {
+                // TRUE: Dynamic windowing based on user's rank
+                const userRank = callingUserIndex + 1;
+                
+                if (userRank <= 12) {
+                    displayUsers = allUsers.slice(0, 12);
+                    highlightIndex = callingUserIndex;
+                } else {
+                    // User is outside top 10, show 5 before and 4 after (10 total with user)
+                    startIndex = Math.max(0, callingUserIndex - 5);
+                    const endIndex = Math.min(allUsers.length, callingUserIndex + 4);
+                    displayUsers = allUsers.slice(startIndex, endIndex);
+                    highlightIndex = callingUserIndex - startIndex;
+                }
+            }
+
+            // Generate scoreboard image
+            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex + 1, startIndex + 1);
+            const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
+            const embed = new EmbedBuilder()
+                .setTitle('Top Characters by Experience')
+                .setImage('attachment://scoreboard.png')
+                .setColor(0x6b4423)
+                .setTimestamp();
+
+            interaction.reply({
+                embeds: [embed],
+                files: [attachment]
+            });
+        } catch (error) {
+            console.error('Error executing scoreboard command:', error, `userId:${userId}`, `guildId:${guildId}`);
+            interaction.reply({
+                content: 'An error occurred while generating the scoreboard.',
+                flags: MessageFlags.Ephemeral
+            });
+        }
+    }
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
         const metadata = await scoreImageBuffer.metadata();
@@ -237,80 +315,6 @@ module.exports = {
     },
 
     executeCommand: async (interaction) => {
-        const userId = interaction.user.id;
-        const guildId = interaction.guildId;
-        //const guildId = '1339984756695371908';
-
-        try {
-            // Get all users with avatars in a single query
-            const allUsers = dbQuery.getScoreboardData.all(guildId);
-
-            if (!allUsers || allUsers.length === 0) {
-                return interaction.reply({
-                    content: 'No characters found in this server.',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-
-            const callingUserIndex = allUsers.findIndex(u => u.userId === userId);
-            
-            // If userGen is true, enforce that the user must have a character
-            if (userGen && callingUserIndex === -1) {
-                return interaction.reply({
-                    content: 'No character found. Use `/character enroll` to create one first.',
-                    flags: MessageFlags.Ephemeral
-                });
-            }
-
-            let displayUsers;
-            let highlightIndex;
-            let startIndex = 0;
-
-            if (!userGen) {
-                // FALSE: Show strictly the Top 10
-                displayUsers = allUsers.slice(0, 12);
-                
-                // Highlight the user only if they actually exist and are in the top 10
-                if (callingUserIndex !== -1 && callingUserIndex < 12) {
-                    highlightIndex = callingUserIndex;
-                } else {
-                    highlightIndex = -1; // Don't highlight anyone
-                }
-            } else {
-                // TRUE: Dynamic windowing based on user's rank
-                const userRank = callingUserIndex + 1;
-                
-                if (userRank <= 12) {
-                    displayUsers = allUsers.slice(0, 12);
-                    highlightIndex = callingUserIndex;
-                } else {
-                    // User is outside top 10, show 5 before and 4 after (10 total with user)
-                    startIndex = Math.max(0, callingUserIndex - 5);
-                    const endIndex = Math.min(allUsers.length, callingUserIndex + 4);
-                    displayUsers = allUsers.slice(startIndex, endIndex);
-                    highlightIndex = callingUserIndex - startIndex;
-                }
-            }
-
-            // Generate scoreboard image
-            const imageBuffer = await generateScoreboardImage(displayUsers, highlightIndex + 1, startIndex + 1);
-            const attachment = new AttachmentBuilder(imageBuffer, { name: 'scoreboard.png' });
-            const embed = new EmbedBuilder()
-                .setTitle('Top Characters by Experience')
-                .setImage('attachment://scoreboard.png')
-                .setColor(0x6b4423)
-                .setTimestamp();
-
-            interaction.reply({
-                embeds: [embed],
-                files: [attachment]
-            });
-        } catch (error) {
-            console.error('Error executing scoreboard command:', error, `userId:${userId}`, `guildId:${guildId}`);
-            interaction.reply({
-                content: 'An error occurred while generating the scoreboard.',
-                flags: MessageFlags.Ephemeral
-            });
-        }
+        scoreboard(interaction);
     }
 };
