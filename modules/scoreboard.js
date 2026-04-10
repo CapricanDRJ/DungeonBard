@@ -266,7 +266,6 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         let plus = '';
 
         const rowWidth = bgWidth - BORDER_LEFT - BORDER_RIGHT;
-        let skipLine = false;
         for (const user of users) {
             const gainOffset = (i >= userLength) ? ROW_HEIGHT : 0;
             const y = HEADER_OFFSET + (i * ROW_HEIGHT) + gainOffset;
