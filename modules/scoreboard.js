@@ -5,7 +5,11 @@ const sharp = require('sharp');
 const MessageFlags = MessageFlagsBitField.Flags;
 const fs = require('fs');
 const bgBuffer = fs.readFileSync('./assets/scoreboard.png');
+const hrBuffer = fs.readFileSync('./assets/header_ribbon.png');
 const scoreImageBuffer = sharp(bgBuffer);
+const sbmetadata = scoreImageBuffer.metadata();
+const h1ImageBuffer = sharp(hrBuffer);
+const h1metadata = headerImageBuffer.metadata();
 
 const dbQuery = {
     getScoreboardData: db.prepare(`
@@ -231,9 +235,11 @@ async function scoreboard(target, guildId, userId = false) {
     }
 async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 1) {
     try {
-        const metadata = await scoreImageBuffer.metadata();
-        const bgWidth = metadata.width;
-        const bgHeight = metadata.height;
+        const bgWidth = sbmetadata.width;
+        const bgHeight = sbmetadata.height;
+        const h1Width = h1metadata.width;
+        const h1Height = h1metadata.height;
+        const h1Canvas = h1ImageBuffer.clone();
         const canvas = scoreImageBuffer.clone();
         
         // Calculate how many rows fit strictly inside the playable area
@@ -282,7 +288,16 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             if(rank === userLength+1) {
                 rank = 1;
                 plus = '+';
+                const bannerX = Math.floor((bgWidth - ribbonWidth) / 2);
+                const bannerY = y;
+                compositeLayers.push({
+                    input: await h1Canvas.png().toBuffer(),
+                    top: bannerY,
+                    left: bannerX
+                });
+                
                 svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="h2">Folios of Renown</text>`;
+
             };
 
               //  
