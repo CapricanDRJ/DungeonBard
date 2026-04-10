@@ -257,7 +257,11 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
         for (const user of users) {
             const y = HEADER_OFFSET + (i * ROW_HEIGHT);
             const isHighlighted = (rank === highlightIndex);
-            
+            if(i === userLength+1) i++;
+            if (rank === userLength+1) {
+                rank = 1;
+                svgContent += `<text x="${bgWidth / 2}" y="${y + ROW_HEIGHT}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
+            };            
             // Highlight background for calling user
             if (isHighlighted) {
                 svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#d4c4a8" opacity="0.5" rx="5"/>`;
@@ -279,11 +283,6 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             }
             rank++;
             i++;
-            if(i === userLength) i++;
-            if (rank === userLength) {
-                rank = 1;
-                svgContent += `<text x="${bgWidth / 2}" y="${y + ROW_HEIGHT + 30}" text-anchor="middle" class="xp">TOP MOVERS</text>`;
-            };
         }
 
         svgContent += '</svg>';
