@@ -33,54 +33,54 @@ const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
 const userGen = true;
 const fontBase = 24;
-
 async function autoPostScoreboard(client, searchText = "") {
     const guilds = Array.from(client.guilds.cache.values());
     const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
 
-    // Using a for...of loop ensures we process one guild at a time
     for (const guild of guilds) {
+        // 1. Quick Cache Lookup for Channel
         const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
         if (!channel || !channel.isTextBased()) continue;
 
+        // 2. Permission Check
         const perms = channel.permissionsFor(guild.members.me);
         if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory])) continue;
 
-        // --- STEP 1: Check Cache ---
-        let targetMessage = channel.messages.cache.find(msg => 
-            msg.author.id === client.user.id &&
-            msg.createdTimestamp > fortyEightHoursAgo &&
-            msg.embeds.length > 0 &&
-            msg.content.includes(searchText)
-        );
+        // 3. Efficiency: Shared filter logic
+        const isValidScoreboard = (msg) => 
+            msg.author.id === client.user.id &&      // Sent by bot
+            msg.type === 0 &&                        // Standalone "Default" message
+            !msg.interaction &&                      // Not a slash command reply
+            msg.createdTimestamp > fortyEightHoursAgo && 
+            msg.embeds.length > 0 &&                 // Has an embed
+            msg.content.includes(searchText);        // Matches search string
 
-        // --- STEP 2: Fetch only if NOT in cache ---
+        // --- STEP 1: Check Cache (Zero API Cost) ---
+        let targetMessage = channel.messages.cache.find(isValidScoreboard);
+
+        // --- STEP 2: Fetch only if necessary (API Cost: 1) ---
         if (!targetMessage) {
             try {
-                // We only fetch if we didn't find it in the cache
                 const fetchedMessages = await channel.messages.fetch({ limit: 50 });
-                targetMessage = fetchedMessages.find(msg => 
-                    msg.author.id === client.user.id &&
-                    msg.createdTimestamp > fortyEightHoursAgo &&
-                    msg.embeds.length > 0 &&
-                    msg.content.includes(searchText)
-                );
+                targetMessage = fetchedMessages.find(isValidScoreboard);
             } catch (err) {
-                console.error(`Failed to fetch for ${guild.name}:`, err);
+                console.error(`Failed to fetch messages in ${guild.name}:`, err);
             }
         }
 
+        // 4. Output Result
         if (targetMessage) {
-            console.log(`Match found in ${guild.name}: ${targetMessage.id}`);
-            console.log(targetMessage);
+            console.log(`[${guild.name}] Found message: ${targetMessage.id}`);
+        } else {
+            console.log(`[${guild.name}] No recent scoreboard found.`);
         }
 
-        // --- STEP 3: Optional Delay ---
-        // If you have hundreds of guilds, wait 200ms between each to be extra safe
-        // await new Promise(resolve => setTimeout(resolve, 200));
+        // --- STEP 3: Rate Limit Protection ---
+        // Processes guilds sequentially. 
+        // Small delay if you have a high guild count to stay under Global Rate Limits.
+        await new Promise(resolve => setTimeout(resolve, 250));
     }
 }
-
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
     try {
