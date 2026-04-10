@@ -354,7 +354,6 @@ module.exports = {
   },
 
   handleInteraction: async (client, interaction) => {
-    console.log(questDisplayName);
     if (interaction.isCommand()) {
       module.exports.executeCommand(interaction);
     } else if (interaction.isStringSelectMenu()) {
