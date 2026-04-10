@@ -42,8 +42,9 @@ async function autoPostScoreboard(client) {
 
     for (const guild of guilds) {
         const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
+        console.log(5);
         if (!channel || !channel.isTextBased()) continue;
-
+console.log(6);
         const perms = channel.permissionsFor(guild.members.me);
         if (!perms || !perms.has([
             PermissionFlagsBits.ViewChannel, 
