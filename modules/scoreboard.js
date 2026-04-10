@@ -289,6 +289,9 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                 rank = 1;
                 plus = '+';
                 const bannerX = Math.floor((bgWidth - h1Width) / 2);
+                console.log(bannerX);
+                console.log(bgWidth);
+                console.log(h1Width);
                 const bannerY = y;
                 compositeLayers.push({
                     input: await h1Canvas.png().toBuffer(),
