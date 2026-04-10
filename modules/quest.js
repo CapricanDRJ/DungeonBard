@@ -40,6 +40,7 @@ const dbQuery = {
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
+  updateDisplayName: db.prepare(`UPDATE users SET displayName = ? WHERE userId = ? AND guildId = ?`),
   getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
   storeQuest: db.prepare(`
       INSERT INTO questTracker (
@@ -353,10 +354,7 @@ module.exports = {
   },
 
   handleInteraction: async (client, interaction) => {
-    const questDisplayName = interaction.member?.nickname || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
-
     console.log(questDisplayName);
-console.log(interaction);
     if (interaction.isCommand()) {
       module.exports.executeCommand(interaction);
     } else if (interaction.isStringSelectMenu()) {
@@ -366,7 +364,7 @@ console.log(interaction);
     } else if (interaction.customId === "questDomainSelect") {
         // Quick quest registration
         const questDomainId = parseInt(interaction.values[0]);
-        
+        const questDisplayName = interaction.member?.nickname || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
         dbQuery.insertQuestUser.run(interaction.user.id, interaction.guildId, questDisplayName, null, questDomainId);
         
         setImmediate(() => {
@@ -457,9 +455,10 @@ console.log(interaction);
               professionBonuses[item.professionId - 1] = item.professionBonus;
               itemString += item.skillBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${skillNames[user.domainId - 1][item.skill - 1]} +${item.skillBonus} *Expires* <t:${item.duration}:R>` : '';
               itemString += item.professionBonus ? `\n- <:${item.name.replace(/[^a-zA-Z]/g, '')}:${item.emojiId}> ${item.name}\n - - ${professionNames[parseInt(item.professionId) - 1]} X${item.professionBonus} *Expires* <t:${item.duration}:R>` : '';
-            }
-            db.prepare(`UPDATE users SET skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
-            .run(quest.skill1 * multiple, quest.skill2 * multiple, quest.skill3 * multiple, quest.skill4 * multiple, quest.skill5 * multiple, quest.skill6 * multiple, quest.coins * multiple, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1] * multiple, interaction.user.id, interaction.guildId);
+            };
+            const displayName = interaction.member?.nickname || interaction.user.displayName || interaction.user.globalName || interaction.user.username;
+            db.prepare(`UPDATE users SET displayName = ?, skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?, skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?, coins = coins + ?, ${profession} = ${profession} + ? WHERE userId = ? AND guildId = ?`)
+            .run(displayName, quest.skill1 * multiple, quest.skill2 * multiple, quest.skill3 * multiple, quest.skill4 * multiple, quest.skill5 * multiple, quest.skill6 * multiple, quest.coins * multiple, quest.professionXp * professionBonuses[parseInt(quest.professionId) - 1] * multiple, interaction.user.id, interaction.guildId);
                     const endStats = new EmbedBuilder()
                         .setTitle(`${user.displayName}`)
                         .setThumbnail(interaction.user.displayAvatarURL())
@@ -493,7 +492,7 @@ console.log(interaction);
                 { name: "Quest Coins Earned", value: `🪙 X ${quest.coins * multiple}`, inline: true }
               )
               .setAuthor({
-                name: user.displayName,
+                name: '\u200b' + displayName,
                 iconURL: interaction.user.displayAvatarURL({ dynamic: true }) // their avatar
               })
             );
