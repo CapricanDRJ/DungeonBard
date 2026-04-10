@@ -553,6 +553,7 @@ module.exports = {
             });
             setImmediate(() => { 
                 // Use interaction.member if in a guild, otherwise fall back to interaction.user
+                if(interaction.member) console.log('member here')
                 const avatar = interaction.member?.displayAvatarURL() || interaction.user.displayAvatarURL();
                 
                 avatarUpdate(userId, guildId, avatar); 
