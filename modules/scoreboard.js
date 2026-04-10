@@ -149,7 +149,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
     // --- SELF-SCHEDULING ---
     // This schedules the function to run again in 10 minutes
     console.log("Cycle complete. Scheduling next run in 10 minutes...");
-    setTimeout(() => autoPostScoreboard(client), 10 * 60 * 1000);
+    setTimeout(() => autoPostScoreboard(client), 1 * 60 * 1000);
 }
 
 async function scoreboard(target, guildId, userId = false) {
