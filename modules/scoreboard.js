@@ -117,6 +117,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
 
             try {
                 // 1. Is it the absolute newest message in the channel?
+                console.log(typeof scoreboardMsg[guild.id], scoreboardMsg[guild.id], typeof channel.lastMessageId, channel.lastMessageId);
                 if (scoreboardMsg[guild.id] && scoreboardMsg[guild.id].id === channel.lastMessageId) {
                     console.log(`[${guild.name}] Scoreboard is up-to-date. Editing...`);
                     await scoreboardMsg[guild.id].edit(messagePayload);
