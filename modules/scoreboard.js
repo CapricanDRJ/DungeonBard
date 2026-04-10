@@ -7,7 +7,7 @@ const fs = require('fs');
 const bgBuffer = fs.readFileSync('./assets/scoreboard.png');
 const hrBuffer = fs.readFileSync('./assets/header_ribbon.png');
 const scoreImageBuffer = sharp(bgBuffer);
-const h1ImageBuffer = sharp(hrBuffer);
+const headerImageBuffer = sharp(hrBuffer);
 
 const dbQuery = {
     getScoreboardData: db.prepare(`
@@ -233,17 +233,15 @@ async function scoreboard(target, guildId, userId = false) {
     }
 async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 1) {
     try {
-        const sbmetadata = scoreImageBuffer.metadata();
-        const h1metadata = h1ImageBuffer.metadata();
-        const bgWidth = sbmetadata.width;
-        const bgHeight = sbmetadata.height;
-        console.log(`Scoreboard background dimensions: ${bgWidth}x${bgHeight}`);
+        const metadata = await scoreImageBuffer.metadata();
+        const bgWidth = metadata.width;
+        const bgHeight = metadata.height;
+        const canvas = scoreImageBuffer.clone();
+
+        const h1metadata = await headerImageBuffer.metadata();
         const h1Width = h1metadata.width;
         const h1Height = h1metadata.height;
-        const h1Canvas = h1ImageBuffer.clone();
-        console.log(`Header ribbon dimensions: ${h1Width}x${h1Height}`);
-        const canvas = scoreImageBuffer.clone();
-        
+        console.log(h1Width, h1Height);
         // Calculate how many rows fit strictly inside the playable area
         const availableHeight = bgHeight - HEADER_OFFSET - BOTTOM_MARGIN;
         const maxCapacity = Math.floor(availableHeight / ROW_HEIGHT);
@@ -290,20 +288,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             if(rank === userLength+1) {
                 rank = 1;
                 plus = '+';
-                const bannerX = Math.floor((bgWidth - h1Width) / 2);
-                console.log(bannerX);
-                console.log(bgWidth);
-                console.log(h1Width);
-                const bannerY = y;
-                compositeLayers.push({
-                    input: await h1Canvas.png().toBuffer(),
-                    top: bannerY,
-                    left: bannerX
-                });
-                
-                
                 svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="h2">Folios of Renown</text>`;
-
             };
 
               //  
