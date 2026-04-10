@@ -21,9 +21,9 @@ const profNames = {
     artisan: ['Novice', 'Apprentice', 'Artisan', 'Adept', 'Mason', 'Grandmaster', 'Guild Leader'],
     soldier: ['Initiate', 'Squire', 'Vanguard', 'Warden', 'Guardian', 'Champion', 'Knight'],
     healer: ['Greenhand', 'Herbalist', 'Apothecary', 'Mender', 'Healer', 'Surgeon', 'Grandhealer'],
-    1: 'artisan',
-    2: 'soldier',
-    3: 'healer'
+    1: 'Artisan',
+    2: 'Soldier',
+    3: 'Healer'
 };
 
 const profLevel = {
