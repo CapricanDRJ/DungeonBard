@@ -88,6 +88,7 @@ console.log(`Starting scoreboard cycle for ${guilds.length} guild(s)...`);
             if(lastMessage) {
                 console.log(`[${guild.name}] Found cached message ${lastMessage.id}. Verifying...`);
                 console.log(channel.lastMessageId, lastMessage.id);
+                console.log(lastMessage);
             if(channel.lastMessageId !== lastMessage?.id) {
                 lastMessage.delete().catch(err => console.error(`Failed to delete old message in ${guild.name}:`, err));
                 scoreboardMsg.delete(guild.id);
