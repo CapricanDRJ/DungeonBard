@@ -33,53 +33,76 @@ const BOTTOM_MARGIN = 60;  // Stops the list before hitting the bottom border
 const TITLE_Y = 75;        // Centers the "Scoreboard" text vertically in the ribbon
 const userGen = true;
 const fontBase = 24;
-async function autoPostScoreboard(client, searchText = "") {
+
+
+
+async function autoPostScoreboard(client) {
     const guilds = Array.from(client.guilds.cache.values());
     const fortyEightHoursAgo = Date.now() - (48 * 60 * 60 * 1000);
 
     for (const guild of guilds) {
-        // 1. Quick Cache Lookup for Channel
         const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
         if (!channel || !channel.isTextBased()) continue;
 
-        // 2. Permission Check
         const perms = channel.permissionsFor(guild.members.me);
-        if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.ReadMessageHistory])) continue;
+        if (!perms || !perms.has([
+            PermissionFlagsBits.ViewChannel, 
+            PermissionFlagsBits.ReadMessageHistory,
+            PermissionFlagsBits.ManageMessages
+        ])) continue;
 
-        // 3. Efficiency: Shared filter logic
         const isValidScoreboard = (msg) => 
-            msg.author.id === client.user.id &&      // Sent by bot
-            msg.type === 0 &&                        // Standalone "Default" message
-            !msg.interaction &&                      // Not a slash command reply
+            msg.author.id === client.user.id &&
+            msg.type === 0 &&
+            !msg.interaction &&
             msg.createdTimestamp > fortyEightHoursAgo && 
-            msg.embeds.length > 0;// &&                 // Has an embed
-            //msg.content.includes(searchText);        // Matches search string
+            msg.embeds.length > 0;
 
-        // --- STEP 1: Check Cache (Zero API Cost) ---
-        let targetMessage = channel.messages.cache.find(isValidScoreboard);
+        try {
+            const fetchedMessages = await channel.messages.fetch({ limit: 50 });
+            const scoreboardMessages = fetchedMessages.filter(isValidScoreboard);
 
-        // --- STEP 2: Fetch only if necessary (API Cost: 1) ---
-        if (!targetMessage) {
-            try {
-                const fetchedMessages = await channel.messages.fetch({ limit: 50 });
-                targetMessage = fetchedMessages.find(isValidScoreboard);
-            } catch (err) {
-                console.error(`Failed to fetch messages in ${guild.name}:`, err);
+            let latestMessage = null;
+
+            for (const [id, msg] of scoreboardMessages) {
+                if (id !== channel.lastMessageId) {
+                    await msg.delete().catch(err => console.error(`Failed to delete in ${guild.name}:`, err));
+                } else {
+                    latestMessage = msg;
+                }
             }
+
+// 5. Final Determination & Testing
+        const messagePayload = {
+            content: `📜 Ledger of Triumphs - Updated at ${new Date().toLocaleTimeString()}`
+        };
+
+        try {
+            if (latestMessage) {
+                console.log(`[${guild.name}] Action: EDITING message ${latestMessage.id}`);
+                // Proper object notation for editing
+                await latestMessage.edit(messagePayload);
+            } else {
+                console.log(`[${guild.name}] Action: SENDING NEW message`);
+                // Proper object notation for sending
+                await channel.send(messagePayload);
+            }
+        } catch (err) {
+            console.error(`[${guild.name}] Failed to update scoreboard:`, err);
         }
 
-        // 4. Output Result
-        if (targetMessage) {
-            console.log(`[${guild.name}] Found message: ${targetMessage.id}`);
-        } else {
-            console.log(`[${guild.name}] No recent scoreboard found.`);
+        } catch (err) {
+            console.error(`Error in ${guild.name}:`, err);
         }
 
-        // --- STEP 3: Rate Limit Protection ---
-        // Processes guilds sequentially. 
-        // Small delay if you have a high guild count to stay under Global Rate Limits.
-        await new Promise(resolve => setTimeout(resolve, 250));
+        // Delay between guilds to stay under rate limits
+        await new Promise(resolve => setTimeout(resolve, 500));
     }
+
+    // --- SELF-SCHEDULING ---
+    // This schedules the function to run again in 10 minutes
+    console.log("Cycle complete. Scheduling next run in 10 minutes...");
+    setTimeout(() => autoPostScoreboard(client), 10 * 60 * 1000);
 }
 
 async function generateScoreboardImage(users, highlightIndex, rank = 1) {
