@@ -264,7 +264,8 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
             }
             if (rank > userLength) {
                 rank = 1;
-                svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#c0a060" opacity="0.3" rx="5"/>`;
+                i++;
+                //svgContent += `<rect x="${BORDER_LEFT}" y="${y}" width="${rowWidth}" height="${ROW_HEIGHT - 10}" fill="#c0a060" opacity="0.3" rx="5"/>`;
             }
             // Rank number
             svgContent += `<text x="${BORDER_LEFT + 10}" y="${y + 32}" class="rank">${rank}.</text>`;
