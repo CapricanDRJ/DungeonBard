@@ -295,7 +295,7 @@ async function generateScoreboardImage(users, gainUsers, highlightIndex, rank = 
                     top: bannerTop,
                     left: bannerLeft
                 });
-                svgContent += `<text x="${bgWidth / 2}" y="${y + 30 - gainOffset}" text-anchor="middle" class="h2">Folios of Renown</text>`;
+                svgContent += `<text x="${bgWidth / 2}" y="${y + Math.floor(ROW_HEIGHT / 2) - gainOffset}" text-anchor="middle" class="h2">Folios of Renown</text>`;
             };
 
               //  
