@@ -349,7 +349,7 @@ module.exports = {
     .setDescription("Browse and explore quests by area")
     .setIntegrationTypes([ 'GuildInstall']),
 
-  allowedButtons: ["questback", "questcomplete", "maxCount"],
+  allowedButtons: ["questback", "questcomplete", "maxCount", "quest"],
 
   executeCommand: async (interaction) => {
     if (interaction.commandName === "quest") {
@@ -390,6 +390,9 @@ module.exports = {
       const action = parts[0];
       
       switch (action) {
+        case "quest":
+          menu(interaction, false, 1);
+          break;
         case "questback":
           if(parts[1]) {
             // Back to stage 2 with area
