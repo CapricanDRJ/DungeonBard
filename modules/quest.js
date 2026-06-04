@@ -36,7 +36,7 @@ const dbQuery = {
   getRandomBeast: db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1'),
   addCoins: db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`),
   getOneDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
-  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId & (1 << (? - 1))"),
+  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId & (1 << (? - 1)) ORDER BY name ASC"),
   getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId & (1 << (? - 1)) ORDER BY questArea ASC"),
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
