@@ -21,12 +21,12 @@ module.exports = {
 
     executeCommand: async (interaction) => {
         try {
-            const logo = new AttachmentBuilder('./assets/SD_logo.png', { name: 'SD_logo.png' });
+            const logo = new AttachmentBuilder('./assets/SD_Logo.png', { name: 'SD_Logo.png' });
 
             const embed = new EmbedBuilder()
                 .setTitle('Begin Your Adventure!')
                 .setDescription('Welcome, Scholar! Press the button below to start your quest.')
-                .setImage('attachment://SD_logo.png')
+                .setImage('attachment://SD_Logo.png')
                 .setColor(0x5865F2);
 
             const row = new ActionRowBuilder().addComponents(
