@@ -36,9 +36,9 @@ const dbQuery = {
   getRandomBeast: db.prepare('SELECT * FROM beastiary where type = ? ORDER BY RANDOM() LIMIT 1'),
   addCoins: db.prepare(`UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?`),
   getOneDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
-  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId IN (0, ?) ORDER BY name ASC"),
+  getQuestsInArea: db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId & (1 << (? - 1))"),
+  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId & (1 << (? - 1)) ORDER BY questArea ASC"),
   getDomain: db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
-  getDistinctQuestArea: db.prepare("SELECT DISTINCT questArea,areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId IN (0, ?) ORDER BY questArea ASC"),
   insertQuestUser: db.prepare(`INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)`),
   updateDisplayName: db.prepare(`UPDATE users SET displayName = ? WHERE userId = ? AND guildId = ?`),
   getAllDomains: db.prepare('SELECT id, title, description FROM domains ORDER BY id'),
@@ -80,6 +80,10 @@ function formatTime(seconds) {
   })
 };
 */
+function translateDomain(value, toBitmask = true) {
+  if (toBitmask) return 1 << (value - 1);
+  return Math.log2(value) + 1;
+}
 function logQuest(log) {
   setImmediate(() => {
 
@@ -437,7 +441,7 @@ module.exports = {
             const log = { 
               guildId: interaction.guildId,
               userId: interaction.user.id,
-              domainId: quest.domainId,
+              domainId: user.domainId,
               questId: id,
               sawMonster: 0,
               beatMonster: null,
@@ -484,7 +488,7 @@ module.exports = {
             embeds.push(new EmbedBuilder()
               .setTitle(quest.questArea)
               .setDescription(quest.areaDesc || "No description available")
-              .setColor(colors[quest.domainId])
+              .setColor(colors[translateDomain(quest.domainId, false)] || 0x000000)
               .addFields(
                 { name: quest.name, value: quest.description, inline: true },
                 { name: `${['Artisan', 'Soldier', 'Healer'][parseInt(quest.professionId) - 1]} XP Earned`, value: `${quest.professionXp * multiple}`, inline: true },
