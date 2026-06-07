@@ -38,14 +38,16 @@ executeCommand: async (interaction) => {
 
         const tokenUrl = `https://api.tsl.rocks/editquest?token=${encodeURIComponent(token)}`;
 
-            return interaction.reply({
-            content: [
-                '**Quest Editing Link:**',
-                `[edit quest](${tokenUrl})`,
-                '',
-                `Link Expires <t:${exp}:R>`
-            ].join('\n'),
-            flags: MessageFlags.Ephemeral
+        return interaction.reply({
+        embeds: [{
+        title: '🛡️ Administrative Access Granted',
+        description: `[Initialize Management Session](${tokenUrl})`,
+        color: 0x5865F2, // Discord Blurple
+        footer: {
+        text: `Expires <t:${exp}:R}`
+        }
+        }],
+        flags: MessageFlags.Ephemeral
         });
     } catch (err) {
         console.error('Error generating quest token:', err);
