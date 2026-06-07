@@ -41,7 +41,7 @@ executeCommand: async (interaction) => {
             return interaction.reply({
             content: [
                 '**Quest Editing Link:**',
-                `\`${tokenUrl}\``,
+                `[edit quest](${tokenUrl})`,
                 '',
                 `Link Expires <t:${exp}:R>`
             ].join('\n'),
