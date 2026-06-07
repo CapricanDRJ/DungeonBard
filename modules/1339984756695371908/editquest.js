@@ -41,10 +41,9 @@ executeCommand: async (interaction) => {
         return interaction.reply({
         embeds: [{
         title: '🛡️ Administrative Access Granted',
-        description: `[Initialize Management Session](${tokenUrl})`,
+        description: `[Initialize Management Session](${tokenUrl})\nExpires <t:${exp}:R}`,
         color: 0x5865F2, // Discord Blurple
         footer: {
-        text: `Expires <t:${exp}:R}`
         }
         }],
         flags: MessageFlags.Ephemeral
