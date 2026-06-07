@@ -8,49 +8,38 @@ const client = new Discord.Client({
      Discord.GatewayIntentBits.Guilds
    ]
 });
-
-// Dynamically load all modules from the /modules directory
+const modules = [];
+const guildMap = new Map();
 const modulesDir = path.join(__dirname, 'modules');
-const modules = fs.readdirSync(modulesDir)
-    .filter(file => file.endsWith('.js'))
-    .map(file => require(path.join(modulesDir, file)));
 
-// Register slash commands
-// Register slash commands
+fs.readdirSync(modulesDir, { withFileTypes: true }).forEach(ent => {
+ const p = path.join(modulesDir, ent.name);
+ if (ent.isFile() && ent.name.endsWith('.js')) modules.push(require(p));
+ else if (ent.isDirectory()) guildMap.set(ent.name, fs.readdirSync(p).filter(f => f.endsWith('.js')).map(f => require(path.join(p, f))));
+});
+
 const registerCommands = async () => {
-    const commands = [];
-    modules.forEach(mod => {
-        if (mod.commandData) {
-            commands.push(mod.commandData.toJSON());
-        }
-    });
-
-    if (commands.length > 0) {
-        const rest = new Discord.REST({ version: '10' }).setToken(Config.Token);
-        
-        // Register commands globally
-        await rest.put(Discord.Routes.applicationCommands(Config.ClientID), { body: commands });
-        console.log('Successfully registered global application commands.');
-    }
+ const rest = new Discord.REST({ version: '10' }).setToken(Config.Token);
+ const globals = modules.filter(m => m.commandData).map(m => m.commandData.toJSON());
+ if (globals.length) await rest.put(Discord.Routes.applicationCommands(Config.ClientID), { body: globals });
+ for (const [gid, mods] of guildMap) {
+ const local = mods.filter(m => m.commandData).map(m => m.commandData.toJSON());
+ if (local.length) await rest.put(Discord.Routes.applicationGuildCommands(Config.ClientID, gid), { body: local });
+ }
 };
 
-client.once('clientReady', async () => {
+client.once('ready', async () => {
     console.log(`Client ready; logged in as ${client.user.tag} (${client.user.id})`);
 
     // Register commands based on the number of guilds (servers)
     await registerCommands();
 
-    // Initialize the bot using all loaded modules
-    modules.forEach(mod => {
-        if (mod.initializeBot) mod.initializeBot(client);
-        if (mod.loadEvents) mod.loadEvents(client);
-    });
-
-    // Call the main function for each module after the bot is ready
-    modules.forEach(mod => {
-        if (mod.main) mod.main(client);
-    });
-
+const allLoaded = [...modules,...Array.from(guildMap.values()).flat()];
+allLoaded.forEach(mod => {
+ if (mod.initializeBot) mod.initializeBot(client);
+ if (mod.loadEvents) mod.loadEvents(client);
+ if (mod.main) mod.main(client);
+});
 
 //emoji upload for beastiary, remove later
 const sqlite3 = require('better-sqlite3');
@@ -115,11 +104,8 @@ downloadAndResizeEmojis();
 });
 
 client.on("interactionCreate", (interaction) => {
-    Promise.all(
-        modules
-            .filter(mod => mod.handleInteraction)
-            .map(mod => mod.handleInteraction(client, interaction))
-    ).catch(console.error); // Log errors if any module fails
+ const active = [...modules,...(guildMap.get(interaction.guildId) || [])];
+ Promise.all(active.filter(m => m.handleInteraction).map(m => m.handleInteraction(client, interaction))).catch(console.error);
 });
 
 setInterval(async () => {
