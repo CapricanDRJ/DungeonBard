@@ -8,7 +8,6 @@ const app = express();
 const PORT = 3002;
 
 // --- CONFIGURATION & PATHS ---
-// Corrected to lowercase 'b' as requested
 const MAIN_DB_PATH = '../dungeonBard/db/dungeonbard.db'; 
 const SESSION_DB_PATH = './db/sessions.db';
 
@@ -28,7 +27,6 @@ try {
  db = new sqlite3(MAIN_DB_PATH);
  sessionDb = new sqlite3(SESSION_DB_PATH);
  
- // Create table if missing - using discord_id as PK to support 'REPLACE' logic
  sessionDb.prepare(`
  CREATE TABLE IF NOT EXISTS sessions (
  discord_id TEXT PRIMARY KEY,
@@ -80,10 +78,11 @@ app.get('/api/quests/areas', (req, res) => {
  if (isNaN(domainId)) return res.status(400).json({ error: "Invalid domain ID" });
 
  try {
- // Replicating quest.js logic: filter areas where the domain bit is set
- const areas = db.prepare("SELECT DISTINCT area_name FROM quests WHERE (area_mask &?)!= 0")
+ // Fixed: changed table name from 'quests' to 'quest' to match your schema
+ // Fixed: using 'questArea' to match your POST route logic
+ const areas = db.prepare("SELECT DISTINCT questArea FROM quest WHERE (questArea &?)!= 0")
 .all(1 << (domainId - 1));
- res.json(areas.map(a => a.area_name));
+ res.json(areas.map(a => a.questArea));
  } catch (err) {
  res.status(500).json({ error: "Database error fetching areas." });
  }
@@ -114,7 +113,7 @@ app.post('/api/quests', checkAuth, (req, res) => {
 // --- AUTHENTICATION ROUTES (OAuth2) ---
 
 app.get('/login', (req, res) => {
- const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${config.ClientID}&redirect_uri=${encodeURIComponent('https://dm.tsl.rocks/callback')}&response_type=code&scope=identify`;
+ const authUrl = `https://discord.com/api/oauth2/authorize?client_id=config.ClientID&redirect_uri={encodeURIComponent('https://dm.tsl.rocks/callback')}&response_type=code&scope=identify`;
  res.redirect(authUrl);
 });
 
@@ -152,35 +151,54 @@ sessionDb.prepare("INSERT OR REPLACE INTO sessions (discord_id, expires_at) VALU
 app.get('/', (req, res) => {
  res.send(`
  <!DOCTYPE html>
- <html>
+ <html lang="en">
  <head>
+ <meta charset="UTF-8">
  <title>Dungeon Bard Admin</title>
  <style>
- body { font-family: sans-serif; padding: 20px; background: #f4f4f4; }
-.card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); }
+ body { font-family: sans-serif; padding: 20px; background: #f4f4f4; line-height: 1.5; }
+.card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
 .hidden { display: none; }
-.error { color: red; }
+.error { color: red; font-weight: bold; }
+.control-group { margin-bottom: 20px; padding: 10px; border: 1px solid #eee; border-radius: 4px; }
+ label { font-weight: bold; margin-right: 10px; }
+ input[type="text"], textarea { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
+ button { padding: 10px 15px; cursor: pointer; background: #5865F2; color: white; border: none; border-radius: 4px; }
+ button:hover { background: #4752C4; }
  </style>
  </head>
  <body>
  <div id="app" class="card">
  <h1>Dungeon Bard Admin</h1>
+ 
  <div id="auth-section">
  <p>You are not logged in.</p>
  <button onclick="window.location.href='/login'">Login with Discord</button>
  </div>
+
  <div id="admin-section" class="hidden">
  <p>Welcome, Admin.</p>
  <hr>
  <h3>Quest Editor</h3>
  <div id="editor">
- <!-- UI logic would go here -->
- <p>Loading controls...</p>
+ <p id="loading-msg">Loading controls...</p>
+ <div id="domain-controls" class="control-group hidden"></div>
+ <div id="area-controls" class="control-group hidden"></div>
+ <div id="quest-form" class="control-group hidden">
+ <label>Quest Name</label><br>
+ <input type="text" id="q-name"><br><br>
+ <label>Description</label><br>
+ <textarea id="q-desc" rows="3"></textarea><br><br>
+ <label>Area Bitmask (questArea)</label><br>
+ <input type="text" id="q-area"><br><br>
+ <button onclick="saveQuest()">Save Quest</button>
+ </div>
  </div>
  </div>
  </div>
 
  <script>
+ // 1. Check Auth Status
  async function checkStatus() {
  try {
  const res = await fetch('/api/auth/status');
@@ -188,10 +206,81 @@ app.get('/', (req, res) => {
  if (data.authenticated) {
  document.getElementById('auth-section').classList.add('hidden');
  document.getElementById('admin-section').classList.remove('hidden');
+ loadDomains();
  }
  } catch (e) { console.error("Auth check failed", e); }
  }
- // Add endpoint for status check
+
+ // 2. Load Domains (Radio Buttons)
+ async function loadDomains() {
+ try {
+ const res = await fetch('/api/quests/domains');
+ const domains = await res.json();
+ const container = document.getElementById('domain-controls');
+ container.innerHTML = '<strong>Select Domain:</strong><br>';
+ domains.forEach(d => {
+ const label = document.createElement('label');
+ label.innerHTML = \`<input type="radio" name="domain" value="\d.id" onchange="loadAreas(\{d.id})"> \${d.title} \`;
+ container.appendChild(label);
+ label.appendChild(document.createElement('br'));
+ });
+ container.classList.remove('hidden');
+ document.getElementById('loading-msg').classList.add('hidden');
+ } catch (e) { console.error("Load domains failed", e); }
+ }
+
+ // 3. Load Areas (Checkboxes) based on Domain
+ async function loadAreas(domainId) {
+ try {
+ const res = await fetch(\`/api/quests/areas?domain_id=\${domainId}\`);
+ const areas = await res.json();
+ const container = document.getElementById('area-controls');
+ container.innerHTML = '<strong>Select Area:</strong><br>';
+ 
+ if (areas.length === 0) {
+ container.innerHTML += '<em>No areas found for this domain.</em>';
+ } else {
+ areas.forEach(a => {
+ const label = document.createElement('label');
+ label.innerHTML = \`<input type="checkbox" name="area" value="\a"> \{a} \`;
+ container.appendChild(label);
+ label.appendChild(document.createElement('br'));
+ });
+ }
+ container.classList.remove('hidden');
+ document.getElementById('quest-form').classList.remove('hidden');
+ // Store domainId for saving
+ window.currentDomainId = domainId;
+ } catch (e) { console.error("Load areas failed", e); }
+ }
+
+ // 4. Save the Quest
+ async function saveQuest() {
+ const name = document.getElementById('q-name').value;
+ const description = document.getElementById('q-desc').value;
+ const questArea = document.getElementById('q-area').value;
+ const domainId = window.currentDomainId;
+
+ if (!name ||!questArea) { alert("Name and Area are required."); return; }
+
+ try {
+ const res = await fetch('/api/quests', {
+ method: 'POST',
+ headers: { 'Content-Type': 'application/json' },
+ body: JSON.stringify({ name, description, questArea, domainId })
+ });
+ if (res.ok) {
+ alert("Quest saved successfully!");
+ document.getElementById('q-name').value = '';
+ document.getElementById('q-desc').value = '';
+ document.getElementById('q-area').value = '';
+ } else {
+ const err = await res.json();
+ alert("Error: " + err.error);
+ }
+ } catch (e) { alert("Failed to save quest."); }
+ }
+
  checkStatus();
  </script>
  </body>
@@ -212,15 +301,13 @@ const server = app.listen(PORT, () => {
  console.log(`🚀 Dungeon Bard Admin running at http://localhost:${PORT}`);
 });
 
-// --- GLOBAL ERROR HANDLERS (To prevent silent exits) ---
-
+// --- GLOBAL ERROR HANDLERS ---
 process.on('uncaughtException', (err) => {
- console.error('❌ UNCAUGHT EXCEPTION! The server is crashing:', err);
- // We don't exit immediately so you can read the log
+ console.error('❌ UNCAUGHT EXCEPTION!', err);
 });
 
 process.on('unhandledRejection', (reason, promise) => {
- console.error('❌ UNHANDLED REJECTION! A promise failed:', reason);
+ console.error('❌ UNHANDLED REJECTION!', reason);
 });
 
 server.on('error', (err) => {
