@@ -382,12 +382,16 @@ app.get('/', (req, res) => {
 
     <div class="two-col">
       <div>
-        <label>Coins Awarded (1–10)</label>
-        <input type="number" id="q-coins" min="1" max="10" value="1">
+        <label>Coins Awarded</label>
+        <select id="q-coins">
+          ${[1,2,3,4,5,6,7,8,9,10].map(n => `<option value="${n}">${n}</option>`).join('')}
+        </select>
       </div>
       <div>
-        <label>Max Count (times claimable)</label>
-        <input type="number" id="q-maxcount" min="1" max="99" value="1">
+        <label>Max Count</label>
+        <select id="q-maxcount">
+          ${[1,2,3,4,5].map(n => `<option value="${n}">${n}</option>`).join('')}
+        </select>
       </div>
     </div>
 
