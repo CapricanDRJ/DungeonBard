@@ -268,7 +268,7 @@ app.get('/callback', async (req, res) => {
     const expires_at = Date.now() + (7 * 24 * 60 * 60 * 1000);
     dbQuery.upsertSession.run(discordId, username, expires_at);
     res.cookie('discordId', discordId, { httpOnly: true, secure: true, sameSite: 'Lax' });
-    res.redirect('/');
+    res.redirect(ADMIN_WHITELIST.includes(discordId) ? '/admin' : '/quests');
   } catch (err) {
     console.error("[OAuth_ERROR]", err.response?.data || err.message);
     res.status(500).send("Authentication failed.");
@@ -306,13 +306,33 @@ app.get('/quests', (req, res) => {
   }
 });
 
-// Root: server-side auth gate — no client-side auth logic at all
 app.get('/', (req, res) => {
-  const session = getAuthedSession(req);
-  if (!session) return res.redirect('/quests');
-
-  // Only reaches here if cookie matches a whitelisted, unexpired session
-  const username = session.username || 'Scribe';
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dungeon Bard</title>
+<style>
+  body { font-family: sans-serif; padding: 40px; background: #2c2f33; color: #dcddde; text-align: center; }
+  .card { background: #36393f; padding: 40px; border-radius: 8px; max-width: 400px; margin: auto; box-shadow: 0 2px 8px rgba(0,0,0,0.4); }
+  h1 { color: #fff; margin-bottom: 20px; }
+  p { margin-bottom: 30px; color: #b9bbbe; }
+  .btn { padding: 12px 24px; background: #5865F2; color: white; border: none; border-radius: 4px; font-size: 1rem; cursor: pointer; text-decoration: none; display: inline-block; }
+  .btn:hover { background: #4752C4; }
+</style>
+</head>
+<body>
+<div class="card">
+  <h1>Dungeon Bard</h1>
+  <p>Login with Discord to continue.</p>
+  <a href="/login" class="btn">Login with Discord</a>
+</div>
+</body>
+</html>`);
+});
+// Admin panel — whitelisted users only
+app.get('/admin', checkAuth, (req, res) => {
+  const username = getAuthedSession(req).username || 'Scribe';
   const domainsJson    = JSON.stringify(DOMAINS);
   const areasJson      = JSON.stringify(AREAS);
   const beastsJson     = JSON.stringify(BEASTS);
@@ -552,7 +572,7 @@ app.get('/', (req, res) => {
 
     try {
       const res = await fetch(\`/api/quests?area=\${encodeURIComponent(area)}&domain=\${domainId}\`);
-      if (res.status === 403) { window.location.href = '/quests'; return; }
+      if (res.status === 403) { window.location.href = '/'; return; }
       const quests = await res.json();
       const sel = document.getElementById('quest-list');
       sel.innerHTML = '<option value="" disabled selected>-- Choose a Quest --</option>';
@@ -570,7 +590,7 @@ app.get('/', (req, res) => {
     if (!id) return;
     try {
       const res = await fetch(\`/api/quests/\${id}\`);
-      if (res.status === 403) { window.location.href = '/quests'; return; }
+      if (res.status === 403) { window.location.href = '/'; return; }
       const q = await res.json();
 
       document.getElementById('q-id').value             = q.id;
@@ -672,7 +692,7 @@ app.get('/', (req, res) => {
         headers: { 'Content-Type': 'application/json' },
         body:    JSON.stringify(body)
       });
-      if (res.status === 403) { window.location.href = '/quests'; return; }
+      if (res.status === 403) { window.location.href = '/'; return; }
       const data = await res.json();
       if (!res.ok) { showStatus(data.error, false); return; }
       showStatus(id ? 'Quest updated.' : \`Quest created (id: \${data.id})\`, true);
