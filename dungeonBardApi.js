@@ -187,7 +187,7 @@ app.get('/', (req, res) => {
  
  <!-- Step 1: Domain Selection -->
  <div id="domain-controls" class="control-group hidden">
- <label for="domain-select">Select Domain:</label>
+ <label for="domain-select">1. Select Domain:</label>
  <select id="domain-select" onchange="loadAreas(this.value)"></select>
  </div>
 
@@ -196,13 +196,13 @@ app.get('/', (req, res) => {
 
  <!-- Step 3: Quest Form -->
  <div id="quest-form" class="control-group hidden">
- <label>Quest Name</label>
+ <label>2. Quest Name</label>
  <input type="text" id="q-name" placeholder="e.g. The Lost Relic">
  
- <label>Description</label>
+ <label>3. Description</label>
  <textarea id="q-desc" rows="3" placeholder="Describe the quest..."></textarea>
  
- <label>Area Bitmask (questArea)</label>
+ <label>4. Area Bitmask (questArea)</label>
  <input type="text" id="q-area" placeholder="e.g. 1, 2, 4">
  
  <button onclick="saveQuest()">Save Quest</button>
@@ -230,17 +230,13 @@ app.get('/', (req, res) => {
  const res = await fetch('/api/quests/domains');
  const domains = await res.json();
  const select = document.getElementById('domain-select');
- 
- // Clear and add default option
  select.innerHTML = '<option value="" disabled selected>-- Choose a Domain --</option>';
- 
  domains.forEach(d => {
  const opt = document.createElement('option');
  opt.value = d.id;
  opt.textContent = d.title;
  select.appendChild(opt);
  });
-
  document.getElementById('domain-controls').classList.remove('hidden');
  document.getElementById('loading-msg').classList.add('hidden');
  } catch (e) { 
@@ -249,38 +245,48 @@ app.get('/', (req, res) => {
  }
  }
 
- // 3. Load Areas (Checkboxes) based on Domain selection
+ // 3. Load ALL Areas globally
  async function loadAreas(domainId) {
  if (!domainId) return;
+ window.currentDomainId = domainId;
 
  try {
- const res = await fetch(\`/api/quests/areas?domain_id=\${domainId}\`);
+ const res = await fetch(\`/api/quests/areas\`); // Removed domain_id filter
  const areas = await res.json();
  const container = document.getElementById('area-controls');
  
- container.innerHTML = '<label>Select Area(s):</label>';
+ container.innerHTML = '<label>Select Area(s) (Quick Pick):</label>';
  
  if (areas.length === 0) {
- container.innerHTML += '<em style="color: #666;">No areas found for this domain.</em>';
+ container.innerHTML += '<em style="color: #666;">No existing areas found in DB. Type mask manually.</em>';
  } else {
  areas.forEach(a => {
  const label = document.createElement('label');
  label.className = 'checkbox-item';
- // We use the area name as the value for the checkbox
- label.innerHTML = \`<input type="checkbox" name="area" value="\a"> \{a} \`;
+ // Pass the area value to our toggle function
+ label.innerHTML = \`<input type="checkbox" class="area-checkbox" value="\a" onchange="updateAreaMask()"> \{a} \`;
  container.appendChild(label);
  });
  }
 
  container.classList.remove('hidden');
  document.getElementById('quest-form').classList.remove('hidden');
- window.currentDomainId = domainId;
  } catch (e) { 
  console.error("Load areas failed", e); 
  }
  }
 
- // 4. Save the Quest
+ // 4. Calculate bitmask from checkboxes and update the text field
+ function updateAreaMask() {
+ const checkboxes = document.querySelectorAll('.area-checkbox:checked');
+ let mask = 0;
+ checkboxes.forEach(cb => {
+ mask |= parseInt(cb.value);
+ });
+ document.getElementById('q-area').value = mask;
+ }
+
+ // 5. Save the Quest
  async function saveQuest() {
  const name = document.getElementById('q-name').value;
  const description = document.getElementById('q-desc').value;
@@ -301,6 +307,8 @@ app.get('/', (req, res) => {
  document.getElementById('q-name').value = '';
  document.getElementById('q-desc').value = '';
  document.getElementById('q-area').value = '';
+ // Uncheck all checkboxes
+ document.querySelectorAll('.area-checkbox').forEach(cb => cb.checked = false);
  } else {
  const err = await res.json();
  alert("Error: " + err.error);
@@ -308,7 +316,6 @@ app.get('/', (req, res) => {
  } catch (e) { alert("Failed to save quest."); }
  }
 
- // Run on load
  checkStatus();
  </script>
  </body>
