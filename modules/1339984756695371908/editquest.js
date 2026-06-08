@@ -25,23 +25,12 @@ module.exports = {
 
 executeCommand: async (interaction) => {
     try {
-        // 60 minute timeout (60 minutes * 60 seconds)
-        const exp = Math.floor(Date.now() / 1000) + (60 * 60);
-    
-        const token = jwt.sign({
-            userId: interaction.user.id,
-            guildId: interaction.guildId,
-            scope: 'editquest',
-            iat: Math.floor(Date.now() / 1000),
-            exp
-        }, secret);
-
-        const tokenUrl = `https://dm.tsl.rocks/`;
+        const tokenUrl = ``;
 
         return interaction.reply({
         embeds: [{
-        title: '🛡️ Administrative Access Granted',
-        description: `[Initialize Management Session](${tokenUrl})\nExpires <t:${exp}:R>`,
+        title: '🛡️ Administrative Access',
+        description: `[Initialize Management Session](https://dm.tsl.rocks/)`,
         color: 0x5865F2, // Discord Blurple
         footer: {
         }
