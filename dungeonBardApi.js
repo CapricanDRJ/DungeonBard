@@ -177,7 +177,16 @@ function buildQuestFields(body) {
   const skills = [0, 0, 0, 0, 0, 0];
   const si = parseInt(skillIndex);
   const sb = parseInt(skillBonus) || 0;
-  if (si >= 1 && si <= 6 && sb > 0) skills[si - 1] = sb;
+
+  // Add this double-check block:
+  if (si >= 1 && si <= 6) {
+    if (sb < 1 || sb > 5) {
+      return { error: "skillBonus must be between 1 and 5." };
+    }
+    skills[si - 1] = sb;
+  } else if (si !== 0) {
+    return { error: "Invalid skillIndex." };
+  }
 
   return {
     fields: [
