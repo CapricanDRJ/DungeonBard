@@ -149,6 +149,16 @@ function buildQuestFields(body) {
   if (!name || !questArea || !areaDesc || !description || !professionId)
     return { error: "Missing required fields." };
 
+  if (name.length > 100)        return { error: "name exceeds 100 characters." };
+  if (description.length > 200) return { error: "description exceeds 200 characters." };
+  if (questArea.length > 50)    return { error: "questArea exceeds 50 characters." };
+  if (areaDesc.length > 100)    return { error: "areaDesc exceeds 100 characters." };
+
+  if (beastiary && !BEASTS.some(b => b.type === beastiary))
+    return { error: "Invalid beastiary type." };
+  if (relic && !RELICS.some(r => r.id === relic))
+    return { error: "Invalid relic id." };
+
   const profId = parseInt(professionId);
   if (![1, 2, 3].includes(profId)) return { error: "Invalid professionId." };
 
