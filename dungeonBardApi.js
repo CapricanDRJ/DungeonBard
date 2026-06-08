@@ -117,11 +117,11 @@ app.get('/callback', async (req, res) => {
 
  try {
  const tokenResponse = await axios.post('https://discord.com/api/oauth2/token', new URLSearchParams({
- client_id: config.ClientId,
+ client_id: config.ClientID,
  client_secret: config.ClientSecret,
  grant_type: 'authorization_code',
  code: code,
- redirect_uri: `req.protocol://{req.get('host')}/callback`,
+ redirect_uri: `https://dm.tsl.rocks/callback`,
  }), { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } });
 
  const userResponse = await axios.get('https://discord.com/api/users/@me', {
