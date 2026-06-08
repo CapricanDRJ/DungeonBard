@@ -17,7 +17,7 @@ app.use(cookieParser());
 // --- CONFIGURATION & PATHS ---
 const config = require('../dungeonBard/config.json');
 
-const MAIN_DB_PATH = '../dungeonBard/db/dungeonBard.db';
+const MAIN_DB_PATH = '../dungeonBard/db/dungeonbard.db';
 const SESSION_DB_PATH = './db/sessions.db';
 
 const ADMIN_WHITELIST = [
