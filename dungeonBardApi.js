@@ -5,7 +5,7 @@ const cookieParser = require('cookie-parser');
 const config = require('../dungeonBard/config.json');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = 3002;
 
 // --- CONFIGURATION & PATHS ---
 // Corrected to lowercase 'b' as requested
