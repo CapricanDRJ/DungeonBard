@@ -377,7 +377,10 @@ app.get('/', (req, res) => {
       <select id="q-skill-index">
         <option value="0">No skill bonus</option>
       </select>
-      <input type="number" id="q-skill-bonus" min="0" max="99" value="0" placeholder="Bonus amount">
+        <label>Bonus Amount</label>
+        <select id="q-skill-bonus">
+          ${[0,1,2,3,4,5].map(n => `<option value="${n}">${n}</option>`).join('')}
+        </select>
     </div>
 
     <div class="two-col">
