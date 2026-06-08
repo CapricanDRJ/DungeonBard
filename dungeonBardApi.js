@@ -107,7 +107,7 @@ app.get('/', (req, res) => {
 // 2. Login Route
 // Redirects the user to Discord's OAuth2 authorization page
 app.get('/login', (req, res) => {
- const discordUrl = `https://discord.com/api/oauth2/authorize?client_id={CLIENT_ID}&redirect_uri={encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
+ const discordUrl = `https://discord.com/api/oauth2/authorize?client_id=${CLIENT_ID}&redirect_uri=${encodeURIComponent(REDIRECT_URI)}&response_type=code&scope=identify`;
  res.redirect(discordUrl);
 });
 
