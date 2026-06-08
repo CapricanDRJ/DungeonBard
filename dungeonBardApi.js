@@ -148,6 +148,7 @@ sessionDb.prepare("INSERT OR REPLACE INTO sessions (discord_id, expires_at) VALU
 });
 
 // --- HTML INTERFACE ---
+// --- HTML INTERFACE ---
 app.get('/', (req, res) => {
  res.send(`
  <!DOCTYPE html>
@@ -160,11 +161,12 @@ app.get('/', (req, res) => {
 .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 5px rgba(0,0,0,0.1); max-width: 800px; margin: auto; }
 .hidden { display: none; }
 .error { color: red; font-weight: bold; }
-.control-group { margin-bottom: 20px; padding: 10px; border: 1px solid #eee; border-radius: 4px; }
- label { font-weight: bold; margin-right: 10px; }
- input[type="text"], textarea { width: 100%; padding: 8px; margin-top: 5px; box-sizing: border-box; }
- button { padding: 10px 15px; cursor: pointer; background: #5865F2; color: white; border: none; border-radius: 4px; }
+.control-group { margin-bottom: 20px; padding: 15px; border: 1px solid #eee; border-radius: 4px; }
+ label { font-weight: bold; display: block; margin-bottom: 5px; }
+ input[type="text"], textarea, select { width: 100%; padding: 8px; margin-bottom: 15px; box-sizing: border-box; border: 1px solid #ccc; border-radius: 4px; }
+ button { padding: 10px 15px; cursor: pointer; background: #5865F2; color: white; border: none; border-radius: 4px; width: 100%; font-size: 1rem; }
  button:hover { background: #4752C4; }
+.checkbox-item { display: block; font-weight: normal; margin-bottom: 5px; cursor: pointer; }
  </style>
  </head>
  <body>
@@ -182,17 +184,28 @@ app.get('/', (req, res) => {
  <h3>Quest Editor</h3>
  <div id="editor">
  <p id="loading-msg">Loading controls...</p>
- <div id="domain-controls" class="control-group hidden"></div>
- <div id="area-controls" class="control-group hidden"></div>
- <div id="quest-form" class="control-group hidden">
- <label>Quest Name</label><br>
- <input type="text" id="q-name"><br><br>
- <label>Description</label><br>
- <textarea id="q-desc" rows="3"></textarea><br><br>
- <label>Area Bitmask (questArea)</label><br>
- <input type="text" id="q-area"><br><br>
- <button onclick="saveQuest()">Save Quest</button>
+ 
+ <!-- Step 1: Domain Selection -->
+ <div id="domain-controls" class="control-group hidden">
+ <label for="domain-select">Select Domain:</label>
+ <select id="domain-select" onchange="loadAreas(this.value)"></select>
  </div>
+
+ <!-- Step 2: Area Selection -->
+ <div id="area-controls" class="control-group hidden"></div>
+
+ <!-- Step 3: Quest Form -->
+ <div id="quest-form" class="control-group hidden">
+ <label>Quest Name</label>
+ <input type="text" id="q-name" placeholder="e.g. The Lost Relic">
+ 
+ <label>Description</label>
+ <textarea id="q-desc" rows="3" placeholder="Describe the quest..."></textarea>
+ 
+ <label>Area Bitmask (questArea)</label>
+ <input type="text" id="q-area" placeholder="e.g. 1, 2, 4">
+ 
+ <button onclick="saveQuest()">Save Quest</button>
  </div>
  </div>
  </div>
@@ -211,47 +224,60 @@ app.get('/', (req, res) => {
  } catch (e) { console.error("Auth check failed", e); }
  }
 
- // 2. Load Domains (Radio Buttons)
+ // 2. Load Domains into Dropdown
  async function loadDomains() {
  try {
  const res = await fetch('/api/quests/domains');
  const domains = await res.json();
- const container = document.getElementById('domain-controls');
- container.innerHTML = '<strong>Select Domain:</strong><br>';
+ const select = document.getElementById('domain-select');
+ 
+ // Clear and add default option
+ select.innerHTML = '<option value="" disabled selected>-- Choose a Domain --</option>';
+ 
  domains.forEach(d => {
- const label = document.createElement('label');
- label.innerHTML = \`<input type="radio" name="domain" value="\d.id" onchange="loadAreas(\{d.id})"> \${d.title} \`;
- container.appendChild(label);
- label.appendChild(document.createElement('br'));
+ const opt = document.createElement('option');
+ opt.value = d.id;
+ opt.textContent = d.title;
+ select.appendChild(opt);
  });
- container.classList.remove('hidden');
+
+ document.getElementById('domain-controls').classList.remove('hidden');
  document.getElementById('loading-msg').classList.add('hidden');
- } catch (e) { console.error("Load domains failed", e); }
+ } catch (e) { 
+ console.error("Load domains failed", e); 
+ document.getElementById('loading-msg').textContent = "Failed to load domains.";
+ }
  }
 
- // 3. Load Areas (Checkboxes) based on Domain
+ // 3. Load Areas (Checkboxes) based on Domain selection
  async function loadAreas(domainId) {
+ if (!domainId) return;
+
  try {
  const res = await fetch(\`/api/quests/areas?domain_id=\${domainId}\`);
  const areas = await res.json();
  const container = document.getElementById('area-controls');
- container.innerHTML = '<strong>Select Area:</strong><br>';
+ 
+ container.innerHTML = '<label>Select Area(s):</label>';
  
  if (areas.length === 0) {
- container.innerHTML += '<em>No areas found for this domain.</em>';
+ container.innerHTML += '<em style="color: #666;">No areas found for this domain.</em>';
  } else {
  areas.forEach(a => {
  const label = document.createElement('label');
+ label.className = 'checkbox-item';
+ // We use the area name as the value for the checkbox
  label.innerHTML = \`<input type="checkbox" name="area" value="\a"> \{a} \`;
  container.appendChild(label);
- label.appendChild(document.createElement('br'));
  });
  }
+
  container.classList.remove('hidden');
  document.getElementById('quest-form').classList.remove('hidden');
- // Store domainId for saving
  window.currentDomainId = domainId;
- } catch (e) { console.error("Load areas failed", e); }
+ } catch (e) { 
+ console.error("Load areas failed", e); 
+ }
  }
 
  // 4. Save the Quest
@@ -269,6 +295,7 @@ app.get('/', (req, res) => {
  headers: { 'Content-Type': 'application/json' },
  body: JSON.stringify({ name, description, questArea, domainId })
  });
+ 
  if (res.ok) {
  alert("Quest saved successfully!");
  document.getElementById('q-name').value = '';
@@ -281,6 +308,7 @@ app.get('/', (req, res) => {
  } catch (e) { alert("Failed to save quest."); }
  }
 
+ // Run on load
  checkStatus();
  </script>
  </body>
