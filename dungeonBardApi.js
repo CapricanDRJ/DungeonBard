@@ -20,6 +20,17 @@ const ADMIN_WHITELIST = [
 
 const PROFESSION_NAMES = ["Artisan", "Soldier", "Healer"];
 
+// --- VALIDATION RANGES (easily adjustable) ---
+const RANGES = {
+  professionXp: { min: 1, max: 100 },
+  coins:        { min: 1, max: 10 },
+  maxCount:     { min: 1, max: 5 },
+  name:         { maxLength: 100 },
+  description:  { maxLength: 200 },
+  questArea:    { maxLength: 50 },
+  areaDesc:     { maxLength: 100 }
+};
+
 // --- DATABASE SETUP ---
 let db, sessionDb;
 try {
@@ -148,10 +159,14 @@ function buildQuestFields(body) {
   if (!name || !questArea || !areaDesc || !description || !professionId)
     return { error: "Missing required fields." };
 
-  if (name.length > 100)        return { error: "name exceeds 100 characters." };
-  if (description.length > 200) return { error: "description exceeds 200 characters." };
-  if (questArea.length > 50)    return { error: "questArea exceeds 50 characters." };
-  if (areaDesc.length > 100)    return { error: "areaDesc exceeds 100 characters." };
+  if (name.length > RANGES.name.maxLength)
+    return { error: `name exceeds ${RANGES.name.maxLength} characters.` };
+  if (description.length > RANGES.description.maxLength)
+    return { error: `description exceeds ${RANGES.description.maxLength} characters.` };
+  if (questArea.length > RANGES.questArea.maxLength)
+    return { error: `questArea exceeds ${RANGES.questArea.maxLength} characters.` };
+  if (areaDesc.length > RANGES.areaDesc.maxLength)
+    return { error: `areaDesc exceeds ${RANGES.areaDesc.maxLength} characters.` };
 
   if (beastiary && !BEASTS.some(b => b.type === beastiary))
     return { error: "Invalid beastiary type." };
@@ -196,12 +211,12 @@ function validateWithFirewall(validated) {
   
   // For new quests (insert), enforce strict ranges
   if (!questId) {
-    if (isNaN(xp) || xp < 10 || xp > 100)
-      return { error: "professionXp must be 10–100." };
-    if (isNaN(c) || c < 1 || c > 10)
-      return { error: "coins must be 1–10." };
-    if (isNaN(mc) || mc < 1 || mc > 5)
-      return { error: "maxCount must be 1–5." };
+    if (isNaN(xp) || xp < RANGES.professionXp.min || xp > RANGES.professionXp.max)
+      return { error: `professionXp must be ${RANGES.professionXp.min}–${RANGES.professionXp.max}.` };
+    if (isNaN(c) || c < RANGES.coins.min || c > RANGES.coins.max)
+      return { error: `coins must be ${RANGES.coins.min}–${RANGES.coins.max}.` };
+    if (isNaN(mc) || mc < RANGES.maxCount.min || mc > RANGES.maxCount.max)
+      return { error: `maxCount must be ${RANGES.maxCount.min}–${RANGES.maxCount.max}.` };
     return { ok: true };
   }
 
@@ -210,16 +225,16 @@ function validateWithFirewall(validated) {
   if (!currentQuest) return { error: "Quest not found." };
 
   // Check professionXp: in range OR matches old value
-  if (!(xp === currentQuest.professionXp || (xp >= 10 && xp <= 100)))
-    return { error: "professionXp out of range and differs from current value." };
+  if (!(xp === currentQuest.professionXp || (xp >= RANGES.professionXp.min && xp <= RANGES.professionXp.max)))
+    return { error: `professionXp out of range and differs from current value.` };
 
   // Check coins: in range OR matches old value
-  if (!(c === currentQuest.coins || (c >= 1 && c <= 10)))
-    return { error: "coins out of range and differs from current value." };
+  if (!(c === currentQuest.coins || (c >= RANGES.coins.min && c <= RANGES.coins.max)))
+    return { error: `coins out of range and differs from current value.` };
 
   // Check maxCount: in range OR matches old value
-  if (!(mc === currentQuest.maxCount || (mc >= 1 && mc <= 5)))
-    return { error: "maxCount out of range and differs from current value." };
+  if (!(mc === currentQuest.maxCount || (mc >= RANGES.maxCount.min && mc <= RANGES.maxCount.max)))
+    return { error: `maxCount out of range and differs from current value.` };
 
   return { ok: true };
 }
@@ -402,8 +417,8 @@ app.get('/', (req, res) => {
         </select>
       </div>
       <div>
-        <label>Profession XP Awarded (10–100)</label>
-        <input type="number" id="q-xp" min="10" max="100" value="10">
+        <label>Profession XP Awarded (1–100)</label>
+        <input type="number" id="q-xp" min="1" max="100" value="1">
       </div>
     </div>
 
@@ -614,7 +629,7 @@ app.get('/', (req, res) => {
     document.getElementById('q-area-desc').value       = '';
     document.getElementById('q-desc').value            = '';
     document.getElementById('q-profession-id').value  = '';
-    document.getElementById('q-xp').value              = 10;
+    document.getElementById('q-xp').value              = 1;
     document.getElementById('q-coins').value           = 1;
     document.getElementById('q-maxcount').value        = 1;
     document.getElementById('q-beast').value           = '';
