@@ -107,7 +107,7 @@ app.post('/api/quests', checkAuth, (req, res) => {
 // --- AUTHENTICATION ROUTES (OAuth2) ---
 
 app.get('/login', (req, res) => {
- const authUrl = `https://discord.com/api/oauth2/authorize?client_id=config.ClientId&redirect_uri={encodeURIComponent(req.protocol + '://' + req.get('host') + '/callback')}&response_type=code&scope=identify`;
+ const authUrl = `https://discord.com/api/oauth2/authorize?client_id=${config.ClientId}&redirect_uri=${encodeURIComponent(req.protocol + '://' + req.get('host') + '/callback')}&response_type=code&scope=identify`;
  res.redirect(authUrl);
 });
 
