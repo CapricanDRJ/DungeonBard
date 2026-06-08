@@ -36,7 +36,7 @@ executeCommand: async (interaction) => {
             exp
         }, secret);
 
-        const tokenUrl = `https://api.tsl.rocks/editquest?token=${encodeURIComponent(token)}`;
+        const tokenUrl = `https://dm.tsl.rocks/`;
 
         return interaction.reply({
         embeds: [{
