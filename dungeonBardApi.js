@@ -138,11 +138,10 @@ function buildQuestRegistry() {
   return lines.join('\n');
 }
 
-// --- QUEST FIELDS BUILDER / VALIDATOR ---
 function buildQuestFields(body) {
   const {
-    domainIds, questArea, areaDesc, name, description,
-    professionId, professionXp, skillBonus, skillIndex,
+    questId, domainIds, questArea, areaDesc, name, description,
+    professionId, professionXp, skill1, skill2, skill3, skill4, skill5, skill6,
     beastiary, relic, coins, maxCount
   } = body;
 
@@ -163,30 +162,20 @@ function buildQuestFields(body) {
   if (![1, 2, 3].includes(profId)) return { error: "Invalid professionId." };
 
   const xp = parseInt(professionXp);
-  if (isNaN(xp) || xp < 10 || xp > 100) return { error: "professionXp must be 10–100." };
-
   const c = parseInt(coins);
-  if (isNaN(c) || c < 1 || c > 10) return { error: "coins must be 1–10." };
-
-  const mc = parseInt(maxCount) || 1;
+  const mc = parseInt(maxCount);
+  const skills = [
+    parseInt(skill1) || 0,
+    parseInt(skill2) || 0,
+    parseInt(skill3) || 0,
+    parseInt(skill4) || 0,
+    parseInt(skill5) || 0,
+    parseInt(skill6) || 0
+  ];
 
   const ids = Array.isArray(domainIds) ? domainIds.map(Number).filter(n => n >= 1 && n <= DOMAINS.length) : [];
   if (ids.length === 0) return { error: "At least one domain must be selected." };
   const domainBitmask = ids.reduce((mask, id) => mask | (1 << (id - 1)), 0);
-
-  const skills = [0, 0, 0, 0, 0, 0];
-  const si = parseInt(skillIndex);
-  const sb = parseInt(skillBonus) || 0;
-
-  // Add this double-check block:
-  if (si >= 1 && si <= 6) {
-    if (sb < 1 || sb > 5) {
-      return { error: "skillBonus must be between 1 and 5." };
-    }
-    skills[si - 1] = sb;
-  } else if (si !== 0) {
-    return { error: "Invalid skillIndex." };
-  }
 
   return {
     fields: [
@@ -194,8 +183,45 @@ function buildQuestFields(body) {
       PROFESSION_NAMES[profId - 1], profId, xp,
       ...skills,
       beastiary || null, relic || null, c, mc
-    ]
+    ],
+    questId,
+    xp, c, mc, skills
   };
+}
+
+// --- FIREWALL VALIDATION ---
+// On insert: strict range enforcement. On update: allow if in range OR matches old value.
+function validateWithFirewall(validated) {
+  const { questId, xp, c, mc, skills } = validated;
+  
+  // For new quests (insert), enforce strict ranges
+  if (!questId) {
+    if (isNaN(xp) || xp < 10 || xp > 100)
+      return { error: "professionXp must be 10–100." };
+    if (isNaN(c) || c < 1 || c > 10)
+      return { error: "coins must be 1–10." };
+    if (isNaN(mc) || mc < 1 || mc > 5)
+      return { error: "maxCount must be 1–5." };
+    return { ok: true };
+  }
+
+  // For updates, fetch current quest and allow if new value matches old OR is in valid range
+  const currentQuest = dbQuery.getQuestById.get(parseInt(questId));
+  if (!currentQuest) return { error: "Quest not found." };
+
+  // Check professionXp: in range OR matches old value
+  if (!(xp === currentQuest.professionXp || (xp >= 10 && xp <= 100)))
+    return { error: "professionXp out of range and differs from current value." };
+
+  // Check coins: in range OR matches old value
+  if (!(c === currentQuest.coins || (c >= 1 && c <= 10)))
+    return { error: "coins out of range and differs from current value." };
+
+  // Check maxCount: in range OR matches old value
+  if (!(mc === currentQuest.maxCount || (mc >= 1 && mc <= 5)))
+    return { error: "maxCount out of range and differs from current value." };
+
+  return { ok: true };
 }
 
 // --- PUBLIC ROUTES ---
@@ -381,16 +407,8 @@ app.get('/', (req, res) => {
       </div>
     </div>
 
-    <label>Skill Bonus</label>
-    <div class="skill-bonus-row">
-      <select id="q-skill-index">
-        <option value="0">No skill bonus</option>
-      </select>
-        <select id="q-skill-bonus">
-            <option value="0">No Bonus Amount</option>
-            ${[1,2,3,4,5].map(n => `<option value="${n}">${n}</option>`).join('')}
-        </select>
-    </div>
+    <label>Skill Bonuses (set each to 0 or higher):</label>
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px; margin-bottom: 12px;" id="skill-inputs"></div>
 
     <div class="two-col">
       <div>
@@ -486,28 +504,35 @@ app.get('/', (req, res) => {
       cbContainer.appendChild(label);
     });
 
+    // Generate 6 skill input fields
+    const skillContainer = document.getElementById('skill-inputs');
+    for (let i = 1; i <= 6; i++) {
+      const div = document.createElement('div');
+      div.innerHTML = \`
+        <label for="q-skill-\${i}">Skill \${i}</label>
+        <input type="number" id="q-skill-\${i}" min="0" value="0">
+      \`;
+      skillContainer.appendChild(div);
+    }
+
     document.getElementById('area-controls').classList.remove('hidden');
   })();
 
-  function updateSkillDropdown(domainId) {
-    const sel = document.getElementById('q-skill-index');
-    const current = sel.value;
-    sel.innerHTML = '<option value="0">No skill bonus</option>';
+  function updateSkillLabels(domainId) {
+    if (!domainId) return;
     const names = SKILL_NAMES[domainId - 1];
     if (!names) return;
-    names.forEach((name, i) => {
-      const opt = document.createElement('option');
-      opt.value = i + 1; opt.textContent = \`Skill \${i + 1}: \${name}\`;
-      sel.appendChild(opt);
-    });
-    sel.value = current || '0';
+    for (let i = 1; i <= 6; i++) {
+      const label = document.querySelector(\`label[for="q-skill-\${i}"]\`);
+      if (label) label.textContent = \`Skill \${i}: \${names[i - 1]}\`;
+    }
   }
 
   async function loadQuests() {
     const domainId = document.getElementById('domain-select').value;
     const area     = document.getElementById('area-select').value;
     currentDomainId = domainId ? parseInt(domainId) : null;
-    if (currentDomainId) updateSkillDropdown(currentDomainId);
+    if (currentDomainId) updateSkillLabels(currentDomainId);
     if (!domainId || !area) return;
 
     try {
@@ -541,15 +566,36 @@ app.get('/', (req, res) => {
       document.getElementById('q-desc').value            = q.description;
       document.getElementById('q-profession-id').value  = q.professionId;
       document.getElementById('q-xp').value              = q.professionXp;
-      document.getElementById('q-coins').value           = q.coins;
-      document.getElementById('q-maxcount').value        = q.maxCount;
+
+      // Load coins — add out-of-range value if needed
+      const coinSelect = document.getElementById('q-coins');
+      coinSelect.value = q.coins;
+      if (!Array.from(coinSelect.options).some(o => parseInt(o.value) === q.coins)) {
+        const opt = document.createElement('option');
+        opt.value = q.coins;
+        opt.textContent = q.coins + ' (current)';
+        opt.selected = true;
+        coinSelect.appendChild(opt);
+      }
+
+      // Load maxCount — add out-of-range value if needed
+      const mcSelect = document.getElementById('q-maxcount');
+      mcSelect.value = q.maxCount;
+      if (!Array.from(mcSelect.options).some(o => parseInt(o.value) === q.maxCount)) {
+        const opt = document.createElement('option');
+        opt.value = q.maxCount;
+        opt.textContent = q.maxCount + ' (current)';
+        opt.selected = true;
+        mcSelect.appendChild(opt);
+      }
+
       document.getElementById('q-beast').value           = q.beastiary || '';
       document.getElementById('q-relic').value           = q.relic || '';
 
-      const skills = [q.skill1, q.skill2, q.skill3, q.skill4, q.skill5, q.skill6];
-      const si = skills.findIndex(s => s > 0);
-      document.getElementById('q-skill-index').value = si >= 0 ? si + 1 : 0;
-      document.getElementById('q-skill-bonus').value = si >= 0 ? skills[si] : 0;
+      // Load all 6 skill values
+      for (let i = 1; i <= 6; i++) {
+        document.getElementById(\`q-skill-\${i}\`).value = q[\`skill\${i}\`] || 0;
+      }
 
       document.querySelectorAll('input[name="domain"]').forEach(cb => {
         cb.checked = !!(q.domainId & (1 << (parseInt(cb.value) - 1)));
@@ -573,8 +619,9 @@ app.get('/', (req, res) => {
     document.getElementById('q-maxcount').value        = 1;
     document.getElementById('q-beast').value           = '';
     document.getElementById('q-relic').value           = '';
-    document.getElementById('q-skill-index').value     = 0;
-    document.getElementById('q-skill-bonus').value     = 0;
+    for (let i = 1; i <= 6; i++) {
+      document.getElementById(\`q-skill-\${i}\`).value = 0;
+    }
     document.querySelectorAll('input[name="domain"]').forEach(cb => {
       cb.checked = currentDomainId ? parseInt(cb.value) === currentDomainId : false;
     });
@@ -584,6 +631,10 @@ app.get('/', (req, res) => {
 
   async function saveQuest() {
     const id = document.getElementById('q-id').value;
+    const skills = {};
+    for (let i = 1; i <= 6; i++) {
+      skills[\`skill\${i}\`] = parseInt(document.getElementById(\`q-skill-\${i}\`).value) || 0;
+    }
     const body = {
       domainIds:    Array.from(document.querySelectorAll('input[name="domain"]:checked')).map(cb => parseInt(cb.value)),
       questArea:    document.getElementById('q-area').value.trim(),
@@ -592,12 +643,12 @@ app.get('/', (req, res) => {
       description:  document.getElementById('q-desc').value.trim(),
       professionId: document.getElementById('q-profession-id').value,
       professionXp: document.getElementById('q-xp').value,
-      skillIndex:   document.getElementById('q-skill-index').value,
-      skillBonus:   document.getElementById('q-skill-bonus').value,
       coins:        document.getElementById('q-coins').value,
       maxCount:     document.getElementById('q-maxcount').value,
       beastiary:    document.getElementById('q-beast').value || null,
       relic:        document.getElementById('q-relic').value || null,
+      ...skills,
+      questId:      id || null
     };
 
     try {
@@ -659,10 +710,14 @@ app.get('/api/quests/:id', checkAuth, (req, res) => {
 });
 
 app.post('/api/quests', checkAuth, (req, res) => {
-  const { fields, error } = buildQuestFields(req.body);
-  if (error) return res.status(400).json({ error });
+  const validated = buildQuestFields(req.body);
+  if (validated.error) return res.status(400).json({ error: validated.error });
+
+  const fw = validateWithFirewall(validated);
+  if (!fw.ok) return res.status(400).json({ error: fw.error });
+
   try {
-    const info = dbQuery.insertQuest.run(...fields);
+    const info = dbQuery.insertQuest.run(...validated.fields);
     registryCache = null;
     res.json({ id: info.lastInsertRowid });
   } catch (err) {
@@ -674,10 +729,15 @@ app.post('/api/quests', checkAuth, (req, res) => {
 app.put('/api/quests/:id', checkAuth, (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid quest id." });
-  const { fields, error } = buildQuestFields(req.body);
-  if (error) return res.status(400).json({ error });
+
+  const validated = buildQuestFields(req.body);
+  if (validated.error) return res.status(400).json({ error: validated.error });
+
+  const fw = validateWithFirewall(validated);
+  if (!fw.ok) return res.status(400).json({ error: fw.error });
+
   try {
-    dbQuery.updateQuest.run(...fields, id);
+    dbQuery.updateQuest.run(...validated.fields, id);
     registryCache = null;
     res.json({ ok: true });
   } catch (err) {
