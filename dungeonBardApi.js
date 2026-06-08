@@ -372,7 +372,7 @@ app.get('/', (req, res) => {
       </div>
     </div>
 
-    <label>Skill Bonus (select one skill and amount; leave at 0 for none)</label>
+    <label>Skill Bonus</label>
     <div class="skill-bonus-row">
       <select id="q-skill-index">
         <option value="0">No skill bonus</option>
