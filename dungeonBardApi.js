@@ -28,7 +28,14 @@ try {
  db = new sqlite3(MAIN_DB_PATH);
  sessionDb = new sqlite3(SESSION_DB_PATH);
  
- // Synchronous startup cache
+ // Create table if missing - using discord_id as PK to support 'REPLACE' logic
+ sessionDb.prepare(`
+ CREATE TABLE IF NOT EXISTS sessions (
+ discord_id TEXT PRIMARY KEY,
+ expires_at INTEGER
+ )
+ `).run();
+
  const domains = db.prepare("SELECT id, title FROM domains").all();
  cachedDomains = domains;
  console.log(`✅ Startup cache loaded: ${domains.length} domains found.`);
@@ -47,9 +54,9 @@ function checkAuth(req, res, next) {
  return res.status(403).json({ error: "Authentication required." });
  }
 
- const session = sessionDb.prepare("SELECT * FROM sessions WHERE discordId =?").get(discordId);
+const session = sessionDb.prepare("SELECT * FROM sessions WHERE discord_id =?").get(discordId);
  
- if (!session || session.expiresAt < Date.now()) {
+ if (!session || session.expires_at < Date.now()) {
  return res.status(403).json({ error: "Session expired or invalid." });
  }
 
@@ -129,9 +136,9 @@ app.get('/callback', async (req, res) => {
  });
 
  const discordId = userResponse.data.id;
- const expiresAt = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
+ const expires_at = Date.now() + (7 * 24 * 60 * 60 * 1000); // 7 days
 
- sessionDb.prepare("INSERT OR REPLACE INTO sessions (discordId, expiresAt) VALUES (?,?)").run(discordId, expiresAt);
+sessionDb.prepare("INSERT OR REPLACE INTO sessions (discord_id, expires_at) VALUES (?,?)").run(discordId, expires_at);
 
  res.cookie('discordId', discordId, { httpOnly: true, secure: false, sameSite: 'Lax' });
  res.redirect('/');
@@ -195,8 +202,8 @@ app.get('/', (req, res) => {
 // Helper for frontend status check
 app.get('/api/auth/status', (req, res) => {
  const discordId = req.cookies.discordId;
- const session = discordId? sessionDb.prepare("SELECT * FROM sessions WHERE discordId =?").get(discordId) : null;
- const authenticated = session && session.expiresAt > Date.now();
+ const session = discordId? sessionDb.prepare("SELECT * FROM sessions WHERE discord_id =?").get(discordId) : null;
+ const authenticated = session && session.expires_at > Date.now();
  res.json({ authenticated });
 });
 
