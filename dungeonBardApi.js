@@ -44,6 +44,10 @@ const BEASTS  = db.prepare("SELECT DISTINCT type, entity FROM beastiary ORDER BY
 const RELICS  = db.prepare("SELECT DISTINCT id, name FROM relic ORDER BY id ASC").all();
 console.log(`✅ Startup cache loaded: ${DOMAINS.length} domains, ${AREAS.length} areas, ${BEASTS.length} beast types, ${RELICS.length} relics.`);
 
+const REGISTRY_TTL = 2 * 60 * 1000; // 2 minutes
+let registryCache = null;
+let registryCachedAt = 0;
+
 // --- PREPARED STATEMENTS ---
 const dbQuery = {
   checkSession:          sessionDb.prepare("SELECT * FROM sessions WHERE discord_id = ?"),
@@ -214,7 +218,11 @@ app.get('/callback', async (req, res) => {
 // Public quest registry — shown to anyone not on the whitelist
 app.get('/quests', (req, res) => {
   try {
-    const registry = buildQuestRegistry();
+    if (!registryCache || Date.now() - registryCachedAt > REGISTRY_TTL) {
+      registryCache = buildQuestRegistry();
+      registryCachedAt = Date.now();
+    }
+    const registry = registryCache;
     res.send(`<!DOCTYPE html>
 <html lang="en">
 <head>
@@ -629,6 +637,7 @@ app.post('/api/quests', checkAuth, (req, res) => {
   if (error) return res.status(400).json({ error });
   try {
     const info = dbQuery.insertQuest.run(...fields);
+    registryCache = null;
     res.json({ id: info.lastInsertRowid });
   } catch (err) {
     console.error("[insertQuest_ERROR]", err.message);
@@ -643,6 +652,7 @@ app.put('/api/quests/:id', checkAuth, (req, res) => {
   if (error) return res.status(400).json({ error });
   try {
     dbQuery.updateQuest.run(...fields, id);
+    registryCache = null;
     res.json({ ok: true });
   } catch (err) {
     console.error("[updateQuest_ERROR]", err.message, { id });
