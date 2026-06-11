@@ -314,7 +314,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     }
 
     const messageData = {
-      embeds: [embed],
+      embeds: [embed, null].filter(Boolean),
       components: components,
       flags: MessageFlags.Ephemeral
     };
