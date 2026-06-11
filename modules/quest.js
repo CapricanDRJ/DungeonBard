@@ -171,6 +171,7 @@ const guild = interaction.guild;
 async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selectedQuestId = null, count = 1) {
   try {
     let embed;
+    let questEmbed;
     let components = [];
     const domain = dbQuery.getDomain.pluck().get(interaction.user.id, interaction.guildId);
     if(!domain) {
@@ -284,12 +285,12 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
           .setDescription(quest.areaDesc || "No description available")
           .setColor(embedColor);
 
-        const fields = [];
-        if (quest.questArea) fields.push({ name: quest.name, value: quest.description, inline: true });
-
-        if (fields.length > 0) {
-          embed.addFields(fields);
-        }
+          if(quest.questArea) {
+            questEmbed = new EmbedBuilder()
+              .setTitle(quest.name)
+              .setDescription(quest.description || "No description available")
+              .setColor(embedColor);
+          }
       }
 
       // Back and Complete buttons
@@ -314,7 +315,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     }
 
     const messageData = {
-      embeds: [embed, null].filter(Boolean),
+      embeds: [embed, questEmbed].filter(Boolean),
       components: components,
       flags: MessageFlags.Ephemeral
     };
