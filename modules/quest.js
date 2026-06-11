@@ -280,6 +280,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       } else {
         embed = new EmbedBuilder()
           .setTitle(quest.questArea)
+          .setImage(`${imageBaseUrl}${quest.questArea.replace(/[^a-zA-Z0-9]/g, '')}.png`)
           .setDescription(quest.areaDesc || "No description available")
           .setColor(embedColor);
 
