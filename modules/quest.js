@@ -18,6 +18,7 @@ colors.unshift(0x000000);
 const crypto = require('crypto');
 //const character = require('./character');
 const key = require('../config.json').key;
+const imageBaseUrl = 'https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/main/placeImages/';
 
 const { skillNames, skillLevel, profNames, profLevel } = require('../assets/levels');
 
@@ -200,8 +201,9 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
     if (stage === 1) {
       // Stage 1: Show quest areas
       embed = new EmbedBuilder()
-        .setTitle("Quest Explorer")
-        .setDescription("Choose a quest area to explore:")
+        .setTitle("Scholars and Dragons")
+        .setDescription("Choose an area to explore:")
+        .setImage(`${imageBaseUrl}sd.png`)
         .setColor(embedColor);
       const questAreas = dbQuery.getDistinctQuestArea.all(domain);
       if (questAreas.length > 0) {
@@ -223,6 +225,7 @@ async function menu(interaction, isUpdate, stage = 1, selectedArea = null, selec
       const areaData = dbQuery.getOneDistinctQuestArea.get(selectedArea);
       embed = new EmbedBuilder()
         .setTitle(selectedArea)
+        .setImage(`${imageBaseUrl}${selectedArea.replace(/[^a-zA-Z0-9]/g, '')}.png`)
         .setDescription(areaData?.areaDesc || "Select a quest:")
         .setColor(embedColor);
 
