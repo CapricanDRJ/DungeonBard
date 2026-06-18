@@ -649,7 +649,132 @@ module.exports = {
     }
   },
 
+
   main: (client) => {
     console.log("Slash commands for quest module have been loaded.");
+ 
+    const getPendingQueue = db.prepare("SELECT * FROM botQueue WHERE processedAt IS NULL ORDER BY id ASC");
+    const markProcessed   = db.prepare("UPDATE botQueue SET processedAt = ? WHERE id = ?");
+    const deleteRow       = db.prepare("DELETE FROM botQueue WHERE id = ?");
+ 
+    const getDomainTitle  = db.prepare("SELECT title FROM domains WHERE id = ?");
+    const getUserAfter    = db.prepare("SELECT * FROM users WHERE userId = ? AND guildId = ?");
+ 
+    setInterval(async () => {
+      const rows = getPendingQueue.all();
+      if (!rows.length) return;
+ 
+      for (const row of rows) {
+        // Validate payload first — bad JSON is a permanent failure, remove and log it
+        let payload;
+        try {
+          payload = JSON.parse(row.payload || '{}');
+        } catch (e) {
+          console.error(`[botQueue_PURGE] id=${row.id} type=${row.type} — unparseable payload, removing:`, row.payload);
+          deleteRow.run(row.id);
+          continue;
+        }
+ 
+        try {
+          if (row.type === 'roleSync') {
+            const guild = client.guilds.cache.get(row.guildId);
+            if (!guild) {
+              // Bot not in this guild — permanent, nothing to do
+              console.error(`[botQueue_PURGE] id=${row.id} roleSync — guild ${row.guildId} not in cache, removing`);
+              deleteRow.run(row.id);
+              continue;
+            }
+            const member = await guild.members.fetch(row.userId).catch(() => null);
+            if (!member) {
+              console.error(`[botQueue_PURGE] id=${row.id} roleSync — member ${row.userId} not found in guild ${row.guildId}, removing`);
+              deleteRow.run(row.id);
+              continue;
+            }
+            const domain = getDomainTitle.get(payload.domainId);
+            if (!domain) {
+              console.error(`[botQueue_PURGE] id=${row.id} roleSync — unknown domainId ${payload.domainId}, removing`);
+              deleteRow.run(row.id);
+              continue;
+            }
+            const role = guild.roles.cache.find(r => r.name === domain.title);
+            if (role) {
+              await member.roles.add(role).catch(err => console.error(`[roleSync_ERROR] id=${row.id}`, err.message));
+            } else {
+              console.error(`[botQueue_WARN] id=${row.id} roleSync — no role named "${domain.title}" in guild ${row.guildId}`);
+            }
+            markProcessed.run(Date.now(), row.id);
+ 
+          } else if (row.type === 'levelUp') {
+            const guild = client.guilds.cache.get(row.guildId);
+            if (!guild) {
+              console.error(`[botQueue_PURGE] id=${row.id} levelUp — guild ${row.guildId} not in cache, removing`);
+              deleteRow.run(row.id);
+              continue;
+            }
+            const channel = guild.channels.cache.find(c => c.name === "📜-ledger-of-triumphs");
+            if (!channel) {
+              // Channel missing — not a transient error, mark done so it doesn't pile up
+              console.error(`[botQueue_WARN] id=${row.id} levelUp — no 📜-ledger-of-triumphs in guild ${row.guildId}, skipping`);
+              markProcessed.run(Date.now(), row.id);
+              continue;
+            }
+            const perms = channel.permissionsFor(guild.members.me);
+            if (!perms || !perms.has([PermissionFlagsBits.ViewChannel, PermissionFlagsBits.SendMessages])) {
+              console.error(`[botQueue_WARN] id=${row.id} levelUp — missing channel perms in guild ${row.guildId}, skipping`);
+              markProcessed.run(Date.now(), row.id);
+              continue;
+            }
+            if (!payload.domainId || !profLevel[payload.domainId] || !skillLevel[payload.domainId]) {
+              console.error(`[botQueue_PURGE] id=${row.id} levelUp — invalid domainId ${payload.domainId}, removing`);
+              deleteRow.run(row.id);
+              continue;
+            }
+            const userAfter = getUserAfter.get(row.userId, row.guildId);
+            if (!userAfter) {
+              console.error(`[botQueue_PURGE] id=${row.id} levelUp — user ${row.userId} not found in guild ${row.guildId}, removing`);
+              deleteRow.run(row.id);
+              continue;
+            }
+ 
+            const userPing    = `<@${row.userId}>`;
+            const pThresholds = profLevel[payload.domainId];
+            const sThresholds = skillLevel[payload.domainId];
+ 
+            ['artisan', 'soldier', 'healer'].forEach(prof => {
+              const key    = `${prof}Exp`;
+              const oldLvl = pThresholds.filter(t => (payload[`${key}Before`] || 0) >= t).length;
+              const newLvl = pThresholds.filter(t => userAfter[key] >= t).length;
+              if (newLvl > oldLvl) {
+                const rankName  = profNames[prof][newLvl - 1] || "Max";
+                const profLabel = prof.charAt(0).toUpperCase() + prof.slice(1);
+                channel.send({ content: `${userPing} has levelled in the ${profLabel} profession. Their new rank is: **${rankName}**. Congratulations!` })
+                  .catch(err => console.error(`[levelUp_prof_ERROR] id=${row.id}`, err.message));
+              }
+            });
+ 
+            for (let i = 1; i <= 6; i++) {
+              const key    = `skill${i}`;
+              const oldLvl = sThresholds.filter(t => (payload[`${key}Before`] || 0) >= t).length;
+              const newLvl = sThresholds.filter(t => userAfter[key] >= t).length;
+              if (newLvl > oldLvl) {
+                const skillTitle = skillNames[payload.domainId - 1][i - 1];
+                channel.send({ content: `${userPing} has just levelled the skill of **${skillTitle}**. Their new level is **${newLvl}**.` })
+                  .catch(err => console.error(`[levelUp_skill_ERROR] id=${row.id}`, err.message));
+              }
+            }
+ 
+            markProcessed.run(Date.now(), row.id);
+ 
+          } else {
+            console.error(`[botQueue_PURGE] id=${row.id} — unknown type "${row.type}", removing`);
+            deleteRow.run(row.id);
+          }
+ 
+        } catch (err) {
+          // Unexpected error on this row — log with full context and continue to next
+          console.error(`[botQueue_ERROR] id=${row.id} type=${row.type} guildId=${row.guildId} userId=${row.userId}:`, err.message);
+        }
+      }
+    }, 60_000); // drain all pending rows once per minute
   }
 };

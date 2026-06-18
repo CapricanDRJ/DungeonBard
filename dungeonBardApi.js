@@ -879,8 +879,9 @@ app.get('/admin', (req, res) => {
 // --- PLAYER PANEL ROUTES (session-only tier) ---
 
 // Map area definitions — coordinates relative to 1002×1005 image.
-// Each area has an array of polygon points [x,y,...] and the questArea name.
-// Adjust coords in PLAY_MAP_AREAS to match your actual hotspot boundaries.
+// Each area has polygon points [x,y,...] relative to the 1002×1005 source image.
+// Center diamond (roughly x:300-700, y:300-860) is intentionally unclaimed — reserved for future use.
+// Adjust coords in PLAY_MAP_AREAS to fine-tune hotspot boundaries.
 const PLAY_MAP_AREAS = [
   { area: "Lair of Self Care",  coords: "60,95 420,95 420,320 300,460 60,460" },
   { area: "Chamber of Oration", coords: "420,95 1000,95 1000,400 840,420 700,340 420,320" },
@@ -1245,7 +1246,7 @@ app.get('/api/play/quests', (req, res) => {
   }
 });
 
-// POST /api/play/claim — claim a quest; mirrors quest.js questcomplete flow
+// POST /api/play/claim — claim a quest; mirrors quest.js questcomplete flow exactly
 app.post('/api/play/claim', (req, res) => {
   const { questId, count, guildId } = req.body;
   if (!questId || !guildId) return res.status(400).json({ error: 'questId and guildId required.' });
@@ -1274,68 +1275,124 @@ app.post('/api/play/claim', (req, res) => {
     })();
 
     const activeItems = dbQuery.getActiveItems.all(req.discordId, guildId);
-    const skillBonuses = [1,1,1,1,1,1];
-    const profBonuses  = [1,1,1];
+    const skillBonuses   = [1,1,1,1,1,1];
+    const profBonuses    = [1,1,1];
     for (const item of activeItems) {
-      if (item.skill)       skillBonuses[item.skill - 1] = item.skillBonus;
-      if (item.professionId) profBonuses[item.professionId - 1] = item.professionBonus;
+      if (item.skill)        skillBonuses[item.skill - 1]        = item.skillBonus;
+      if (item.professionId) profBonuses[item.professionId - 1]  = item.professionBonus;
     }
 
-    const profession = ['artisan','soldier','healer'][parseInt(quest.professionId) - 1] + 'Exp';
+    // Build log object exactly as quest.js does — initialized before any mutations
+    const log = {
+      guildId,
+      userId:      req.discordId,
+      domainId:    user.domainId,
+      questId:     id,
+      sawMonster:  0,       // quest.js default
+      beatMonster: null,    // quest.js default — only set if monster appears
+      relic:       null,
+      quantity:    clampedCount,
+      artisanExp:  user.artisanExp,   // pre-claim snapshot for questTracker diff
+      soldierExp:  user.soldierExp,
+      healerExp:   user.healerExp,
+      overallExp:  user.overallExp
+    };
+
+    const profession = PROFESSION_NAMES[parseInt(quest.professionId) - 1] + 'Exp';
     const xpEarned   = quest.professionXp * profBonuses[parseInt(quest.professionId) - 1] * clampedCount;
 
-    // Update user stats
+    // Update user stats — includes displayName update matching quest.js
+    const displayName = req.session.username || user.displayName || 'Adventurer';
     db.prepare(`UPDATE users SET
+      displayName = ?,
       skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?,
       skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?,
       coins = coins + ?, ${profession} = ${profession} + ?
       WHERE userId = ? AND guildId = ?`
     ).run(
+      displayName,
       quest.skill1 * clampedCount, quest.skill2 * clampedCount, quest.skill3 * clampedCount,
       quest.skill4 * clampedCount, quest.skill5 * clampedCount, quest.skill6 * clampedCount,
       quest.coins * clampedCount, xpEarned,
       req.discordId, guildId
     );
 
-    // Battle / relic resolution (mirrors quest.js)
-    let outcome = 'success', monster = null, relic = null, battleLog = null, bonusCoins = 0;
+    // skillMod — two-arg signature matching quest.js exactly
+    function skillMod(domainId, skill) {
+      return (20 - skillLevel[domainId].findIndex(val => val <= skill));
+    }
+
+    // Battle / relic resolution — mirrors quest.js questcomplete flow exactly
+    let outcome = 'success', monster = null, battleLog = null, bonusCoins = 0;
 
     if (quest.beastiary) {
       const beast = dbQuery.getRandomBeast.get(quest.beastiary);
       if (beast && Math.random() < beast.chance) {
-        function skillMod(skill) { return (20 - (skillLevel[user.domainId]?.findIndex(v => v <= skill) ?? 0)); }
-        const atk = skillMod(user.skill3) + skillBonuses[2];
-        const def = skillMod(user.skill4) + skillBonuses[3];
-        const hp  = skillMod(user.skill5);
-        const diff = [0.01,0.75,0.9,1.05][parseInt(beast.difficulty)] || 0.75;
-        let userHp = hp, monHp = hp * diff;
-        let log = '', i = 0;
-        while (monHp > 0 && userHp > 0 && i < 20) {
-          const ua = Math.floor(Math.random()*20) + atk, md = Math.floor(Math.random()*20) + def * diff;
-          if (ua >= md) { const dmg = (ua-md)/2; monHp -= dmg; log += `You hit for ${dmg.toFixed(1)}!\n`; }
-          else log += `You miss!\n`;
-          if (monHp <= 0) break;
-          const ma = (i>5?20:Math.floor(Math.random()*20)+atk*diff), ud = Math.floor(Math.random()*20)+def;
-          if (i>7) { userHp=0; log+=`Fatal blow!\n`; break; }
-          if (ma >= ud) { const dmg=(ma-ud)/2; userHp-=dmg; log+=`${beast.entity} hits you for ${dmg.toFixed(1)}!\n`; }
-          else log += `${beast.entity} misses!\n`;
+        log.sawMonster = 1;   // matches quest.js: only set when chance triggers
+
+        const difficulty    = [0.01,0.75,0.9,1.05][parseInt(beast.difficulty)];
+        const attack        = skillMod(user.domainId, user.skill3) + skillBonuses[2];
+        const defense       = skillMod(user.domainId, user.skill4) + skillBonuses[3];
+        const hp            = skillMod(user.domainId, user.skill5);
+        const monsterAttack  = skillMod(user.domainId, user.skill3) * difficulty;
+        const monsterDefense = skillMod(user.domainId, user.skill4) * difficulty;
+
+        let userHitpoints    = hp;
+        let monsterHitpoints = hp * difficulty;
+
+        // Battle log header matches quest.js format exactly
+        let bLog = `Monster Attack: ${monsterAttack.toFixed(2)}, Defense: ${monsterDefense.toFixed(2)}, Hitpoints: ${monsterHitpoints.toFixed(2)}\n`;
+        bLog    += `Your Attack: ${attack.toFixed(2)}, Defense: ${defense.toFixed(2)}, Hitpoints: ${userHitpoints.toFixed(2)}\n`;
+
+        let i = 0;
+        while (monsterHitpoints > 0 && userHitpoints > 0) {
+          const userd20attack    = Math.floor(Math.random()*20) + attack;
+          const monsterd20defense = Math.floor(Math.random()*20) + monsterDefense;
+          if (userd20attack >= monsterd20defense) {
+            const monsterDamage = (userd20attack - monsterd20defense) / 2;
+            bLog += `You hit the **${beast.entity}** for ${monsterDamage.toFixed(2)}/${monsterHitpoints.toFixed(2)} damage!\n`;
+            monsterHitpoints -= monsterDamage;
+          } else {
+            bLog += `You miss the **${beast.entity}**!\n`;
+          }
+          if (monsterHitpoints <= 0) break;
+          const monsterD20attack = (i > 5) ? 20 : Math.floor(Math.random()*20) + monsterAttack;
+          const userd20defense   = Math.floor(Math.random()*20) + defense;
+          if (i > 7) {
+            bLog += `The **${beast.entity}** hits you for ${userHitpoints.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
+            userHitpoints = 0;
+            break;
+          }
+          if (monsterD20attack >= userd20defense) {
+            const userDamage = (monsterD20attack - userd20defense) / 2;
+            bLog += `The **${beast.entity}** hits you for ${userDamage.toFixed(2)}/${userHitpoints.toFixed(2)} damage!\n`;
+            userHitpoints -= userDamage;
+          } else {
+            bLog += `The **${beast.entity}** misses you!\n`;
+          }
+          if (userHitpoints <= 0) break;
           i++;
         }
-        monster = beast.entity;
-        battleLog = log;
-        if (userHp <= 0) {
+
+        monster   = beast.entity;
+        battleLog = bLog;
+
+        if (userHitpoints <= 0) {
+          log.beatMonster = 0;  // quest.js: explicit 0 on defeat
           outcome = 'defeat';
         } else {
-          bonusCoins = Math.floor(quest.coins * ((beast.difficulty*0.3)+(0.5*Math.random())));
+          log.beatMonster = 1;  // quest.js: explicit 1 on win
+          bonusCoins = Math.floor(quest.coins * ((beast.difficulty * 0.3) + (0.5 * Math.random())));
           dbQuery.addCoins.run(bonusCoins, req.discordId, guildId);
           if (quest.relic) {
             const r = dbQuery.getRandomRelic.get(quest.relic);
             if (r && Math.random() < r.chance) {
-              relic = r.name + ': ' + r.description;
+              // quest.js format: "${quest.relic}: ${relic.description}" — relic type id, not r.name
+              log.relic = `${quest.relic}: ${r.description}`;
               if (r.bonusXp && r.bonusXp < 9) {
                 dbQuery.addToInventory.run(req.discordId, guildId, r.name, r.skillBonus, r.skill, r.duration, r.emojiId);
               } else if (r.bonusXp) {
-                const rProf = ['artisan','soldier','healer'][parseInt(r.professionId)-1]+'Exp';
+                const rProf = PROFESSION_NAMES[parseInt(r.professionId)-1] + 'Exp';
                 db.prepare(`UPDATE users SET ${rProf} = ${rProf} + ? WHERE userId = ? AND guildId = ?`)
                   .run(r.bonusXp * profBonuses[parseInt(r.professionId)-1], req.discordId, guildId);
               }
@@ -1343,49 +1400,70 @@ app.post('/api/play/claim', (req, res) => {
           }
         }
       }
+      // beast.chance did not trigger: sawMonster stays 0, beatMonster stays null — matches quest.js
     } else if (quest.relic) {
+      // No beastiary — relic-only path (quest.js: beastiary === null branch)
       const r = dbQuery.getRandomRelic.get(quest.relic);
       if (r && Math.random() < r.chance) {
-        relic = r.name + ': ' + r.description;
+        log.relic = `${quest.relic}: ${r.description}`;  // quest.js format
         if (r.bonusXp && r.bonusXp < 9) {
           dbQuery.addToInventory.run(req.discordId, guildId, r.name, r.skillBonus, r.skill, r.duration, r.emojiId);
         } else if (r.bonusXp) {
-          const rProf = ['artisan','soldier','healer'][parseInt(r.professionId)-1]+'Exp';
+          const rProf = PROFESSION_NAMES[parseInt(r.professionId)-1] + 'Exp';
           db.prepare(`UPDATE users SET ${rProf} = ${rProf} + ? WHERE userId = ? AND guildId = ?`)
             .run(r.bonusXp * profBonuses[parseInt(r.professionId)-1], req.discordId, guildId);
         }
       }
     }
 
-    // Log to questTracker
+    // Log to questTracker + queue bot actions — both deferred so response isn't held
     setImmediate(() => {
       try {
+        const encryptedId = crypto.createHmac('sha256', config.key || '').update(req.discordId).digest('hex');
         dbQuery.storeQuest.run(
-          guildId, req.discordId,
-          crypto.createHmac('sha256', config.key || '').update(req.discordId).digest('hex'),
-          user.domainId, id,
-          user.artisanExp, user.soldierExp, user.healerExp, user.overallExp,
-          outcome === 'defeat' ? 0 : 1, outcome === 'defeat' ? 0 : 1,
-          relic, clampedCount,
-          req.discordId, guildId
+          log.guildId,
+          log.userId,
+          encryptedId,
+          log.domainId,
+          log.questId,
+          log.artisanExp,   // pre-claim — SQL computes diff against current row
+          log.soldierExp,
+          log.healerExp,
+          log.overallExp,
+          log.sawMonster,
+          log.beatMonster,
+          log.relic,
+          log.quantity,
+          log.userId,       // WHERE clause
+          log.guildId
         );
-        // Queue level-up check for the bot
+
+        // Queue level-up check — includes full pre-claim snapshot so bot
+        // can run the same threshold logic as checkLevelUp without re-reading old XP
         dbQuery.insertBotQueue.run('levelUp', guildId, req.discordId, JSON.stringify({
-          questId: id, outcome, xpEarned
+          displayName,
+          domainId:    user.domainId,
+          artisanExpBefore: log.artisanExp,
+          soldierExpBefore: log.soldierExp,
+          healerExpBefore:  log.healerExp,
+          skill1Before: user.skill1, skill2Before: user.skill2,
+          skill3Before: user.skill3, skill4Before: user.skill4,
+          skill5Before: user.skill5, skill6Before: user.skill6,
         }), Date.now());
-      } catch (e) { console.error('[storeQuest_ERROR]', e.message); }
+
+      } catch (e) { console.error('[storeQuest_ERROR]', e.message, { questId: id, guildId }); }
     });
 
     const userAfter = dbQuery.getUser.get(req.discordId, guildId);
     res.json({
       outcome,
-      xpEarned: outcome === 'defeat' ? 0 : xpEarned,
+      xpEarned:    outcome === 'defeat' ? 0 : xpEarned,
       coinsEarned: (quest.coins * clampedCount) + bonusCoins,
-      overallExp: userAfter?.overallExp ?? user.overallExp,
-      artisanExp: userAfter?.artisanExp ?? user.artisanExp,
-      soldierExp: userAfter?.soldierExp ?? user.soldierExp,
-      healerExp:  userAfter?.healerExp  ?? user.healerExp,
-      monster, relic, battleLog
+      overallExp:  userAfter?.overallExp ?? user.overallExp,
+      artisanExp:  userAfter?.artisanExp ?? user.artisanExp,
+      soldierExp:  userAfter?.soldierExp ?? user.soldierExp,
+      healerExp:   userAfter?.healerExp  ?? user.healerExp,
+      monster, relic: log.relic, battleLog
     });
   } catch (err) {
     console.error('[claimQuest_ERROR]', err.message, { questId: id, guildId, discordId: req.discordId });
