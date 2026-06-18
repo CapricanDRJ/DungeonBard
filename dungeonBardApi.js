@@ -882,16 +882,12 @@ app.get('/admin', (req, res) => {
 // Each area has an array of polygon points [x,y,...] and the questArea name.
 // Adjust coords in PLAY_MAP_AREAS to match your actual hotspot boundaries.
 const PLAY_MAP_AREAS = [
-  { area: "Chamber of Oration",  coords: "560,130, 780,130, 820,300, 680,320, 580,280" },
-  { area: "Wilderness of Wyrm",  coords: "220,120, 560,120, 600,320, 380,380, 200,300" },
-  { area: "Lair of Self Care",   coords: "100,280, 240,260, 280,420, 180,460, 90,420" },
-  { area: "Market Town",         coords: "220,380, 380,360, 420,500, 300,540, 200,500" },
-  { area: "Ruins",               coords: "700,300, 840,280, 860,440, 740,460, 680,400" },
-  { area: "Scribe's Tower",      coords: "820,440, 940,420, 950,600, 860,620, 800,560" },
-  { area: "Hall of Marvels",     coords: "100,520, 280,500, 320,660, 180,700, 90,640" },
-  { area: "Tribunal of Forms",   coords: "80,700, 240,680, 260,840, 140,860, 70,800" },
-  { area: "Merchant Coast",      coords: "560,580, 760,540, 820,740, 680,800, 520,740" },
-  { area: "Vault of Vellum",     coords: "760,760, 920,720, 950,900, 840,930, 740,880" },
+  { area: "Lair of Self Care",  coords: "60,95 420,95 420,320 300,460 60,460" },
+  { area: "Chamber of Oration", coords: "420,95 1000,95 1000,400 840,420 700,340 420,320" },
+  { area: "Scribe's Tower",     coords: "840,420 1000,400 1000,780 660,720 700,540 700,340 840,420" },
+  { area: "Hall of Marvels",    coords: "60,460 300,460 420,320 420,560 300,700 60,680" },
+  { area: "Tribunal of Forms",  coords: "60,680 300,700 420,840 420,980 60,980" },
+  { area: "Vault of Vellum",    coords: "420,840 660,720 1000,780 1000,980 420,980" },
 ];
 
 // Helper: look up or resolve guildId from cookie or default (highest overallExp)
