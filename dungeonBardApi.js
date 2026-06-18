@@ -2,6 +2,7 @@ const express = require('express');
 const sqlite3 = require('better-sqlite3');
 const axios = require('axios');
 const cookieParser = require('cookie-parser');
+const crypto = require('crypto'); // built-in — for generating unguessable session tokens
 const config = require('../dungeonBard/config.json');
 const { skillNames } = require('../dungeonBard/assets/levels');
 
@@ -20,6 +21,9 @@ const ADMIN_WHITELIST = [
 
 const PROFESSION_NAMES = ["Artisan", "Soldier", "Healer"];
 
+const SESSION_LIFETIME_MS  = 7 * 24 * 60 * 60 * 1000; // 7 days hard cap
+const REVERIFY_INTERVAL_MS = 60 * 60 * 1000;           // re-check with Discord hourly
+
 // --- VALIDATION RANGES (easily adjustable) ---
 const RANGES = {
   professionXp: { min: 1, max: 100 },
@@ -36,11 +40,25 @@ let db, sessionDb;
 try {
   db = new sqlite3(MAIN_DB_PATH);
   sessionDb = new sqlite3(SESSION_DB_PATH);
+
+  // One-time migration: the old schema (cookie = bare discordId, no real
+  // token stored) can't support re-verifying with Discord. If it's still
+  // around, replace it — back up db/sessions.db first if you want a copy.
+  // Effect: everyone has to log in again once after this change ships.
+  const existingCols = sessionDb.prepare("PRAGMA table_info(sessions)").all().map(c => c.name);
+  if (existingCols.length && !existingCols.includes('session_token')) {
+    sessionDb.prepare('DROP TABLE sessions').run();
+  }
+
   sessionDb.prepare(`
     CREATE TABLE IF NOT EXISTS sessions (
-      discord_id TEXT PRIMARY KEY,
-      username   TEXT,
-      expires_at INTEGER
+      session_token    TEXT PRIMARY KEY,
+      discord_id       TEXT NOT NULL,
+      username          TEXT,
+      access_token      TEXT NOT NULL,
+      refresh_token     TEXT,
+      last_verified_at  INTEGER NOT NULL,
+      expires_at        INTEGER NOT NULL
     )
   `).run();
 } catch (err) {
@@ -61,8 +79,11 @@ let registryCachedAt = 0;
 
 // --- PREPARED STATEMENTS ---
 const dbQuery = {
-  checkSession:          sessionDb.prepare("SELECT * FROM sessions WHERE discord_id = ?"),
-  upsertSession:         sessionDb.prepare("INSERT OR REPLACE INTO sessions (discord_id, username, expires_at) VALUES (?, ?, ?)"),
+  getSession:            sessionDb.prepare("SELECT * FROM sessions WHERE session_token = ?"),
+  insertSession:         sessionDb.prepare("INSERT OR REPLACE INTO sessions (session_token, discord_id, username, access_token, refresh_token, last_verified_at, expires_at) VALUES (?, ?, ?, ?, ?, ?, ?)"),
+  touchSession:          sessionDb.prepare("UPDATE sessions SET last_verified_at = ? WHERE session_token = ?"),
+  updateTokens:          sessionDb.prepare("UPDATE sessions SET access_token = ?, refresh_token = ?, last_verified_at = ? WHERE session_token = ?"),
+  deleteSession:         sessionDb.prepare("DELETE FROM sessions WHERE session_token = ?"),
   getAllQuests:           db.prepare("SELECT id, name, description, questArea, domainId FROM quest ORDER BY questArea ASC, name ASC"),
   getQuestsByAreaDomain: db.prepare("SELECT id, name FROM quest WHERE questArea = ? AND domainId & ? ORDER BY name ASC"),
   getQuestById:          db.prepare("SELECT * FROM quest WHERE id = ?"),
@@ -82,19 +103,97 @@ const dbQuery = {
 app.use(express.json());
 app.use(cookieParser());
 
-// Returns the session if valid + on whitelist, otherwise null
-function getAuthedSession(req) {
-  const discordId = req.cookies.discordId;
-  if (!discordId || !ADMIN_WHITELIST.includes(discordId)) return null;
-  const session = dbQuery.checkSession.get(discordId);
-  if (!session || session.expires_at < Date.now()) return null;
-  return session;
+// Confirms the access token is still live and returns the Discord identity.
+async function verifyDiscordToken(accessToken) {
+  const res = await axios.get('https://discord.com/api/users/@me', {
+    headers: { Authorization: `Bearer ${accessToken}` }
+  });
+  return res.data;
 }
 
-function checkAuth(req, res, next) {
-  if (!getAuthedSession(req)) return res.status(403).json({ error: "Access denied." });
-  next();
+// Exchanges a refresh token for a new access/refresh token pair.
+async function refreshDiscordToken(refreshToken) {
+  const res = await axios.post('https://discord.com/api/oauth2/token',
+    new URLSearchParams({
+      client_id: config.ClientID,
+      client_secret: config.ClientSecret,
+      grant_type: 'refresh_token',
+      refresh_token: refreshToken,
+    }),
+    { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
+  );
+  return res.data;
 }
+
+// Returns the session row if the cookie maps to a live, non-expired session
+// — re-verifying with Discord at most once an hour, with a refresh-token
+// fallback. Does NOT decide whitelist membership; that's a separate check
+// in the gate below, since dungeonBard has routes that are public (no
+// session at all) and routes that need both a valid session and whitelist.
+async function getAuthedSession(req) {
+  const sessionToken = req.cookies.session;
+  if (!sessionToken) return null;
+
+  const session = dbQuery.getSession.get(sessionToken);
+  if (!session) return null;
+  if (session.expires_at < Date.now()) {
+    dbQuery.deleteSession.run(sessionToken);
+    return null;
+  }
+
+  if (Date.now() - session.last_verified_at < REVERIFY_INTERVAL_MS) {
+    return session; // verified recently enough — skip the Discord round-trip
+  }
+
+  try {
+    await verifyDiscordToken(session.access_token);
+    dbQuery.touchSession.run(Date.now(), sessionToken);
+    return session;
+  } catch (err) {
+    if (session.refresh_token) {
+      try {
+        const refreshed = await refreshDiscordToken(session.refresh_token);
+        dbQuery.updateTokens.run(refreshed.access_token, refreshed.refresh_token, Date.now(), sessionToken);
+        return { ...session, access_token: refreshed.access_token, refresh_token: refreshed.refresh_token };
+      } catch (refreshErr) {
+        console.error('[sessionRefresh_ERROR]', refreshErr.message, { sessionToken });
+      }
+    }
+    dbQuery.deleteSession.run(sessionToken);
+    return null;
+  }
+}
+
+// Deny-by-default gate, two-tier: public paths need nothing; everything
+// else needs a valid session AND whitelist membership (dungeonBard has no
+// "valid session only" tier currently).
+const PUBLIC_PATHS = ['/', '/login', '/callback', '/quests'];
+
+app.use(async (req, res, next) => {
+  if (PUBLIC_PATHS.includes(req.path)) return next();
+  try {
+    const session = await getAuthedSession(req);
+    if (!session) {
+      res.clearCookie('session');
+      return req.path.startsWith('/api/')
+        ? res.status(403).json({ error: 'Access denied.' })
+        : res.redirect('/');
+    }
+    if (!ADMIN_WHITELIST.includes(session.discord_id)) {
+      return req.path.startsWith('/api/')
+        ? res.status(403).json({ error: 'Access denied.' })
+        : res.status(403).send('Not authorized.');
+    }
+    req.session = session;
+    req.discordId = session.discord_id;
+    next();
+  } catch (err) {
+    console.error('[authGate_ERROR]', err.message);
+    return req.path.startsWith('/api/')
+      ? res.status(500).json({ error: 'Auth check failed.' })
+      : res.status(500).send('Auth check failed.');
+  }
+});
 
 // --- QUEST REGISTRY RENDERER (for /quests) ---
 function buildQuestRegistry() {
@@ -260,14 +359,24 @@ app.get('/callback', async (req, res) => {
       }),
       { headers: { 'Content-Type': 'application/x-www-form-urlencoded' } }
     );
+    const { access_token, refresh_token } = tokenResponse.data;
     const userResponse = await axios.get('https://discord.com/api/users/@me', {
-      headers: { Authorization: `Bearer ${tokenResponse.data.access_token}` }
+      headers: { Authorization: `Bearer ${access_token}` }
     });
     const discordId = userResponse.data.id;
     const username  = userResponse.data.global_name || userResponse.data.username;
-    const expires_at = Date.now() + (7 * 24 * 60 * 60 * 1000);
-    dbQuery.upsertSession.run(discordId, username, expires_at);
-    res.cookie('discordId', discordId, { httpOnly: true, secure: true, sameSite: 'Lax' });
+
+    const sessionToken = crypto.randomBytes(32).toString('hex');
+    const now = Date.now();
+    const expiresAt = now + SESSION_LIFETIME_MS;
+    dbQuery.insertSession.run(sessionToken, discordId, username, access_token, refresh_token, now, expiresAt);
+
+    res.cookie('session', sessionToken, {
+      httpOnly: true,
+      secure: true,
+      sameSite: 'Lax',
+      maxAge: SESSION_LIFETIME_MS
+    });
     res.redirect(ADMIN_WHITELIST.includes(discordId) ? '/admin' : '/quests');
   } catch (err) {
     console.error("[OAuth_ERROR]", err.response?.data || err.message);
@@ -331,8 +440,8 @@ app.get('/', (req, res) => {
 </html>`);
 });
 // Admin panel — whitelisted users only
-app.get('/admin', checkAuth, (req, res) => {
-  const username = getAuthedSession(req).username || 'Scribe';
+app.get('/admin', (req, res) => {
+  const username = req.session.username || 'Scribe';
   const domainsJson    = JSON.stringify(DOMAINS);
   const areasJson      = JSON.stringify(AREAS);
   const beastsJson     = JSON.stringify(BEASTS);
@@ -712,13 +821,13 @@ app.get('/admin', checkAuth, (req, res) => {
 </html>`);
 });
 
-// --- API ROUTES (all behind checkAuth) ---
-app.get('/api/quests/domains', checkAuth, (req, res) => res.json(DOMAINS));
-app.get('/api/quests/areas',   checkAuth, (req, res) => res.json(AREAS));
-app.get('/api/beasts',         checkAuth, (req, res) => res.json(BEASTS));
-app.get('/api/relics',         checkAuth, (req, res) => res.json(RELICS));
+// --- API ROUTES (all gated by the global auth middleware above) ---
+app.get('/api/quests/domains', (req, res) => res.json(DOMAINS));
+app.get('/api/quests/areas',   (req, res) => res.json(AREAS));
+app.get('/api/beasts',         (req, res) => res.json(BEASTS));
+app.get('/api/relics',         (req, res) => res.json(RELICS));
 
-app.get('/api/quests', checkAuth, (req, res) => {
+app.get('/api/quests', (req, res) => {
   const { area, domain } = req.query;
   if (!area || !domain) return res.status(400).json({ error: "area and domain required." });
   const domainId = parseInt(domain);
@@ -731,7 +840,7 @@ app.get('/api/quests', checkAuth, (req, res) => {
   }
 });
 
-app.get('/api/quests/:id', checkAuth, (req, res) => {
+app.get('/api/quests/:id', (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid quest id." });
   try {
@@ -744,7 +853,7 @@ app.get('/api/quests/:id', checkAuth, (req, res) => {
   }
 });
 
-app.post('/api/quests', checkAuth, (req, res) => {
+app.post('/api/quests', (req, res) => {
   const validated = buildQuestFields(req.body);
   if (validated.error) return res.status(400).json({ error: validated.error });
 
@@ -761,7 +870,7 @@ app.post('/api/quests', checkAuth, (req, res) => {
   }
 });
 
-app.put('/api/quests/:id', checkAuth, (req, res) => {
+app.put('/api/quests/:id', (req, res) => {
   const id = parseInt(req.params.id);
   if (isNaN(id)) return res.status(400).json({ error: "Invalid quest id." });
 
