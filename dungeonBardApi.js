@@ -4,7 +4,7 @@ const axios = require('axios');
 const cookieParser = require('cookie-parser');
 const crypto = require('crypto'); // built-in — for generating unguessable session tokens
 const config = require('../dungeonBard/config.json');
-const { skillNames } = require('../dungeonBard/assets/levels');
+const { skillNames, skillLevel, profNames, profLevel } = require('../dungeonBard/assets/levels');
 
 const app = express();
 const PORT = 3002;
@@ -61,6 +61,19 @@ try {
       expires_at        INTEGER NOT NULL
     )
   `).run();
+
+  // Bot action queue — web server inserts, bot polls WHERE processedAt IS NULL
+  db.prepare(`
+    CREATE TABLE IF NOT EXISTS botQueue (
+      id          INTEGER PRIMARY KEY AUTOINCREMENT,
+      type        TEXT NOT NULL,
+      guildId     TEXT NOT NULL,
+      userId      TEXT NOT NULL,
+      payload     TEXT,
+      createdAt   INTEGER NOT NULL,
+      processedAt INTEGER
+    )
+  `).run();
 } catch (err) {
   console.error("❌ CRITICAL: Failed to initialize databases:", err.message);
   process.exit(1);
@@ -96,6 +109,41 @@ const dbQuery = {
     UPDATE quest SET domainId=?, questArea=?, areaDesc=?, name=?, description=?, profession=?, professionId=?,
       professionXp=?, skill1=?, skill2=?, skill3=?, skill4=?, skill5=?, skill6=?, beastiary=?, relic=?, coins=?, maxCount=?
     WHERE id=?
+  `),
+  // Player-facing statements
+  getPlayerGuilds:       db.prepare("SELECT guildId, displayName, overallExp FROM users WHERE userId = ? ORDER BY overallExp DESC"),
+  getUser:               db.prepare("SELECT * FROM users WHERE userId = ? AND guildId = ?"),
+  getDomain:             db.prepare("SELECT domainId FROM users WHERE userId = ? AND guildId = ?"),
+  getDistinctQuestArea:  db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea IS NOT NULL AND domainId & (1 << (? - 1)) ORDER BY questArea ASC"),
+  getOneDistinctQuestArea: db.prepare("SELECT DISTINCT questArea, areaDesc FROM quest WHERE questArea = ? LIMIT 1"),
+  getQuestsInArea:       db.prepare("SELECT id, name, description FROM quest WHERE questArea = ? AND domainId & (1 << (? - 1)) ORDER BY name ASC"),
+  getActiveItems:        db.prepare("SELECT * FROM inventory WHERE userId = ? AND guildId = ? AND duration > 31536000"),
+  delExpired:            db.prepare("DELETE FROM inventory WHERE duration < strftime('%s', 'now') AND duration > 31536000 AND userId = ? AND guildId = ?"),
+  setActive:             db.prepare("UPDATE inventory SET duration = duration - strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND duration > 31536000"),
+  profBonus:             db.prepare("UPDATE inventory SET duration = duration + strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND professionId != 0 AND professionBonus = (SELECT MAX(professionBonus) FROM inventory i2 WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId AND i2.professionId = inventory.professionId)"),
+  skillBonus:            db.prepare("UPDATE inventory SET duration = duration + strftime('%s', 'now') WHERE userId = ? AND guildId = ? AND skill != 0 AND skillBonus = (SELECT MAX(skillBonus) FROM inventory i2 WHERE i2.userId = inventory.userId AND i2.guildId = inventory.guildId AND i2.skill = inventory.skill)"),
+  addCoins:              db.prepare("UPDATE users SET coins = coins + ? WHERE userId = ? AND guildId = ?"),
+  addToInventory:        db.prepare("INSERT INTO inventory (userId, guildId, name, skillBonus, skill, duration, emojiId) VALUES (?, ?, ?, ?, ?, ?, ?)"),
+  insertQuestUser:       db.prepare("INSERT OR REPLACE INTO users (userId, guildId, displayName, avatarFile, domainId) VALUES (?, ?, ?, ?, ?)"),
+  getRandomBeast:        db.prepare("SELECT * FROM beastiary WHERE type = ? ORDER BY RANDOM() LIMIT 1"),
+  getRandomRelic:        db.prepare("SELECT * FROM relic WHERE id = ? ORDER BY RANDOM() LIMIT 1"),
+  insertBotQueue:        db.prepare("INSERT INTO botQueue (type, guildId, userId, payload, createdAt) VALUES (?, ?, ?, ?, ?)"),
+  storeQuest:            db.prepare(`
+    INSERT INTO questTracker (
+      guildId, userId, encryptedUserId, domainId, questId,
+      artisanExp, soldierExp, healerExp, overallExp,
+      artisanExpGained, soldierExpGained, healerExpGained, expGained,
+      skill1, skill2, skill3, skill4, skill5, skill6,
+      sawMonster, beatMonster, relic, quantity
+    )
+    SELECT
+      ?, ?, ?, ?, ?,
+      u.artisanExp, u.soldierExp, u.healerExp, u.overallExp,
+      (u.artisanExp - ?), (u.soldierExp - ?), (u.healerExp - ?), (u.overallExp - ?),
+      u.skill1, u.skill2, u.skill3, u.skill4, u.skill5, u.skill6,
+      ?, ?, ?, ?
+    FROM users u
+    WHERE u.userId = ? AND u.guildId = ?
   `)
 };
 
@@ -164,10 +212,12 @@ async function getAuthedSession(req) {
   }
 }
 
-// Deny-by-default gate, two-tier: public paths need nothing; everything
-// else needs a valid session AND whitelist membership (dungeonBard has no
-// "valid session only" tier currently).
-const PUBLIC_PATHS = ['/', '/login', '/callback', '/quests'];
+// Deny-by-default gate, three-tier:
+//   public  — no session required
+//   player  — valid session, any logged-in Discord user (/play*, /api/play*)
+//   admin   — valid session AND whitelist (/admin, /api/quests*, etc.)
+const PUBLIC_PATHS  = ['/', '/login', '/callback', '/quests'];
+const PLAYER_PATHS  = ['/play'];   // prefix-matched below
 
 app.use(async (req, res, next) => {
   if (PUBLIC_PATHS.includes(req.path)) return next();
@@ -179,13 +229,18 @@ app.use(async (req, res, next) => {
         ? res.status(403).json({ error: 'Access denied.' })
         : res.redirect('/');
     }
+    req.session  = session;
+    req.discordId = session.discord_id;
+
+    // Player tier: /play and /api/play — any valid session is fine
+    if (req.path.startsWith('/play') || req.path.startsWith('/api/play')) return next();
+
+    // Admin tier: everything else needs whitelist
     if (!ADMIN_WHITELIST.includes(session.discord_id)) {
       return req.path.startsWith('/api/')
         ? res.status(403).json({ error: 'Access denied.' })
         : res.status(403).send('Not authorized.');
     }
-    req.session = session;
-    req.discordId = session.discord_id;
     next();
   } catch (err) {
     console.error('[authGate_ERROR]', err.message);
@@ -377,7 +432,7 @@ app.get('/callback', async (req, res) => {
       sameSite: 'Lax',
       maxAge: SESSION_LIFETIME_MS
     });
-    res.redirect(ADMIN_WHITELIST.includes(discordId) ? '/admin' : '/quests');
+    res.redirect(ADMIN_WHITELIST.includes(discordId) ? '/admin' : '/play');
   } catch (err) {
     console.error("[OAuth_ERROR]", err.response?.data || err.message);
     res.status(500).send("Authentication failed.");
@@ -485,7 +540,7 @@ app.get('/admin', (req, res) => {
 <body>
 <div class="card">
   <h1>Dungeon Bard</h1>
-  <p>Welcome, ${username}.</p>
+  <p>Welcome, ${username}. <a href="/play" style="color:#b9bbbe;font-size:0.85rem;">[ Player Panel ]</a></p>
   <hr>
   <h3>Quest Editor</h3>
 
@@ -821,7 +876,528 @@ app.get('/admin', (req, res) => {
 </html>`);
 });
 
-// --- API ROUTES (all gated by the global auth middleware above) ---
+// --- PLAYER PANEL ROUTES (session-only tier) ---
+
+// Map area definitions — coordinates relative to 1002×1005 image.
+// Each area has an array of polygon points [x,y,...] and the questArea name.
+// Adjust coords in PLAY_MAP_AREAS to match your actual hotspot boundaries.
+const PLAY_MAP_AREAS = [
+  { area: "Chamber of Oration",  coords: "560,130, 780,130, 820,300, 680,320, 580,280" },
+  { area: "Wilderness of Wyrm",  coords: "220,120, 560,120, 600,320, 380,380, 200,300" },
+  { area: "Lair of Self Care",   coords: "100,280, 240,260, 280,420, 180,460, 90,420" },
+  { area: "Market Town",         coords: "220,380, 380,360, 420,500, 300,540, 200,500" },
+  { area: "Ruins",               coords: "700,300, 840,280, 860,440, 740,460, 680,400" },
+  { area: "Scribe's Tower",      coords: "820,440, 940,420, 950,600, 860,620, 800,560" },
+  { area: "Hall of Marvels",     coords: "100,520, 280,500, 320,660, 180,700, 90,640" },
+  { area: "Tribunal of Forms",   coords: "80,700, 240,680, 260,840, 140,860, 70,800" },
+  { area: "Merchant Coast",      coords: "560,580, 760,540, 820,740, 680,800, 520,740" },
+  { area: "Vault of Vellum",     coords: "760,760, 920,720, 950,900, 840,930, 740,880" },
+];
+
+// Helper: look up or resolve guildId from cookie or default (highest overallExp)
+function resolveGuildId(req) {
+  const cookieGuild = req.cookies.selectedGuild;
+  const guilds = dbQuery.getPlayerGuilds.all(req.discordId);
+  if (!guilds.length) return null;
+  if (cookieGuild && guilds.some(g => g.guildId === cookieGuild)) return cookieGuild;
+  return guilds[0].guildId; // already sorted by overallExp DESC
+}
+
+// GET /play — guild picker or redirect to /play/:guildId
+app.get('/play', (req, res) => {
+  const guilds = dbQuery.getPlayerGuilds.all(req.discordId);
+  if (!guilds.length) return res.status(400).send('No guild membership found. Use the bot in a Discord server first.');
+  const guildId = resolveGuildId(req);
+  res.redirect(`/play/${guildId}`);
+});
+
+// GET /play/:guildId — main player panel
+app.get('/play/:guildId', (req, res) => {
+  const { guildId } = req.params;
+  const guilds = dbQuery.getPlayerGuilds.all(req.discordId);
+  if (!guilds.length || !guilds.some(g => g.guildId === guildId)) {
+    return res.status(403).send('You are not a member of that guild.');
+  }
+  // Set/refresh selectedGuild cookie (30 days, not httpOnly so JS can also read it)
+  res.cookie('selectedGuild', guildId, { httpOnly: true, secure: true, sameSite: 'Lax', maxAge: 30 * 24 * 60 * 60 * 1000 });
+
+  const user = dbQuery.getUser.get(req.discordId, guildId);
+  const domainId = user?.domainId || null;
+  const username = req.session.username || 'Adventurer';
+  const isAdmin  = ADMIN_WHITELIST.includes(req.discordId);
+
+  const guildsJson   = JSON.stringify(guilds);
+  const domainsJson  = JSON.stringify(DOMAINS);
+  const mapAreasJson = JSON.stringify(PLAY_MAP_AREAS);
+  const imageBase    = 'https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/main/placeImages/';
+
+  res.send(`<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<title>Dungeon Bard — Quest Panel</title>
+<style>
+  * { box-sizing: border-box; }
+  body { font-family: sans-serif; background: #2c2f33; color: #dcddde; margin: 0; padding: 16px; }
+  .card { background: #36393f; border-radius: 8px; padding: 20px; max-width: 900px; margin: auto; box-shadow: 0 2px 8px rgba(0,0,0,.4); }
+  h1, h2 { color: #fff; margin: 0 0 8px; }
+  .nav { display: flex; gap: 12px; align-items: center; margin-bottom: 16px; flex-wrap: wrap; }
+  .nav select { background: #40444b; color: #dcddde; border: 1px solid #4f545c; border-radius: 4px; padding: 6px 10px; }
+  .nav a { color: #b9bbbe; font-size: .85rem; text-decoration: none; }
+  .nav a:hover { color: #fff; }
+  hr { border-color: #4f545c; margin: 14px 0; }
+  /* Map */
+  .map-wrap { position: relative; display: inline-block; width: 100%; max-width: 700px; }
+  .map-wrap img { width: 100%; height: auto; display: block; border-radius: 6px; }
+  .map-wrap svg { position: absolute; top: 0; left: 0; width: 100%; height: 100%; }
+  .map-wrap svg polygon { fill: rgba(255,220,100,.15); stroke: rgba(255,220,100,.5); stroke-width: 2; cursor: pointer; transition: fill .15s; }
+  .map-wrap svg polygon:hover, .map-wrap svg polygon.active { fill: rgba(255,220,100,.4); stroke: #ffd700; }
+  /* Controls */
+  .controls { margin-top: 16px; }
+  label { display: block; font-size: .85rem; color: #b9bbbe; margin-bottom: 4px; }
+  select, .btn { padding: 8px 14px; border-radius: 4px; border: 1px solid #4f545c; background: #40444b; color: #dcddde; font-size: .95rem; }
+  .btn { cursor: pointer; border: none; }
+  .btn-primary { background: #5865F2; color: #fff; }
+  .btn-primary:hover { background: #4752C4; }
+  .btn-primary:disabled { background: #3c4394; color: #888; cursor: not-allowed; }
+  .btn-danger  { background: #ed4245; color: #fff; }
+  .btn-danger:hover  { background: #c03537; }
+  .btn-success { background: #57f287; color: #000; }
+  .btn-success:hover { background: #3ac76d; }
+  .area-img { width: 100%; max-width: 500px; border-radius: 6px; margin-top: 10px; display: none; }
+  .quest-detail { background: #2f3136; border-radius: 6px; padding: 14px; margin-top: 12px; display: none; }
+  .quest-detail h3 { margin: 0 0 6px; color: #fff; }
+  .quest-detail p { margin: 0 0 10px; color: #b9bbbe; font-size: .9rem; }
+  .count-row { display: flex; align-items: center; gap: 10px; margin-bottom: 10px; }
+  .count-row input { width: 60px; padding: 6px; background: #40444b; border: 1px solid #4f545c; border-radius: 4px; color: #dcddde; text-align: center; }
+  .result-box { background: #2f3136; border-radius: 6px; padding: 14px; margin-top: 14px; display: none; }
+  .result-box h3 { color: #57f287; margin: 0 0 8px; }
+  .result-box .defeat { color: #ed4245; }
+  .result-box pre { font-size: .78rem; color: #b9bbbe; white-space: pre-wrap; margin: 8px 0 0; }
+  .stat-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 8px; margin-top: 8px; }
+  .stat-box { background: #40444b; border-radius: 4px; padding: 8px; text-align: center; }
+  .stat-box .val { font-size: 1.1rem; font-weight: bold; color: #fff; }
+  .stat-box .lbl { font-size: .75rem; color: #b9bbbe; }
+  .domain-select-wrap { padding: 20px; background: #2f3136; border-radius: 6px; }
+  .domain-btn { display: block; width: 100%; text-align: left; padding: 10px 14px; margin-bottom: 8px;
+    background: #40444b; border: 1px solid #4f545c; border-radius: 4px; color: #dcddde; cursor: pointer; font-size: .95rem; }
+  .domain-btn:hover { background: #4f545c; }
+  #status { margin-top: 10px; font-size: .9rem; }
+</style>
+</head>
+<body>
+<div class="card">
+  <div class="nav">
+    <h1>Dungeon Bard</h1>
+    <span style="color:#b9bbbe">|</span>
+    <span>${username}</span>
+    <span style="color:#b9bbbe">|</span>
+    <label style="margin:0;display:inline">Guild:
+      <select id="guild-select" onchange="switchGuild(this.value)">
+        ${guilds.map(g => `<option value="${g.guildId}" ${g.guildId === guildId ? 'selected' : ''}>${g.displayName || g.guildId} (${g.overallExp} XP)</option>`).join('')}
+      </select>
+    </label>
+    ${isAdmin ? '<a href="/admin">[ Admin Panel ]</a>' : ''}
+    <a href="/quests">[ Quest Registry ]</a>
+  </div>
+  <hr>
+
+  <div id="domain-wrap" style="display:${domainId ? 'none' : 'block'}">
+    <div class="domain-select-wrap">
+      <h2>Choose Your Domain</h2>
+      <p style="color:#b9bbbe;font-size:.9rem">Select the domain you wish to adventure in:</p>
+      ${DOMAINS.map(d => `<button class="domain-btn" onclick="selectDomain(${d.id})">${d.title}</button>`).join('')}
+    </div>
+  </div>
+
+  <div id="quest-wrap" style="display:${domainId ? 'block' : 'none'}">
+    <h2>Quest Map</h2>
+    <div class="map-wrap">
+      <img src="${imageBase}sd.png" alt="Quest Map" id="map-img">
+      <svg viewBox="0 0 1002 1005" id="map-svg">
+        ${PLAY_MAP_AREAS.map(a => `<polygon points="${a.coords}" data-area="${a.area}" onclick="selectArea('${a.area.replace(/'/g,"\\'")}', this)" title="${a.area}"/>`).join('\n        ')}
+      </svg>
+    </div>
+
+    <div class="controls">
+      <label>Area</label>
+      <select id="area-select" onchange="onAreaSelect(this.value)" style="width:100%;max-width:400px">
+        <option value="">— Select an area —</option>
+      </select>
+
+      <img id="area-img" class="area-img" alt="Area">
+
+      <div style="margin-top:12px">
+        <label>Quest</label>
+        <select id="quest-select" onchange="onQuestSelect(this.value)" style="width:100%;max-width:400px" disabled>
+          <option value="">— Select a quest —</option>
+        </select>
+      </div>
+
+      <div class="quest-detail" id="quest-detail">
+        <h3 id="quest-name"></h3>
+        <p id="quest-desc"></p>
+        <div class="count-row">
+          <label style="margin:0">Count:</label>
+          <input type="number" id="quest-count" value="1" min="1" max="1">
+          <span id="quest-maxcount-label" style="color:#b9bbbe;font-size:.85rem"></span>
+        </div>
+        <button class="btn btn-success" id="claim-btn" onclick="claimQuest()">Claim Quest</button>
+        <div id="status"></div>
+      </div>
+    </div>
+  </div>
+
+  <div class="result-box" id="result-box">
+    <h3 id="result-title">Quest Complete!</h3>
+    <div id="result-body"></div>
+  </div>
+</div>
+
+<script>
+  const DOMAINS    = ${domainsJson};
+  const MAP_AREAS  = ${mapAreasJson};
+  const IMAGE_BASE = '${imageBase}';
+  const GUILD_ID   = '${guildId}';
+  let currentDomainId = ${domainId || 'null'};
+  let currentQuest = null;
+
+  // Populate area dropdown from map areas (filtering later against DB after area select)
+  function initAreaDropdown() {
+    const sel = document.getElementById('area-select');
+    sel.innerHTML = '<option value="">— Select an area —</option>';
+    MAP_AREAS.forEach(a => {
+      const opt = document.createElement('option');
+      opt.value = a.area;
+      opt.textContent = a.area;
+      sel.appendChild(opt);
+    });
+  }
+  initAreaDropdown();
+
+  function switchGuild(guildId) {
+    window.location.href = '/play/' + guildId;
+  }
+
+  async function selectDomain(domainId) {
+    try {
+      const res = await fetch('/api/play/domain', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ guildId: GUILD_ID, domainId })
+      });
+      if (!res.ok) throw new Error((await res.json()).error);
+      currentDomainId = domainId;
+      document.getElementById('domain-wrap').style.display = 'none';
+      document.getElementById('quest-wrap').style.display  = 'block';
+    } catch (e) { alert('Failed to set domain: ' + e.message); }
+  }
+
+  // Map click
+  function selectArea(areaName, el) {
+    document.querySelectorAll('#map-svg polygon').forEach(p => p.classList.remove('active'));
+    el.classList.add('active');
+    const sel = document.getElementById('area-select');
+    sel.value = areaName;
+    loadAreaQuests(areaName);
+  }
+
+  // Dropdown select
+  function onAreaSelect(areaName) {
+    if (!areaName) return;
+    // Sync map highlight
+    document.querySelectorAll('#map-svg polygon').forEach(p => {
+      p.classList.toggle('active', p.dataset.area === areaName);
+    });
+    loadAreaQuests(areaName);
+  }
+
+  async function loadAreaQuests(areaName) {
+    document.getElementById('quest-detail').style.display = 'none';
+    document.getElementById('result-box').style.display   = 'none';
+    currentQuest = null;
+
+    const img = document.getElementById('area-img');
+    img.src = IMAGE_BASE + areaName.replace(/[^a-zA-Z0-9]/g, '') + '.png';
+    img.style.display = 'block';
+    img.onerror = () => img.style.display = 'none';
+
+    const qs = document.getElementById('quest-select');
+    qs.innerHTML = '<option value="">Loading...</option>';
+    qs.disabled = true;
+    try {
+      const res = await fetch('/api/play/quests?area=' + encodeURIComponent(areaName) + '&guildId=' + GUILD_ID);
+      const quests = await res.json();
+      qs.innerHTML = '<option value="">— Select a quest —</option>';
+      quests.forEach(q => {
+        const opt = document.createElement('option');
+        opt.value = q.id;
+        opt.textContent = q.name;
+        opt.dataset.desc = q.description || '';
+        opt.dataset.max  = q.maxCount || 1;
+        qs.appendChild(opt);
+      });
+      qs.disabled = false;
+    } catch(e) {
+      qs.innerHTML = '<option value="">Failed to load quests</option>';
+    }
+  }
+
+  function onQuestSelect(questId) {
+    const qs  = document.getElementById('quest-select');
+    const opt = qs.options[qs.selectedIndex];
+    if (!questId || !opt) { document.getElementById('quest-detail').style.display = 'none'; return; }
+    const maxCount = parseInt(opt.dataset.max) || 1;
+    currentQuest = { id: questId, maxCount };
+    document.getElementById('quest-name').textContent  = opt.textContent;
+    document.getElementById('quest-desc').textContent  = opt.dataset.desc;
+    document.getElementById('quest-count').max         = maxCount;
+    document.getElementById('quest-count').value       = 1;
+    document.getElementById('quest-maxcount-label').textContent = 'max ' + maxCount;
+    document.getElementById('quest-detail').style.display = 'block';
+    document.getElementById('result-box').style.display   = 'none';
+    document.getElementById('status').textContent = '';
+  }
+
+  async function claimQuest() {
+    if (!currentQuest) return;
+    const count = Math.min(parseInt(document.getElementById('quest-count').value) || 1, currentQuest.maxCount);
+    const btn = document.getElementById('claim-btn');
+    btn.disabled = true;
+    btn.textContent = 'Claiming...';
+    document.getElementById('status').textContent = '';
+    try {
+      const res = await fetch('/api/play/claim', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ questId: currentQuest.id, count, guildId: GUILD_ID })
+      });
+      const data = await res.json();
+      if (!res.ok) { document.getElementById('status').textContent = data.error || 'Failed.'; return; }
+      showResult(data);
+    } catch(e) {
+      document.getElementById('status').textContent = 'Request failed.';
+    } finally {
+      btn.disabled = false;
+      btn.textContent = 'Claim Quest';
+    }
+  }
+
+  function showResult(data) {
+    const box = document.getElementById('result-box');
+    box.style.display = 'block';
+    document.getElementById('result-title').textContent = data.outcome === 'defeat' ? 'Defeated!' : 'Quest Complete!';
+    document.getElementById('result-title').className = data.outcome === 'defeat' ? 'defeat' : '';
+    let html = '<div class="stat-grid">';
+    html += stat('XP Earned', data.xpEarned);
+    html += stat('Coins Earned', '🪙 ' + data.coinsEarned);
+    html += stat('Overall XP', data.overallExp);
+    html += stat('Artisan XP', data.artisanExp);
+    html += stat('Soldier XP', data.soldierExp);
+    html += stat('Healer XP', data.healerExp);
+    html += '</div>';
+    if (data.monster) html += '<p style="margin-top:10px;color:#b9bbbe">⚔️ ' + data.monster + '</p>';
+    if (data.relic)   html += '<p style="margin-top:4px;color:#ffd700">✨ ' + data.relic + '</p>';
+    if (data.battleLog) html += '<pre>' + data.battleLog + '</pre>';
+    document.getElementById('result-body').innerHTML = html;
+    box.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+  function stat(lbl, val) {
+    return '<div class="stat-box"><div class="val">' + val + '</div><div class="lbl">' + lbl + '</div></div>';
+  }
+</script>
+</body>
+</html>`);
+});
+
+// --- PLAYER API ---
+
+// POST /api/play/domain — set domain for first-time players
+app.post('/api/play/domain', (req, res) => {
+  const { guildId, domainId } = req.body;
+  if (!guildId || !domainId) return res.status(400).json({ error: 'guildId and domainId required.' });
+  const id = parseInt(domainId);
+  if (!DOMAINS.some(d => d.id === id)) return res.status(400).json({ error: 'Invalid domain.' });
+  // Verify the player actually belongs to this guild
+  const guilds = dbQuery.getPlayerGuilds.all(req.discordId);
+  if (!guilds.some(g => g.guildId === guildId)) return res.status(403).json({ error: 'Not a member of that guild.' });
+  try {
+    const username = req.session.username || 'Adventurer';
+    dbQuery.insertQuestUser.run(req.discordId, guildId, username, null, id);
+    // Queue role sync for the bot
+    dbQuery.insertBotQueue.run('roleSync', guildId, req.discordId, JSON.stringify({ domainId: id }), Date.now());
+    res.json({ ok: true });
+  } catch (err) {
+    console.error('[setDomain_ERROR]', err.message, { discordId: req.discordId, guildId });
+    res.status(500).json({ error: 'Failed to set domain.' });
+  }
+});
+
+// GET /api/play/quests?area=&guildId= — quests for an area filtered by player domain
+app.get('/api/play/quests', (req, res) => {
+  const { area, guildId } = req.query;
+  if (!area || !guildId) return res.status(400).json({ error: 'area and guildId required.' });
+  const guilds = dbQuery.getPlayerGuilds.all(req.discordId);
+  if (!guilds.some(g => g.guildId === guildId)) return res.status(403).json({ error: 'Not a member of that guild.' });
+  try {
+    const user = dbQuery.getUser.get(req.discordId, guildId);
+    if (!user?.domainId) return res.status(400).json({ error: 'No domain set.' });
+    res.json(dbQuery.getQuestsInArea.all(area, user.domainId));
+  } catch (err) {
+    console.error('[playQuests_ERROR]', err.message, { area, guildId });
+    res.status(500).json({ error: 'Failed to fetch quests.' });
+  }
+});
+
+// POST /api/play/claim — claim a quest; mirrors quest.js questcomplete flow
+app.post('/api/play/claim', (req, res) => {
+  const { questId, count, guildId } = req.body;
+  if (!questId || !guildId) return res.status(400).json({ error: 'questId and guildId required.' });
+  const id       = parseInt(questId);
+  const multiple = Math.max(1, parseInt(count) || 1);
+  if (isNaN(id)) return res.status(400).json({ error: 'Invalid questId.' });
+
+  // Confirm guild membership
+  const guilds = dbQuery.getPlayerGuilds.all(req.discordId);
+  if (!guilds.some(g => g.guildId === guildId)) return res.status(403).json({ error: 'Not a member of that guild.' });
+
+  const quest = dbQuery.getQuestById.get(id);
+  if (!quest) return res.status(404).json({ error: 'Quest not found.' });
+
+  const clampedCount = Math.min(multiple, quest.maxCount || 1);
+  const user = dbQuery.getUser.get(req.discordId, guildId);
+  if (!user) return res.status(400).json({ error: 'User not found in that guild.' });
+
+  try {
+    // Apply inventory bonuses (mirror quest.js transaction)
+    db.transaction(() => {
+      dbQuery.delExpired.run(req.discordId, guildId);
+      dbQuery.setActive.run(req.discordId, guildId);
+      dbQuery.profBonus.run(req.discordId, guildId);
+      dbQuery.skillBonus.run(req.discordId, guildId);
+    })();
+
+    const activeItems = dbQuery.getActiveItems.all(req.discordId, guildId);
+    const skillBonuses = [1,1,1,1,1,1];
+    const profBonuses  = [1,1,1];
+    for (const item of activeItems) {
+      if (item.skill)       skillBonuses[item.skill - 1] = item.skillBonus;
+      if (item.professionId) profBonuses[item.professionId - 1] = item.professionBonus;
+    }
+
+    const profession = ['artisan','soldier','healer'][parseInt(quest.professionId) - 1] + 'Exp';
+    const xpEarned   = quest.professionXp * profBonuses[parseInt(quest.professionId) - 1] * clampedCount;
+
+    // Update user stats
+    db.prepare(`UPDATE users SET
+      skill1 = skill1 + ?, skill2 = skill2 + ?, skill3 = skill3 + ?,
+      skill4 = skill4 + ?, skill5 = skill5 + ?, skill6 = skill6 + ?,
+      coins = coins + ?, ${profession} = ${profession} + ?
+      WHERE userId = ? AND guildId = ?`
+    ).run(
+      quest.skill1 * clampedCount, quest.skill2 * clampedCount, quest.skill3 * clampedCount,
+      quest.skill4 * clampedCount, quest.skill5 * clampedCount, quest.skill6 * clampedCount,
+      quest.coins * clampedCount, xpEarned,
+      req.discordId, guildId
+    );
+
+    // Battle / relic resolution (mirrors quest.js)
+    let outcome = 'success', monster = null, relic = null, battleLog = null, bonusCoins = 0;
+
+    if (quest.beastiary) {
+      const beast = dbQuery.getRandomBeast.get(quest.beastiary);
+      if (beast && Math.random() < beast.chance) {
+        function skillMod(skill) { return (20 - (skillLevel[user.domainId]?.findIndex(v => v <= skill) ?? 0)); }
+        const atk = skillMod(user.skill3) + skillBonuses[2];
+        const def = skillMod(user.skill4) + skillBonuses[3];
+        const hp  = skillMod(user.skill5);
+        const diff = [0.01,0.75,0.9,1.05][parseInt(beast.difficulty)] || 0.75;
+        let userHp = hp, monHp = hp * diff;
+        let log = '', i = 0;
+        while (monHp > 0 && userHp > 0 && i < 20) {
+          const ua = Math.floor(Math.random()*20) + atk, md = Math.floor(Math.random()*20) + def * diff;
+          if (ua >= md) { const dmg = (ua-md)/2; monHp -= dmg; log += `You hit for ${dmg.toFixed(1)}!\n`; }
+          else log += `You miss!\n`;
+          if (monHp <= 0) break;
+          const ma = (i>5?20:Math.floor(Math.random()*20)+atk*diff), ud = Math.floor(Math.random()*20)+def;
+          if (i>7) { userHp=0; log+=`Fatal blow!\n`; break; }
+          if (ma >= ud) { const dmg=(ma-ud)/2; userHp-=dmg; log+=`${beast.entity} hits you for ${dmg.toFixed(1)}!\n`; }
+          else log += `${beast.entity} misses!\n`;
+          i++;
+        }
+        monster = beast.entity;
+        battleLog = log;
+        if (userHp <= 0) {
+          outcome = 'defeat';
+        } else {
+          bonusCoins = Math.floor(quest.coins * ((beast.difficulty*0.3)+(0.5*Math.random())));
+          dbQuery.addCoins.run(bonusCoins, req.discordId, guildId);
+          if (quest.relic) {
+            const r = dbQuery.getRandomRelic.get(quest.relic);
+            if (r && Math.random() < r.chance) {
+              relic = r.name + ': ' + r.description;
+              if (r.bonusXp && r.bonusXp < 9) {
+                dbQuery.addToInventory.run(req.discordId, guildId, r.name, r.skillBonus, r.skill, r.duration, r.emojiId);
+              } else if (r.bonusXp) {
+                const rProf = ['artisan','soldier','healer'][parseInt(r.professionId)-1]+'Exp';
+                db.prepare(`UPDATE users SET ${rProf} = ${rProf} + ? WHERE userId = ? AND guildId = ?`)
+                  .run(r.bonusXp * profBonuses[parseInt(r.professionId)-1], req.discordId, guildId);
+              }
+            }
+          }
+        }
+      }
+    } else if (quest.relic) {
+      const r = dbQuery.getRandomRelic.get(quest.relic);
+      if (r && Math.random() < r.chance) {
+        relic = r.name + ': ' + r.description;
+        if (r.bonusXp && r.bonusXp < 9) {
+          dbQuery.addToInventory.run(req.discordId, guildId, r.name, r.skillBonus, r.skill, r.duration, r.emojiId);
+        } else if (r.bonusXp) {
+          const rProf = ['artisan','soldier','healer'][parseInt(r.professionId)-1]+'Exp';
+          db.prepare(`UPDATE users SET ${rProf} = ${rProf} + ? WHERE userId = ? AND guildId = ?`)
+            .run(r.bonusXp * profBonuses[parseInt(r.professionId)-1], req.discordId, guildId);
+        }
+      }
+    }
+
+    // Log to questTracker
+    setImmediate(() => {
+      try {
+        dbQuery.storeQuest.run(
+          guildId, req.discordId,
+          crypto.createHmac('sha256', config.key || '').update(req.discordId).digest('hex'),
+          user.domainId, id,
+          user.artisanExp, user.soldierExp, user.healerExp, user.overallExp,
+          outcome === 'defeat' ? 0 : 1, outcome === 'defeat' ? 0 : 1,
+          relic, clampedCount,
+          req.discordId, guildId
+        );
+        // Queue level-up check for the bot
+        dbQuery.insertBotQueue.run('levelUp', guildId, req.discordId, JSON.stringify({
+          questId: id, outcome, xpEarned
+        }), Date.now());
+      } catch (e) { console.error('[storeQuest_ERROR]', e.message); }
+    });
+
+    const userAfter = dbQuery.getUser.get(req.discordId, guildId);
+    res.json({
+      outcome,
+      xpEarned: outcome === 'defeat' ? 0 : xpEarned,
+      coinsEarned: (quest.coins * clampedCount) + bonusCoins,
+      overallExp: userAfter?.overallExp ?? user.overallExp,
+      artisanExp: userAfter?.artisanExp ?? user.artisanExp,
+      soldierExp: userAfter?.soldierExp ?? user.soldierExp,
+      healerExp:  userAfter?.healerExp  ?? user.healerExp,
+      monster, relic, battleLog
+    });
+  } catch (err) {
+    console.error('[claimQuest_ERROR]', err.message, { questId: id, guildId, discordId: req.discordId });
+    res.status(500).json({ error: 'Failed to process quest.' });
+  }
+});
+
+// --- ADMIN API ROUTES (all gated by the global auth middleware above) ---
 app.get('/api/quests/domains', (req, res) => res.json(DOMAINS));
 app.get('/api/quests/areas',   (req, res) => res.json(AREAS));
 app.get('/api/beasts',         (req, res) => res.json(BEASTS));
