@@ -126,7 +126,7 @@ module.exports = {
         components: []
       });
       // Public announcement in the channel. Remove this line to keep results private.
-      await interaction.followUp({ content: `🎩 <@${interaction.user.id}> has been sorted into **${house.name}** ${house.emoji}`, allowedMentions: { parse: [] } });
+      await interaction.followUp({ content: `🎩 <@${interaction.user.id}> has been sorted into **${house.name}** ${house.emoji}`, embeds: img.image ? [{ color: house.color, image: img.image }] : [], files: img.files, allowedMentions: { parse: [] } });
     } catch (error) {
       console.error(`SORTINGHAT_ERROR user=${interaction.user?.id} id=${interaction.customId} ${error.message}`);
     }
