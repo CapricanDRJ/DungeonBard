@@ -43,7 +43,7 @@ function attach(file) {
 // Ordered most important first. a[0] is house 1, a[1] is house 2, etc.
 // weight is the multiplier x10 (17 = 1.7) so the math stays in whole numbers.
 const questions = [
-  { q: 'Pick a magical item.', weight: 17, a: ['An enchanted sword', 'A picnic basket that never empties', 'A book that answers any question', 'A ring that makes people listen to you'] },
+  { q: 'Pick a magical item.', weight: 17, a: ['A sword that cuts any material', 'A picnic basket that never empties', 'A book that answers any question', 'A ring that makes people listen to you'] },
   { q: 'Where do you sit?', weight: 16, a: ['Front row, right in the action', 'In the kitchen at a party', 'Quiet corner by a window', 'Head of the table'] },
   { q: 'Pick a game for game night.', weight: 15, a: ['A chaotic dare game', 'A co-op game', 'Trivia or puzzles', 'A strategy game like chess'] },
   { q: 'Perfect free day?', weight: 14, a: ['No plan, see what happens', 'Cozy day with friends and good food', 'Lost in a new book or hobby', 'A stylish night out'] },
