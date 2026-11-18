@@ -44,11 +44,11 @@ function attach(file) {
 // weight is the multiplier x10 (17 = 1.7) so the math stays in whole numbers.
 const questions = [
   { q: 'Pick a magical item.', weight: 17, a: ['An enchanted sword', 'A picnic basket that never empties', 'A book that answers any question', 'A ring that makes people listen to you'] },
-  { q: 'Where do you sit?', weight: 16, a: ['Front seat of the rollercoaster', 'In the kitchen at a party', 'Quiet corner by a window', 'Head of the table'] },
+  { q: 'Where do you sit?', weight: 16, a: ['Front row, right in the action', 'In the kitchen at a party', 'Quiet corner by a window', 'Head of the table'] },
   { q: 'Pick a game for game night.', weight: 15, a: ['A chaotic dare game', 'A co-op game', 'Trivia or puzzles', 'A strategy game like chess'] },
   { q: 'Perfect free day?', weight: 14, a: ['No plan, see what happens', 'Cozy day with friends and good food', 'Lost in a new book or hobby', 'A stylish night out'] },
-  { q: 'Pick a companion.', weight: 13, a: ['A hawk', 'A floppy-eared dog', 'An owl', 'A sleek black cat'] },
-  { q: 'Pick a subject.', weight: 12, a: ['Defence Against the Dark Arts', 'Herbology', 'Charms', 'Potions'] },
+  { q: 'Pick a companion.', weight: 13, a: ['A bold, sharp-eyed hawk', 'A loyal, floppy-eared dog', 'A wise, wide-eyed owl', 'A sleek, mysterious black cat'] },
+  { q: 'Pick a subject.', weight: 12, a: ['Defence Against the Dark Arts', 'Care of Magical Creatures', 'Study of Ancient Runes', 'Advanced Potion-Making'] },
   { q: 'Pick a drink.', weight: 11, a: ['Something spicy', 'Hot chocolate', 'A weird new tea', 'Dark espresso'] }
 ];
 
@@ -100,6 +100,10 @@ module.exports = {
         return await interaction.reply({ ...questionMessage('sortinghat', 0), flags: MessageFlags.Ephemeral });
       }
       if (!interaction.isButton() || !interaction.customId.startsWith('sortinghat')) return;
+      // Plain 'sortinghat' button (on the public announcement) starts a fresh quiz, shown only to the clicker
+      if (interaction.customId === 'sortinghat') {
+        return await interaction.reply({ ...questionMessage('sortinghat', 0), flags: MessageFlags.Ephemeral });
+      }
 
       // sortinghat_1_3_2 -> answers [1, 3, 2], so the user is on question 4
       const parts = interaction.customId.split('_');
@@ -126,7 +130,7 @@ module.exports = {
         components: []
       });
       // Public announcement in the channel. Remove this line to keep results private.
-      await interaction.followUp({ content: `🎩 <@${interaction.user.id}> has been sorted into **${house.name}** ${house.emoji}`, embeds: img.image ? [{ color: house.color, image: img.image }] : [], files: img.files, allowedMentions: { parse: [] } });
+      await interaction.followUp({ content: `🎩 <@${interaction.user.id}> has been sorted into **${house.name}** ${house.emoji}`, embeds: img.image ? [{ color: house.color, image: img.image }] : [], files: img.files, components: [{ type: 1, components: [{ type: 2, style: 2, custom_id: 'sortinghat', label: 'Sorting Hat', emoji: { name: '🎩' } }] }], allowedMentions: { parse: [] } });
     } catch (error) {
       console.error(`SORTINGHAT_ERROR user=${interaction.user?.id} id=${interaction.customId} ${error.message}`);
     }
