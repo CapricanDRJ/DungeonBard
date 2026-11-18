@@ -118,14 +118,20 @@ module.exports = {
       }
 
       const h = sortHouse(answers), house = houses[h], img = attach(images[1][h - 1]);
+      // Percent of each house, sorted highest first (winner first on a tie). Bar is 10 segments.
+      const totals = { 1: 0, 2: 0, 3: 0, 4: 0 }, max = questions.reduce((s, x) => s + x.weight, 0);
+      answers.forEach((x, i) => { totals[x] += questions[i].weight; });
+      const bars = [1, 2, 3, 4].sort((a, b) => (totals[b] - totals[a]) || ((b === h) - (a === h))).map(n => {
+        const pct = Math.round(totals[n] / max * 100), full = Math.round(pct / 10);
+        return `${houses[n].emoji} ${'▰'.repeat(full)}${'▱'.repeat(10 - full)} **${pct}%** ${houses[n].name}`;
+      }).join('\n');
       await interaction.update({
         embeds: [{
           title: `${house.emoji} ${house.name}!`,
-          description: house.text,
-          color: house.color,
-          image: img.image
+          description: bars,
+          color: house.color
         }],
-        files: img.files,
+        files: [],
         attachments: [],
         components: []
       });
