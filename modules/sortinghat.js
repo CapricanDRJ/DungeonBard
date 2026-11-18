@@ -1,6 +1,5 @@
 const { SlashCommandBuilder, MessageFlagsBitField } = require('discord.js');
 const MessageFlags = MessageFlagsBitField.Flags;
-const fs = require('fs');
 
 // House numbers used in button ids: 1 = Gryffindor, 2 = Hufflepuff, 3 = Ravenclaw, 4 = Slytherin
 const houses = {
@@ -10,9 +9,8 @@ const houses = {
   4: { name: 'Slytherin', emoji: '🐍', color: 0x2a7a4b, text: 'Driven and stylish. You know what you want and how to get it.' }
 };
 
-// Embed images, uploaded by the bot from imageDir (relative to where the bot is started, same as db/tech.db).
-// A missing file is logged and the embed shows with no image.
-const imageDir = 'assets/sortinghat/';
+// Embed images are served from the GitHub repo (raw files), so nothing is uploaded with the message.
+const imageUrl = 'https://raw.githubusercontent.com/CapricanDRJ/DungeonBard/main/assets/sortinghat/';
 const images = [
   [ // [0] questions, same order as the questions array below
     'q1.png', // magical item
@@ -31,13 +29,10 @@ const images = [
   ]
 ];
 
-// Returns the embed image and the file to upload for it.
+// Returns the embed image. files is always empty now, kept so the callers do not change.
 function attach(file) {
-  if (!file || !fs.existsSync(imageDir + file)) {
-    if (file) console.error(`SORTINGHAT_IMAGE_MISSING file=${imageDir + file}`);
-    return { image: undefined, files: [] };
-  }
-  return { image: { url: `attachment://${file}` }, files: [{ attachment: imageDir + file, name: file }] };
+  if (!file) return { image: undefined, files: [] };
+  return { image: { url: imageUrl + file }, files: [] };
 }
 
 // Ordered most important first. a[0] is house 1, a[1] is house 2, etc.
